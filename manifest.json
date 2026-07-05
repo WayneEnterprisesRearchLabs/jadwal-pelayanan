@@ -8,12 +8,12 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://drive.google.com/uc?export=view&id=1GPxewkjJsm_ksnZIPBA3gYJMun6JlID0",
+      "src": "https://wayneenterprisesrearchlabs.github.io/paw-app-assets/image.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://drive.google.com/uc?export=view&id=1GPxewkjJsm_ksnZIPBA3gYJMun6JlID0",
+      "src": "https://wayneenterprisesrearchlabs.github.io/paw-app-assets/image.png",
       "sizes": "512x512",
       "type": "image/png"
     }

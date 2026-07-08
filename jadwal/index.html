@@ -350,6 +350,9 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 </style>
 </head>
 <body>
+<div id="native-splash" style="position:fixed;inset:0;z-index:9999;background:#0a0c10;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease;">
+  <img src="icons/icon-512.png" style="width:96px;height:96px;border-radius:24px;box-shadow:0 0 40px rgba(232,184,75,.35);" alt="">
+</div>
 <div class="ov" id="ov" onclick="closeDr()"></div>
 <div class="dr" id="dr">
   <div class="dr-top">
@@ -447,6 +450,20 @@ Object.keys(API_PARAM_MAP).forEach(function(fnName){
 var google = { script: { run: null } };
 Object.defineProperty(google.script, 'run', { get: function(){ return new GasRun(); } });
 
+var SPLASH_MIN_MS = 1200; // tweak this — how long the splash stays up, in ms
+var splashStart = Date.now();
+function hideSplash(){
+  var el = document.getElementById('native-splash');
+  if(!el) return;
+  var elapsed = Date.now() - splashStart;
+  var wait = Math.max(0, SPLASH_MIN_MS - elapsed);
+  setTimeout(function(){
+    el.style.opacity = '0';
+    setTimeout(function(){ el.remove(); }, 400);
+  }, wait);
+}
+window.addEventListener('load', hideSplash);
+  
 // ============================================================
 //  ORIGINAL APP CODE — unchanged below this point
 // ============================================================

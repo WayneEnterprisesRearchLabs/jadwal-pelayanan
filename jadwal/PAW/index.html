@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Jadwal PAW</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#0a0c10">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ── BASE RESET ─────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --page-pad: 25px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: #0a0c10;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: #0a0c10;
+  color: #f0f0f5;
+  min-height: 100svh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    140px circle at var(--gx, 50%) var(--gy, 30%),
+    rgba(232,184,75,.18) 0%,
+    rgba(232,184,75,.08) 40%,
+    rgba(232,184,75,.02) 70%,
+    transparent 100%
+  );
+  filter: blur(6px);
+  will-change: background;
+}
+
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ── HORIZONTAL TABLE ROLL OVER ─────── */
+.ring-scroll {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ring-tbl {
+  min-width: 600px;
+}
+
+/* ── OVERLAY + DRAWER ─────── */
+.ov{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .3s}
+.ov.on{opacity:1;pointer-events:all}
+.dr{position:fixed;left:0;top:0;bottom:0;z-index:200;width:264px;background:#12151c;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .32s cubic-bezier(.22,1,.36,1);padding-top:env(safe-area-inset-top,0px)}
+.dr.on{transform:translateX(0)}
+.dr-top{display:flex;align-items:center;gap:11px;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.dr-ring{width:36px;height:36px;border-radius:50%;background:#e8b84b;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dr-ring img{width:100%;height:100%;object-fit:cover;display:none}
+.dr-church{font-size:10px;color:#8890aa;letter-spacing:.06em;text-transform:uppercase}
+.dr-team{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;line-height:1.3;margin-top:1px}
+.dr-nav{flex:1;padding:10px 0}
+.dr-item{display:flex;align-items:center;gap:13px;padding:13px 18px;cursor:pointer;font-size:15px;font-weight:500;color:#8890aa;transition:background .12s,color .12s;position:relative}
+.dr-item:active{background:rgba(255,255,255,.04)}
+.dr-item.on{color:#f0f0f5}
+.dr-item.on::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:#e8b84b}
+.dr-item svg{opacity:.6;flex-shrink:0;transition:opacity .15s}
+.dr-item.on svg{opacity:1}
+.dr-close{padding:14px 18px;border-top:1px solid rgba(255,255,255,.07);color:#4a5070;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+
+/* ── PAGE ─────────────────── */
+.page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── HEADER — 32px sides ──── */
+.hdr{position:sticky;top:0;z-index:40;background:#12151c;border-bottom:1px solid rgba(255,255,255,.08);padding:28px var(--page-pad) 20px;width:100%;animation:fadeUp .5s cubic-bezier(.22,1,.36,1) both}
+.hdr-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:0;}
+.menu-btn{width:36px;height:36px;border-radius:10px;background:none;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#f0f0f5;transition:background .15s;margin-top:2px}
+.menu-btn:active{background:rgba(255,255,255,.08)}
+.hdr-text{flex:1;min-width:0}
+.hdr-l1{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;line-height:1.05;letter-spacing:-.02em;color:#f0f0f5}
+.hdr-l2{display:inline-flex;align-items:center;background:rgba(244,160,110,.15);color:#f4a06e;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:7px;margin-top:5px}
+.hdr-logo{width:36px;height:36px;border-radius:50%;background:#e8b84b;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;animation:logoBreathe 3.5s ease-in-out infinite;margin-top:2px}
+@keyframes logoBreathe{
+  0%,100%{ box-shadow:0 0 0px 0px rgba(232,184,75,0);background:#e8b84b; }
+  50%    { box-shadow:0 0 16px 6px rgba(232,184,75,.5);background:#f2ca52; }
+}
+.hdr-logo img{width:100%;height:100%;object-fit:cover;display:none;opacity:0;transition:opacity .4s ease}
+.hdr-logo img.loaded{opacity:1}
+
+/* ── SEARCH ───────────────── */
+.srch{position:relative;margin-bottom:14px}
+.srch-icon{position:absolute;left:calc(var(--page-pad) + 13px);top:50%;transform:translateY(-50%);color:#4a5070;pointer-events:none;transition:color .2s}
+.srch:focus-within .srch-icon{color:#e8b84b}
+.srch-inp{width:100%;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:13px 42px 13px 42px;font-family:'DM Sans',sans-serif;font-size:16px;color:#f0f0f5;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}
+.srch-inp::placeholder{color:#4a5070}
+.srch-inp:focus{border-color:#e8b84b;box-shadow:0 0 0 3px rgba(232,184,75,.1)}
+.srch-clear{position:absolute;right:calc(var(--page-pad) + 11px);top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:#222737;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:#8890aa;font-size:14px}
+
+/* ── SUGGESTIONS ──────────── */
+.sug{position:absolute;top:calc(100%+5px);left:var(--page-pad);right:var(--page-pad);z-index:100;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;overflow:hidden;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both}
+@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.sug-item{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06);transition:background .1s}
+.sug-item:last-child{border:none}
+.sug-item:active{background:#1a1e28}
+.sug-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sug-av img{width:100%;height:100%;object-fit:cover;display:block}
+.sug-name{font-size:15px;font-weight:500}
+.sug-badges{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+.sug-empty{padding:18px;text-align:center;font-size:14px;color:#8890aa}
+
+/* ── CONTENT — 32px sides ─── */
+.content{flex:1;padding-left:var(--page-pad);padding-right:var(--page-pad);padding-bottom:calc(env(safe-area-inset-bottom,0px)+72px);overflow-x:hidden;width:100%;box-sizing:border-box}
+#content{opacity:0;transition:opacity .5s ease}
+#content.ready{opacity:1}
+
+/* ── HOME ─────────────────── */
+.home{padding:52px 0 28px;text-align:center;animation:fadeUp .45s cubic-bezier(.22,1,.36,1)}
+.home-orb{width:70px;height:70px;border-radius:22px;background:rgba(232,184,75,.13);border:1px solid rgba(232,184,75,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(232,184,75,.1)}50%{box-shadow:0 0 0 16px transparent}}
+.home-h{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.03em;line-height:1.15;margin-bottom:10px}
+.home-p{font-size:15px;color:#8890aa;line-height:1.65}
+
+/* ── VOL CARD ─────────────── */
+.vol-card{display:flex;align-items:center;gap:13px;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:18px;padding:18px;margin-bottom:14px;animation:slideDown .32s cubic-bezier(.22,1,.36,1)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.vol-av{width:52px;height:52px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid}
+.vol-av img{width:100%;height:100%;object-fit:cover;display:block}
+.vol-name{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:6px;color:#e8b84b}
+.vol-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.vol-meta{font-size:13px;color:#8890aa;margin-top:4px}
+
+/* ── SCHED TABS ───────────── */
+.sched-tabs{display:flex;gap:5px;margin-bottom:16px;background:#12151c;border-radius:13px;padding:4px;border:1px solid rgba(255,255,255,.06)}
+.sched-tab{flex:1;padding:9px 0;border-radius:9px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#8890aa;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
+.sched-tab.on{background:#222737;color:#f0f0f5}
+
+/* ── MONTH NAV ────────────── */
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.month-lbl{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.mon-btn{width:34px;height:34px;border-radius:10px;background:#12151c;border:1px solid rgba(255,255,255,.13);color:#8890aa;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.mon-btn:active{background:#222737;color:#f0f0f5}
+.mon-btn:disabled{opacity:.22;cursor:default}
+
+/* ── MINI CALENDAR ────────── */
+.mini-cal{background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 10px 10px;margin-bottom:18px;animation:calIn .25s cubic-bezier(.22,1,.36,1)}
+@keyframes calIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:5px}
+.cal-dow{text-align:center;font-size:12px;font-weight:700;color:#e8b84b;padding:2px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+.cal-cell{height:34px;display:flex;align-items:center;justify-content:center}
+.cal-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#4a5070;transition:all .15s}
+.cal-cell.is-today:not(.has-event) .cal-num{box-shadow:0 0 0 1.5px #f0f0f5;color:#f0f0f5;font-weight:700}
+.cal-cell.has-event:not(.is-today){cursor:pointer}
+.cal-cell.has-event:not(.is-today) .cal-num{background:rgba(232,184,75,.18);color:#e8b84b;font-weight:800;font-size:14px}
+.cal-cell.has-event:not(.is-today):active .cal-num{background:rgba(232,184,75,.32)}
+.cal-cell.is-today.has-event{cursor:pointer}
+.cal-cell.is-today.has-event .cal-num{background:#e8b84b;color:#0a0c10;font-weight:800;font-size:14px;box-shadow:0 0 0 2px #0a0c10,0 0 0 3.5px rgba(240,240,245,.6)}
+
+/* ── SEC LABEL ────────────── */
+.sec-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4a5070;margin-bottom:10px}
+
+/* ── MONTH SLIDE TRANSITION ── */
+@keyframes slideInRight{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:translateX(0)}}
+.slide-in-right{animation:slideInRight .45s cubic-bezier(.22,1,.36,1) both}
+.slide-in-left{animation:slideInLeft .45s cubic-bezier(.22,1,.36,1) both}
+
+/* ── EVENT LIST ───────────── */
+.ev-list{display:flex;flex-direction:column;gap:10px}
+
+/* ── EVENT CARD ───────────── */
+.ecard{background:#12151c;border:1.5px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;cursor:pointer;transition:border-color .2s,background .15s;animation:cardBounce .65s cubic-bezier(.34,1.3,.64,1) both}
+.ecard:nth-child(1){animation-delay:.05s}
+.ecard:nth-child(2){animation-delay:.13s}
+.ecard:nth-child(3){animation-delay:.21s}
+.ecard:nth-child(4){animation-delay:.29s}
+.ecard:nth-child(5){animation-delay:.37s}
+.ecard:nth-child(n+6){animation-delay:.42s}
+@keyframes cardBounce{
+  0%  { opacity:0; transform:translateY(22px) scale(.96); }
+  55% { opacity:1; transform:translateY(-3px) scale(1.005); }
+  80% { transform:translateY(1px) scale(.998); }
+  100%{ transform:translateY(0) scale(1); }
+}
+.ecard:active{background:#1a1e28}
+.ecard.open{border-color:rgba(232,184,75,.45)}
+.ecard.past{opacity:.38}
+.ecard.digantikan{border-color:rgba(248,113,113,.3);opacity:.6}
+.ecard.menggantikan{border-color:rgba(74,222,128,.4)}
+.ecard.special{border-color:rgba(192,132,252,.45)}
+.ecard-top{display:flex;align-items:center;padding:15px 16px;gap:25px}
+.date-blk{flex-shrink:0;align-self:flex-start;width:65px;height:85px;background:#1a1e28;border-radius:12px;padding:9px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.date-blk.today{background:#e8b84b}
+.db-dow{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8890aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:54px;text-align:center}
+.db-num{font-family:'DM Sans',sans-serif;font-size:30px;font-weight:900;line-height:1;color:#e8b84b}
+.db-mon{font-size:11px;font-weight:600;color:#8890aa}
+.date-blk.today .db-dow,.date-blk.today .db-num,.date-blk.today .db-mon{color:#0a0c10}
+.ecard-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.ecard-time-top{font-size:14px;font-weight:700;color:#e8b84b;letter-spacing:.02em;margin-bottom:3px}
+.ecard-svc{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;letter-spacing:-.02em;color:#f0f0f5;line-height:1.2;margin-bottom:3px}
+.ecard-meta-row{display:flex;align-items:center;gap:10px}
+.ecard-meta-row{display:flex;align-items:center;gap:8px}
+.ecard-tags-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:1;min-width:0}
+.ecard-time{font-size:16px;font-weight:700;color:#e8b84b}
+.role-chip{display:inline-block;font-size:13px;font-weight:600;padding:4px 11px;border-radius:20px;white-space:nowrap}
+.sub-badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px}
+.sub-badge.out{background:rgba(248,113,113,.18);color:#f87171}
+.sub-badge.in{background:rgba(74,222,128,.18);color:#4ade80}
+.ecard-arr{color:#4a5070;flex-shrink:0;display:flex;align-items:center;margin-left:4px;transition:transform .3s cubic-bezier(.34,1.4,.64,1),color .2s}
+.ecard.open .ecard-arr{transform:rotate(90deg);color:#e8b84b}
+
+/* ── ROSTER PANEL ─────────── */
+.roster{max-height:0;overflow:hidden;transition:max-height 1.2s cubic-bezier(.16,1,.3,1)}
+@keyframes rosterFadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.roster-fadein{animation:rosterFadeIn 1.2s cubic-bezier(.16,1,.3,1) both}
+.roster-inner{border-top:1px solid rgba(255,255,255,.06);padding:10px;background:#1a1e28;display:flex;flex-direction:column;gap:7px}
+.roster-spin{display:flex;align-items:center;gap:8px;font-size:13px;color:#8890aa;padding:4px}
+.r-spin{width:15px;height:15px;border-radius:50%;border:2px solid #222737;border-top-color:#e8b84b;animation:spin .6s linear infinite;flex-shrink:0}
+
+/* ── GROUP LABEL ──────────── */
+.group-lbl{text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#e8b84b;letter-spacing:.08em;text-transform:uppercase;padding:3px 0}
+
+/* ── SEGMENT BLOCKS ───────── */
+.seg-block{border-radius:12px;overflow:hidden;margin:0}
+.sub-divider{height:1px;background:rgba(255,255,255,.1)}
+
+/* ── ROLE ROW ── */
+.role-row{display:flex;align-items:stretch;min-height:40px}
+.r-lbl{width:33%;min-width:72px;max-width:108px;flex-shrink:0;display:flex;align-items:center;padding:8px 6px 8px 12px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;line-height:1.2}
+.r-names{flex:1;display:flex;flex-direction:column;gap:5px;padding:7px 12px 7px 8px;border-left:1px solid rgba(255,255,255,.08)}
+
+/* ── NAME CHIPS ───────────── */
+.nchip{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.07);border-radius:30px;padding:5px 13px 5px 5px;width:fit-content;animation:chipIn .2s cubic-bezier(.22,1,.36,1) both}
+.nchip.me{background:rgba(232,184,75,.18);border-color:rgba(232,184,75,.35)}
+.nchip-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.nchip-av img{width:100%;height:100%;object-fit:cover;display:block}
+.nchip-name{font-size:15px;font-weight:500;color:#f0f0f5}
+.nchip.me .nchip-name{color:#e8b84b;font-weight:600}
+.sub-grp{background:transparent;border:none;padding:0;display:flex;flex-direction:column;gap:6px;width:fit-content;animation:chipIn .22s cubic-bezier(.22,1,.36,1) both}
+.n-orig{display:inline-flex;align-items:center;gap:7px;padding:2px 4px}
+.n-orig .nchip-av{width:22px;height:22px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(248,113,113,.15)}
+.n-orig .nname{font-size:13px;font-weight:500;color:#f87171;text-decoration:line-through;text-decoration-thickness:2px}
+.n-new{display:inline-flex;align-items:center;gap:7px;background:rgba(74,222,128,.16);border:1px solid rgba(74,222,128,.32);border-radius:30px;padding:5px 13px 5px 5px;width:fit-content}
+.n-new .nchip-av{width:24px;height:24px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(74,222,128,.2)}
+.n-new .nname{font-size:14px;font-weight:600;color:#4ade80}
+
+
+/* ── HISTORY ──────────────── */
+.hist-group{margin-bottom:22px}
+.hist-month{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#8890aa;margin-bottom:10px}
+
+/* ── CATATAN ──────────────── */
+.notes-list{display:flex;flex-direction:column;gap:12px;padding-top:6px}
+.note-card{background:#12151c;border:1.5px solid rgba(255,255,255,.07);border-radius:16px;padding:18px;animation:fadeUp .3s cubic-bezier(.22,1,.36,1) both}
+.note-card:nth-child(1){animation-delay:.04s}.note-card:nth-child(2){animation-delay:.08s}
+.note-date{font-size:11px;color:#4a5070;margin-bottom:5px}
+.note-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:7px}
+.note-body{font-size:14px;color:#8890aa;line-height:1.7}
+.note-by{font-size:11px;color:#4a5070;margin-top:8px}
+
+/* ── MASUKAN ──────────────── */
+.fb-wrap{padding-top:6px;animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.fb-title{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:7px}
+.fb-sub{font-size:14px;color:#8890aa;margin-bottom:22px;line-height:1.65}
+.form-g{margin-bottom:14px}
+.form-lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8890aa;margin-bottom:6px;display:block}
+.form-inp{width:100%;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:13px;padding:13px 15px;font-family:'DM Sans',sans-serif;font-size:15px;color:#f0f0f5;outline:none;-webkit-appearance:none;transition:border-color .2s,box-shadow .2s}
+.form-inp::placeholder{color:#4a5070}
+.form-inp:focus{border-color:#e8b84b;box-shadow:0 0 0 3px rgba(232,184,75,.1)}
+textarea.form-inp{resize:vertical;min-height:110px;line-height:1.6}
+.sub-btn{width:100%;padding:14px;border-radius:13px;border:none;background:#e8b84b;color:#0a0c10;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:4px}
+.sub-btn:active{opacity:.85;transform:scale(.98)}
+.sub-btn:disabled{opacity:.4;cursor:default}
+.fb-ok{text-align:center;padding:48px 0;animation:fadeUp .4s cubic-bezier(.22,1,.36,1)}
+.fb-ok-ico{font-size:48px;margin-bottom:14px}
+.fb-ok-h{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px}
+.fb-ok-p{font-size:14px;color:#8890aa;line-height:1.6}
+
+/* ── RINGKASAN (volunteer view) ── */
+.ring-wrap{animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.ring-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-top:20px}
+.ring-month-lbl{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.01em;color:#e8b84b}
+.ring-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
+.ring-tbl th,.ring-tbl td{border:1px solid rgba(255,255,255,.08);padding:7px 10px;text-align:center;vertical-align:middle}
+.ring-tbl th{background:#1a1e28;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+.ring-tbl .week-hdr{background:#0f2d52;color:#e8b84b;font-size:11px;font-weight:800;letter-spacing:.08em}
+.ring-tbl .date-hdr{background:#1e2636;color:#f0f0f5;font-size:12px;font-weight:700;white-space:nowrap}
+.ring-tbl .svc-hdr{background:#1a1e28;color:#8890aa;font-size:11px;white-space:nowrap}
+.ring-tbl .role-col{text-align:left;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-left:12px;white-space:nowrap;min-width:80px}
+.ring-tbl .cell-filled{background:rgba(74,222,128,.05)}
+.ring-tbl .cell-empty{color:#4a5070}
+.ring-tbl tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.ring-save-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:13px;border:none;background:#e8b84b;color:#0a0c10;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:48px;transition:opacity .2s}
+.ring-save-btn:active{opacity:.85}
+
+/* ── STATES ───────────────── */
+.empty{text-align:center;padding:40px 0;animation:fadeUp .3s ease}
+.empty-ico{margin-bottom:10px}
+.empty-msg{font-size:14px;color:#8890aa;line-height:1.6}
+.loading{text-align:center;padding:48px 0;animation:fadeUp .2s ease}
+.big-spin{width:28px;height:28px;border-radius:50%;border:3px solid #222737;border-top-color:#e8b84b;animation:spin .7s linear infinite;margin:0 auto 12px}
+.ld-txt{font-size:14px;color:#8890aa}
+.no-ev{background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:22px;text-align:center;font-size:14px;color:#8890aa}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="native-splash" style="position:fixed;inset:0;z-index:9999;background:#0a0c10;"></div>
+  <img src="icons/icon-512.png" style="width:96px;height:96px;border-radius:24px;box-shadow:0 0 40px rgba(232,184,75,.35);" alt="">
+</div>
+<div class="ov" id="ov" onclick="closeDr()"></div>
+<div class="dr" id="dr">
+  <div class="dr-top">
+    <div class="dr-ring" id="dr-ring"><img id="dr-logo" src="" alt="" style="display:none"></div>
+    <div><div class="dr-church" id="dr-church">GMS Salatiga</div><div class="dr-team" id="dr-team">Jadwal Pelayanan PAW</div></div>
+  </div>
+  <nav class="dr-nav">
+    <div class="dr-item on" id="dn-jadwal" onclick="navTo('jadwal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Jadwal</div>
+    <div class="dr-item" id="dn-ringkasan" onclick="navTo('ringkasan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>Ringkasan</div>
+    <div class="dr-item" id="dn-catatan" onclick="navTo('catatan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Catatan</div>
+    <div class="dr-item" id="dn-masukan" onclick="navTo('masukan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Kritik &amp; Saran</div>
+  </nav>
+  <div class="dr-close" onclick="closeDr()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Tutup</div>
+</div>
+
+<div class="page">
+  <div class="hdr">
+    <div class="hdr-top">
+      <button class="menu-btn" onclick="openDr()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="hdr-text">
+        <div class="hdr-l1" id="hdr-l1">Jadwal Pelayanan</div>
+        <div class="hdr-l2" id="hdr-l2">PAW DEPARTMENT</div>
+      </div>
+      <div class="hdr-logo" id="hdr-logo"><img id="hdr-logo-img" src="" alt="" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="srch" id="srch-wrap" style="padding:0 var(--page-pad);margin-top:14px;margin-bottom:16px;">
+    <svg class="srch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="srch-inp" id="sinp" type="text" placeholder="Cari namamu…" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" oninput="onInput()" onfocus="onFocus()">
+    <button class="srch-clear" id="sbtn" onclick="clearSrch()">✕</button>
+    <div class="sug" id="sug"></div>
+  </div>
+
+  <div class="content ready" id="content">
+    <div class="home"><div class="home-orb"><svg viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div class="home-h">Welcome Home!</div><div class="home-p">Cari namamu untuk melihat<br>jadwal pelayananmu.</div></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  GAS SHIM — makes google.script.run work over fetch() on GitHub Pages
+// ============================================================
+var EXEC_URL = "https://script.google.com/macros/s/AKfycbyRFSxg1KEJelSsBMs4rBBf6-h0G1jiWF04TsITRzFhkvGd-sIhLbjlaB3K3HgkghIA/exec"; // e.g. https://script.google.com/macros/s/AKfycb.../exec
+
+var API_PARAM_MAP = {
+  getConfig: [], getAllMusicians: [], getNotes: [],
+  searchMusicians: ['query'],
+  getMusicianSchedule: ['name'],
+  getServiceRoster: ['date','service'],
+  getAdminData: ['year','month'],
+  submitFeedback: ['nama','pesan'],
+  saveServiceRoster: ['dateStr','service','time','dayName','rosterJson','isSpecial'],
+  deleteService: ['dateStr','service','time'],
+  saveNote: ['idx','tanggal','judul','isi','oleh'],
+  deleteNote: ['idx']
+};
+var API_WRITE_ACTIONS = ['submitFeedback','saveServiceRoster','deleteService','saveNote','deleteNote'];
+
+function callApi(action, args){
+  var names = API_PARAM_MAP[action] || [];
+  var params = {action: action};
+  names.forEach(function(name, i){
+    var val = args[i];
+    params[name] = (val===undefined || val===null) ? "" : val;
+  });
+  if (API_WRITE_ACTIONS.indexOf(action) !== -1){
+    return fetch(EXEC_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(params)
+    }).then(function(r){ return r.json(); });
+  }
+  var qs = Object.keys(params).map(function(k){
+    return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+  }).join('&');
+  return fetch(EXEC_URL + '?' + qs).then(function(r){ return r.json(); });
+}
+
+function GasRun(){ this._s=null; this._f=null; }
+GasRun.prototype.withSuccessHandler=function(fn){ this._s=fn; return this; };
+GasRun.prototype.withFailureHandler=function(fn){ this._f=fn; return this; };
+Object.keys(API_PARAM_MAP).forEach(function(fnName){
+  GasRun.prototype[fnName]=function(){
+    var args=Array.prototype.slice.call(arguments), s=this._s, f=this._f;
+    callApi(fnName, args).then(function(data){
+      if (data && data.error){ if(f) f({message:data.error}); else console.error(data.error); return; }
+      if (s) s(data);
+    }).catch(function(err){
+      if (f) f({message: err.message || String(err)}); else console.error(err);
+    });
+    return this;
+  };
+});
+var google = { script: { run: null } };
+Object.defineProperty(google.script, 'run', { get: function(){ return new GasRun(); } });
+
+var SPLASH_MIN_MS = 1200;
+var splashStart = Date.now();
+function hideSplash(){
+  var el = document.getElementById('native-splash');
+  if(!el) return;
+  var elapsed = Date.now() - splashStart;
+  var wait = Math.max(0, SPLASH_MIN_MS - elapsed);
+  setTimeout(function(){
+    el.style.transition = 'opacity .35s ease';
+    el.style.opacity = '0';
+    setTimeout(function(){ el.remove(); }, 350);
+  }, wait);
+}
+window.addEventListener('load', hideSplash);
+  
+// ============================================================
+//  ORIGINAL APP CODE — unchanged below this point
+// ============================================================
+var BLN_L=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+var BLN_S=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
+var HARI_L=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+var HARI_S=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+var DOW=["M","S","S","R","K","J","S"];
+var ROST=[{seg:1,roles:["Speaker"]},{seg:2,sub:1,roles:["WL","Singer"]},{seg:2,sub:2,roles:["Keys","Guitar","Bass","Drums"]},{seg:3,sub:1,roles:["SPV","MD","Sequencer","SD"]},{seg:3,sub:2,roles:["CM"]},{seg:4,roles:["Soundman"]}];
+
+var RC={
+  speaker:  {fg:"#22c3ff",bg:"rgba(34,195,255,.22)"},
+  wl:       {fg:"#3ddc84",bg:"rgba(61,220,132,.22)"},
+  singer:   {fg:"#5eead4",bg:"rgba(94,234,212,.20)"},
+  keys:     {fg:"#5b7cfa",bg:"rgba(91,124,250,.24)"},
+  keyboard: {fg:"#5b7cfa",bg:"rgba(91,124,250,.24)"},
+  guitar:   {fg:"#5b7cfa",bg:"rgba(91,124,250,.24)"},
+  bass:     {fg:"#5b7cfa",bg:"rgba(91,124,250,.24)"},
+  drums:    {fg:"#5b7cfa",bg:"rgba(91,124,250,.24)"},
+  spv:      {fg:"#ff9d3d",bg:"rgba(255,157,61,.22)"},
+  md:       {fg:"#ff9d3d",bg:"rgba(255,157,61,.22)"},
+  sequencer:{fg:"#ff9d3d",bg:"rgba(255,157,61,.22)"},
+  sd:       {fg:"#ff9d3d",bg:"rgba(255,157,61,.22)"},
+  cm:       {fg:"#ffc23c",bg:"rgba(255,194,60,.24)"},
+  soundman: {fg:"#b8c2d9",bg:"rgba(184,194,217,.16)"},
+  sound:    {fg:"#b8c2d9",bg:"rgba(184,194,217,.16)"}
+};
+
+var SS={1:"background:rgba(244,160,110,.10)",2:"background:rgba(250,200,100,.09)",3:"background:rgba(126,184,247,.09)",4:"background:rgba(148,163,184,.09)"};
+
+var PAW_ROLES=["Speaker","WL","Singer","Keys","Guitar","Bass","Drums","SPV","MD","Sequencer","SD","CM","Soundman"];
+
+var REGULAR_SERVICES=["Ibadah 1","Ibadah 2","Ibadah 3","Doa Malam"];
+
+function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
+function chipCss(r){var c=C(r);return"color:"+c.fg+";background:"+c.bg;}
+function avCss(r){var c=C(r);return"background:"+c.bg+";color:"+c.fg;}
+function rcolor(r){return C(r).fg;}
+function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
+function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
+
+function defaultTimesFor(rawService,firstOnly){
+  var full={"Ibadah 123":"07:00, 09:30, 17:00","AOG":"17:00, 18:30"};
+  var val=full[rawService]||"";
+  if(firstOnly&&val)return val.split(",")[0].trim();
+  return val;
+}
+
+function rowTint(role){
+  var c=C(role);
+  var m=c.bg.match(/rgba\(([\d.]+),([\d.]+),([\d.]+),([\d.]+)\)/);
+  if(!m)return c.bg;
+  var a=parseFloat(m[4])*0.5;
+  return "rgba("+m[1]+","+m[2]+","+m[3]+","+a.toFixed(3)+")";
+}
+
+var st={
+  mainTab:"jadwal",
+  vol:null,allEvents:[],schedTab:"jadwal",viewYear:0,viewMonth:0,monthDir:1,openKey:null,rosterCache:{},query:"",debounce:null,sugList:[],justPicked:false,
+  ringYear:0,ringMonth:0,ringCache:{}
+};
+
+(function(){var now=new Date();st.ringYear=now.getFullYear();st.ringMonth=now.getMonth();})();
+
+google.script.run.withSuccessHandler(function(c){
+  var church=c.churchName||"GMS Salatiga";
+  document.getElementById("hdr-l1").textContent="Jadwal Pelayanan";
+  document.getElementById("hdr-l2").textContent="PAW DEPARTMENT";
+  document.getElementById("dr-team").textContent="Jadwal Pelayanan";
+  document.getElementById("dr-church").textContent=church;
+  if(c.rosterStructure)ROST=c.rosterStructure;
+  if(c.pawRoles)PAW_ROLES=c.pawRoles;
+if(c.logoUrl){
+  ["hdr-logo-img","dr-logo"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){
+      el.style.display="block";
+      el.onload=function(){ el.classList.add("loaded"); };
+      el.src=c.logoUrl;
+    }
+  });
+}
+}).getConfig();
+
+google.script.run.withSuccessHandler(function(list){
+  st.allMusicians = list || [];
+  var savedName = null;
+  try{ savedName = localStorage.getItem("paw_volName"); }catch(e){ console.warn("localStorage read failed", e); }
+  if(savedName){
+    var match = st.allMusicians.find(function(m){return m.name===savedName;});
+    if(match){
+      st.vol = match;
+      st.justPicked = true;
+      document.getElementById("sinp").value = match.name;
+      document.getElementById("sbtn").style.display = "flex";
+      showLoading();
+      google.script.run.withSuccessHandler(gotEvents).withFailureHandler(function(e){showErr(e.message);}).getMusicianSchedule(match.name);
+    }
+  }
+}).getAllMusicians();
+
+function openDr(){document.getElementById("dr").classList.add("on");document.getElementById("ov").classList.add("on");}
+function closeDr(){document.getElementById("dr").classList.remove("on");document.getElementById("ov").classList.remove("on");}
+
+function navTo(tab){
+  st.mainTab=tab;closeDr();
+  ["jadwal","ringkasan","catatan","masukan"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
+  document.getElementById("srch-wrap").style.display=tab==="jadwal"?"block":"none";
+  if(tab==="jadwal")renderJadwal();
+  else if(tab==="ringkasan")renderRingkasan();
+  else if(tab==="catatan")renderCatatan();
+  else renderMasukan();
+}
+
+/* ── SEARCH ── */
+function onInput(){
+  var q=document.getElementById("sinp").value.trim();
+  st.query=q;
+  st.justPicked=false;
+  document.getElementById("sbtn").style.display=q?"flex":"none";
+  if(!q){hideSug();return;}
+  clearTimeout(st.debounce);
+  st.debounce=setTimeout(function(){doSearch(q);},150);
+}
+
+function onFocus(){
+  if(st.justPicked||st.vol){st.justPicked=false;return;}
+  if(st.query)doSearch(st.query);
+}
+
+function doSearch(q){
+  if(!st.allMusicians || !st.allMusicians.length){
+    google.script.run.withSuccessHandler(function(list){
+      if(st.vol || document.getElementById("sinp").value.trim()!==q) return;
+      showSug(list);
+    }).searchMusicians(q);
+    return;
+  }
+  var ql=q.toLowerCase();
+  var list=st.allMusicians.filter(function(m){
+    return m.name.toLowerCase().indexOf(ql)!==-1;
+  }).slice(0,15);
+  showSug(list);
+}
+
+function showSug(list){
+  st.sugList=list||[];var box=document.getElementById("sug");
+  if(!st.sugList.length){box.innerHTML='<div class="sug-empty">Nama tidak ditemukan</div>';}
+  else{box.innerHTML=st.sugList.map(function(m,i){return'<div class="sug-item" onclick="pickVol('+i+')"><div class="sug-av" style="'+avCss(m.roles[0]||"soundman")+'">'+av(m.photo,m.name,36,m.roles[0])+'</div><div><div class="sug-name">'+esc(m.name)+'</div><div class="sug-badges">'+m.roles.map(function(r){return'<span class="badge" style="'+chipCss(r)+'">'+esc(roleLabel(r))+'</span>';}).join('')+'</div></div></div>';}).join('');}
+  box.style.display="block";
+}
+function hideSug(){document.getElementById("sug").style.display="none";}
+
+function pickVol(idx){
+  var v=st.sugList[idx];if(!v)return;
+  st.vol=v;st.justPicked=true;st.openKey=null;st.rosterCache={};
+  document.getElementById("sinp").value=v.name;
+  document.getElementById("sbtn").style.display="flex";
+  hideSug();
+  document.getElementById("sinp").blur();
+  showLoading();
+  try{localStorage.setItem("paw_volName",v.name);}catch(e){console.warn("localStorage set failed",e);}
+  google.script.run.withSuccessHandler(gotEvents).withFailureHandler(function(e){showErr(e.message);}).getMusicianSchedule(v.name);
+}
+
+function gotEvents(events){
+  st.allEvents=events;var now=new Date();st.viewYear=now.getFullYear();st.viewMonth=now.getMonth();
+  var mk0=mKey(st.viewYear,st.viewMonth);
+  var has=events.some(function(e){return !e.isPast&&mOf(e.date).key===mk0;});
+  if(!has){var fwd={};events.filter(function(e){return !e.isPast;}).forEach(function(e){var m=mOf(e.date);fwd[m.key]=m;});var s=Object.keys(fwd).sort();if(s.length){st.viewYear=fwd[s[0]].year;st.viewMonth=fwd[s[0]].month;}}
+  st.schedTab="jadwal";renderJadwal();
+}
+
+/* ── JADWAL TAB ── */
+function renderJadwal(){
+  if(!st.vol){document.getElementById("content").innerHTML=homeHTML();return;}
+  var v=st.vol;var up=st.allEvents.filter(function(e){return !e.isPast;});
+  var h='<div class="vol-card"><div class="vol-av" style="border-color:'+rcolor(v.roles[0]||"soundman")+';'+avCss(v.roles[0]||"soundman")+'">'+av(v.photo,v.name,52,v.roles[0])+'</div><div style="min-width:0"><div class="vol-name">'+esc(v.name)+'</div><div class="vol-badges">'+v.roles.map(function(r){return'<span class="badge" style="'+chipCss(r)+'">'+esc(roleLabel(r))+'</span>';}).join('')+(v.group?'<span class="badge" style="background:rgba(255,255,255,.08);color:#8890aa">'+esc(v.group)+'</span>':'')+'</div><div class="vol-meta">'+up.length+' ibadah mendatang</div></div></div>'+
+    '<div class="sched-tabs"><button class="sched-tab'+(st.schedTab==="jadwal"?" on":"")+'" onclick="switchST(\'jadwal\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Jadwal</button><button class="sched-tab'+(st.schedTab==="riwayat"?" on":"")+'" onclick="switchST(\'riwayat\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Riwayat</button></div>'+
+    (st.schedTab==="jadwal"?buildSched():buildRiwayat());
+  document.getElementById("content").innerHTML=h;
+  requestAnimationFrame(function(){
+  document.getElementById("content").classList.add("ready");
+});
+}
+
+function buildSched(){
+  var y=st.viewYear,m=st.viewMonth;
+  var evs=st.allEvents.filter(function(e){return !e.isPast&&mOf(e.date).key===mKey(y,m);});
+  var eD={};evs.forEach(function(e){eD[e.date]=true;});
+  var now=new Date();
+  var canPrev=mKey(y,m)>mKey(now.getFullYear(),now.getMonth());
+  var dir=(st.monthDir!==0)?(st.monthDir>0?'slide-in-right':'slide-in-left'):'';
+  st.monthDir=0;
+
+  var h='<div class="month-nav">'+
+    '<button class="mon-btn" onclick="chMonth(-1)"'+(canPrev?'':' disabled')+'>'+
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>'+
+    '</button>'+
+    '<div class="month-lbl">'+BLN_L[m]+' '+y+'</div>'+
+    '<button class="mon-btn" onclick="chMonth(1)">'+
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'+
+    '</button>'+
+  '</div>'+buildCal(y,m,eD);
+
+  if(!evs.length){
+    h+='<div class="no-ev '+dir+'">Belum ada jadwal bulan ini</div>';
+  } else {
+    h+='<div class="sec-lbl">Ibadah &amp; Acara</div>'+
+       '<div class="ev-list '+dir+'">';
+    evs.forEach(function(ev,i){h+=cardHTML(ev,i);});
+    h+='</div>';
+  }
+  return h;
+}
+
+function buildCal(year,mon,eD){
+  var fd=new Date(year,mon,1).getDay(),days=new Date(year,mon+1,0).getDate(),todayStr=isoToday();
+  var h='<div class="mini-cal"><div class="cal-dow-row">';DOW.forEach(function(l){h+='<div class="cal-dow">'+l+'</div>';});h+='</div><div class="cal-grid">';
+  for(var d=1;d<=days;d++){var iso=year+"-"+pad(mon+1)+"-"+pad(d);var isTod=iso===todayStr,hasEv=!!eD[iso];var cls="cal-cell"+(isTod?" is-today":"")+(hasEv?" has-event":"");var clk=hasEv?' onclick="scrollToDate(\''+iso+'\')"':"";var style=(d===1&&fd>0)?' style="grid-column-start:'+(fd+1)+'"':"";h+='<div class="'+cls+'"'+style+clk+'><div class="cal-num">'+d+'</div></div>';}
+  h+='</div></div>';return h;
+}
+
+function buildRiwayat(){
+  var past=st.allEvents.filter(function(e){return e.isPast;});
+  if(!past.length)return'<div class="empty"><div class="empty-ico"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4a5070" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="empty-msg">Belum ada riwayat ibadah.</div></div>';
+  var g={},ord=[];past.slice().reverse().forEach(function(e){var mk=mOf(e.date).key;if(!g[mk]){g[mk]={lbl:mLabel(e.date),evs:[]};ord.push(mk);}g[mk].evs.push(e);});
+  var h="";ord.forEach(function(mk){var gi=g[mk];h+='<div class="hist-group"><div class="hist-month">'+gi.lbl+'</div><div class="ev-list">';gi.evs.forEach(function(ev,i){h+=cardHTML(ev,i);});h+='</div></div>';});return h;
+}
+
+function cardHTML(ev,idx){
+  var dp=ev.date.split("-"),dObj=new Date(ev.date+"T00:00:00"),key=ev.date+"|"+ev.service,kid=safeId(key),isTod=ev.date===isoToday(),ss=ev.subStatus||"aktif";
+  var displayTime=ev.time||defaultTimesFor(ev.service);
+  var subBadge="";if(ss==="digantikan")subBadge='<span class="sub-badge out">Diganti</span>';else if(ss==="menggantikan")subBadge='<span class="sub-badge in">Mengganti</span>';
+  var cardCls="ecard"+(ev.isPast?" past":"")+(ss==="digantikan"?" digantikan":ss==="menggantikan"?" menggantikan":(ev.isSpecial?" special":""));
+  return'<div class="'+cardCls+'" id="card-'+kid+'" onclick="toggleCard(\''+escQ(key)+'\',\''+escQ(ev.name)+'\')"><div class="ecard-top"><div class="date-blk'+(isTod?" today":"")+'"><div class="db-dow">'+HARI_L[dObj.getDay()]+'</div><div class="db-num">'+parseInt(dp[2])+'</div><div class="db-mon">'+BLN_S[parseInt(dp[1])-1]+'</div></div><div class="ecard-info">'+(displayTime?'<div class="ecard-time-top">'+esc(displayTime)+'</div>':'')+'<div class="ecard-svc">'+esc(serviceLabel(ev.service))+'</div><div class="ecard-meta-row"><div class="ecard-tags-wrap"><span class="role-chip" style="'+chipCss(ev.role)+'">'+esc(roleLabel(ev.role))+'</span>'+(subBadge||"")+'</div><span class="ecard-arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div></div></div><div class="roster" id="r-'+kid+'"><div class="roster-inner" id="ri-'+kid+'"><div class="roster-spin"><div class="r-spin"></div>Memuat tim…</div></div></div></div>';
+}
+
+function scrollToCard(card){
+  setTimeout(function(){
+    var top=card.getBoundingClientRect().top+window.pageYOffset-90;
+    window.scrollTo({top:top,behavior:"smooth"});
+  },80);
+}
+
+function toggleCard(key,myName){
+  var kid=safeId(key),card=document.getElementById("card-"+kid);
+  if(!card)return;
+
+  if(st.openKey&&st.openKey!==key){
+    var prevKid=safeId(st.openKey);
+    var prev=document.getElementById("card-"+prevKid);
+    var prevRoster=document.getElementById("r-"+prevKid);
+    if(prev)prev.classList.remove("open");
+    if(prevRoster)prevRoster.style.maxHeight="0px";
+  }
+
+  var opening=card.classList.toggle("open");
+  st.openKey=opening?key:null;
+  var rosterEl=document.getElementById("r-"+kid);
+
+  if(opening){
+    if(rosterEl)rosterEl.style.maxHeight=rosterEl.scrollHeight+"px";
+    if(st.rosterCache[key]){
+      fillRoster("ri-"+kid,st.rosterCache[key],myName);
+      growRoster(kid);
+      scrollToCard(card);
+    } else {
+      var pipe=key.indexOf("|");
+      google.script.run
+        .withSuccessHandler(function(data){
+          st.rosterCache[key]=data;
+          fillRoster("ri-"+kid,data,myName);
+          growRoster(kid);
+          scrollToCard(card);
+        })
+        .withFailureHandler(function(e){
+          console.error("getServiceRoster failed:",e);
+          setRosterHTML(document.getElementById("ri-"+kid),'<div style="color:#f87171;font-size:13px;text-align:center;padding:6px">Gagal memuat: '+esc(e.message)+'</div>');
+          growRoster(kid);
+        })
+        .getServiceRoster(key.substring(0,pipe),key.substring(pipe+1));
+    }
+  } else {
+    if(rosterEl)rosterEl.style.maxHeight="0px";
+  }
+}
+
+function growRoster(kid){
+  var el=document.getElementById("r-"+kid);
+  if(!el)return;
+  requestAnimationFrame(function(){
+    el.style.maxHeight=el.scrollHeight+"px";
+  });
+}
+
+function setRosterHTML(el,html){
+  el.innerHTML=html;
+  el.classList.remove("roster-fadein");
+  void el.offsetWidth;
+  el.classList.add("roster-fadein");
+}
+
+function fillRoster(elId,data,myName){
+  var el=document.getElementById(elId);if(!el)return;
+  var slots=data.slots||data,groupLabel=data.groupLabel||"",myLo=myName.toLowerCase();
+  if(!Object.keys(slots).length){setRosterHTML(el,'<div style="color:#8890aa;font-size:13px;text-align:center;padding:6px">Belum ada data roster.</div>');return;}
+  var h="",prevSeg=null,prevSub=null,segOpen=false;
+  ROST.forEach(function(grp){
+    var hasData=grp.roles.some(function(r){return slots[r]&&slots[r].length;});if(!hasData)return;
+    if(grp.seg!==prevSeg){if(segOpen)h+='</div>';h+='<div class="seg-block" style="'+SS[grp.seg]+'">';segOpen=true;prevSeg=grp.seg;prevSub=null;}
+    if(grp.sub!==undefined&&grp.sub!==prevSub&&prevSub!==null)h+='<div class="sub-divider"></div>';
+    if(grp.sub!==undefined)prevSub=grp.sub;
+    var roleRendered=false;
+    grp.roles.forEach(function(role){
+      if(!slots[role]||!slots[role].length)return;
+      if(roleRendered)h+='<div class="sub-divider"></div>';
+      roleRendered=true;
+      var c=C(role);
+      h+='<div class="role-row" style="background:'+rowTint(role)+'"><div class="r-lbl" style="color:'+c.fg+'">'+esc(roleLabel(role))+'</div><div class="r-names">';
+      slots[role].forEach(function(slot,si){
+        var orig=slot.original,sub=slot.substitute;
+        if(!sub){
+          var me=orig.name.toLowerCase().trim()===myLo.trim();
+          h+='<div class="nchip'+(me?" me":"")+'"><div class="nchip-av" style="'+avCss(role)+'">'+av(orig.photo,orig.name,26,role)+'</div><span class="nchip-name">'+esc(orig.name)+'</span></div>';
+        } else {
+          h+='<div class="sub-grp"><div class="n-orig"><div class="nchip-av">'+av(orig.photo,orig.name,22,role)+'</div><span class="nname">'+esc(orig.name)+'</span></div><div class="n-new"><div class="nchip-av">'+av(sub.photo,sub.name,22,role)+'</div><span class="nname">'+esc(sub.name)+'</span></div></div>';
+        }
+      });
+      h+='</div></div>';
+    });
+  });
+  if(segOpen)h+='</div>';
+  if(groupLabel){var m2=h.indexOf('style="'+SS[2]+'"');if(m2!==-1){var bs=h.lastIndexOf('<div class="seg-block"',m2);if(bs!==-1)h=h.substring(0,bs)+'<div class="group-lbl">'+esc(groupLabel)+'</div>'+h.substring(bs);}}
+  setRosterHTML(el,h);
+}
+
+/* ── RINGKASAN TAB ── */
+function renderRingkasan(){
+  var cacheKey=mKey(st.ringYear,st.ringMonth);
+  if(st.ringCache[cacheKey]){
+    try{buildRingkasanUI(st.ringCache[cacheKey]);}catch(err){console.error("buildRingkasanUI error:",err);showErr("Error: "+err.message);}
+    return;
+  }
+  document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"></div><div class="ld-txt">Memuat ringkasan…</div></div>';
+  google.script.run
+    .withSuccessHandler(function(data){
+      st.ringCache[cacheKey]=data;
+      try{buildRingkasanUI(data);}catch(err){console.error("buildRingkasanUI error:",err);showErr("Error: "+err.message);}
+    })
+    .withFailureHandler(function(e){showErr(e.message);})
+    .getAdminData(st.ringYear,st.ringMonth);
+  requestAnimationFrame(function(){
+    document.getElementById("content").classList.add("ready");
+  });
+}
+ 
+function chRingMonth(dir){
+  st.ringMonth+=dir;
+  if(st.ringMonth>11){st.ringMonth=0;st.ringYear++;}
+  if(st.ringMonth<0){st.ringMonth=11;st.ringYear--;}
+  renderRingkasan();
+}
+ 
+function buildRingkasanUI(data){
+  var services=data.services||[];
+  var roles=data.pawRoles||PAW_ROLES;
+
+  var groupMap={};
+  var groups=data.groups||{};
+  Object.keys(groups).forEach(function(g){
+    Object.keys(groups[g]).forEach(function(role){
+      groups[g][role].forEach(function(name){groupMap[name]=g;});
+    });
+  });
+
+  var satSun=services.filter(function(s){
+    return roles.some(function(r){return s.slots&&s.slots[r]&&s.slots[r].length>0;});
+  });
+
+  var h='<div class="ring-wrap">';
+  h+='<div class="ring-month-nav">'+
+    '<button class="mon-btn" onclick="chRingMonth(-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>'+
+    '<div class="ring-month-lbl">'+BLN_L[st.ringMonth]+" "+st.ringYear+'</div>'+
+    '<button class="mon-btn" onclick="chRingMonth(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>'+
+  '</div>';
+
+  if(!satSun.length){
+    h+='<div class="empty"><div class="empty-ico"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4a5070" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-msg">Belum ada data bulan ini.</div></div></div>';
+    document.getElementById("content").innerHTML=h;
+    return;
+  }
+
+  h+='<button class="ring-save-btn" onclick="saveRingkasanAsImage()">'+
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'+
+    'Simpan Gambar</button>';
+
+  var specialDates={};
+  satSun.forEach(function(s){
+    if(s.isSpecial) specialDates[s.date]=true;
+  });
+
+  var dateGroups={},dateOrder=[];
+  satSun.forEach(function(s){
+    if(!dateGroups[s.date]){dateGroups[s.date]={day:s.day,slots:[]};dateOrder.push(s.date);}
+    dateGroups[s.date].slots.push(s);
+  });
+
+  var weekMap={},weekOrder=[];
+  dateOrder.forEach(function(ds){
+    var d=new Date(ds+"T00:00:00"),w=Math.ceil(d.getDate()/7);
+    if(!weekMap[w]){weekMap[w]={dates:[],count:0};weekOrder.push(w);}
+    weekMap[w].dates.push(ds);weekMap[w].count+=dateGroups[ds].slots.length;
+  });
+
+  h+='<div id="ring-table-wrap" style="background:#0a0c10;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">';
+
+  h+='<div style="padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.08);background:#12151c">'+
+    '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#f0f0f5">PAW</span>'+
+    '<span style="font-family:Syne,sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;color:#e8b84b;margin-left:10px">'+BLN_L[st.ringMonth].toUpperCase()+' '+st.ringYear+'</span>'+
+  '</div>';
+
+  var ringColWidth=90, ringLabelWidth=80;
+  var ringTotalWidth=ringLabelWidth+(satSun.length*ringColWidth);
+  h+='<div class="ring-scroll"><table class="ring-tbl" style="width:'+ringTotalWidth+'px"><colgroup><col style="width:'+ringLabelWidth+'px">';
+  satSun.forEach(function(){h+='<col style="width:'+ringColWidth+'px">';});
+  h+='</colgroup>';
+
+  h+='<tr><th class="role-col"></th>';
+  weekOrder.forEach(function(w){h+='<th class="week-hdr" colspan="'+weekMap[w].count+'">WEEK '+w+'</th>';});
+  h+='</tr>';
+
+  h+='<tr><th class="role-col"></th>';
+  dateOrder.forEach(function(ds){
+    var d=new Date(ds+"T00:00:00");
+    var dstr=HARI_S[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
+    var isSpec=!!specialDates[ds];
+    var style=isSpec?'background:rgba(192,132,252,.15);color:#c084fc':'';
+    h+='<th class="date-hdr" colspan="'+dateGroups[ds].slots.length+'" style="'+style+'">'+esc(dstr)+'</th>';
+  });
+  h+='</tr>';
+
+  h+='<tr><th class="role-col"></th>';
+  satSun.forEach(function(s){
+    var isSpec=!!s.isSpecial;
+    var style=isSpec?'background:rgba(192,132,252,.12);color:#c084fc':'';
+    var svcTime=s.time||defaultTimesFor(s.service,true);
+    h+='<th class="svc-hdr" style="'+style+'">'+esc(serviceLabel(s.service))+'<br><span style="color:#4a5070;font-size:10px">'+esc(svcTime)+'</span></th>';
+  });
+  h+='</tr>';
+
+  if(roles.indexOf("Speaker")!==-1){
+    var spC=C("Speaker"),spTint=rowTint("Speaker");
+    h+='<tr><td class="role-col" style="color:'+spC.fg+';background:'+spC.bg+'">'+esc(roleLabel("Speaker"))+'</td>';
+    satSun.forEach(function(s){
+      var people=s.slots["Speaker"]||[];
+      var names=people.map(function(p){
+        var nm=p.name||p,sub=p.sub;
+        return sub?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>':esc(nm);
+      }).join('<br><br>');
+      var cellBg=s.isSpecial?'rgba(192,132,252,.14)':spTint;
+      h+='<td class="'+(names?"cell-filled":"cell-empty")+'" style="background:'+cellBg+'">'+names+'</td>';
+    });
+    h+='</tr>';
+  }
+
+  h+='<tr><th class="role-col" style="color:#8890aa;font-size:10px;letter-spacing:.06em;text-transform:uppercase">Group</th>';
+  satSun.forEach(function(s){
+    var bandRoles=["WL","Singer","Keys","Guitar","Bass","Drums"];
+    var g=null,isMix=false;
+    bandRoles.forEach(function(role){
+      (s.slots[role]||[]).forEach(function(p){
+        var name=p.name||p;
+        var pg=groupMap[name];
+        if(!pg)return;
+        if(g===null)g=pg;
+        else if(g!==pg)isMix=true;
+      });
+    });
+    var label=isMix?"MIX":(g?"GROUP "+String(g).replace(/^group\s*/i,'').trim():"—");
+    var col=isMix?"color:#f59e0b":"color:#e8b84b";
+    var grpBg=s.isSpecial?'background:rgba(192,132,252,.18);':'background:#1a1e28;';
+    h+='<th style="'+grpBg+'font-size:11px;font-weight:800;'+col+'">'+label+'</th>';
+  });
+  h+='</tr>';
+
+  roles.forEach(function(role){
+    if(role==="Speaker")return;
+    var c=C(role);
+    var tint=rowTint(role);
+    h+='<tr><td class="role-col" style="color:'+c.fg+';background:'+c.bg+'">'+esc(roleLabel(role))+'</td>';
+    satSun.forEach(function(s){
+      var people=s.slots[role]||[];
+      var names=people.map(function(p){
+        var nm=p.name||p,sub=p.sub;
+        return sub?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>':esc(nm);
+      }).join('<br><br>');
+      var cellBg=s.isSpecial?'rgba(192,132,252,.14)':tint;
+      h+='<td class="'+(names?"cell-filled":"cell-empty")+'" style="background:'+cellBg+'">'+names+'</td>';
+    });
+    h+='</tr>';
+  });
+
+  h+='</table></div></div></div>';
+  document.getElementById("content").innerHTML=h;
+}
+ 
+
+function saveRingkasanAsImage(){
+  var outerWrapper=document.getElementById("ring-table-wrap");
+  var scrollDiv=outerWrapper?outerWrapper.querySelector(".ring-scroll"):null;
+  var table=outerWrapper?outerWrapper.querySelector(".ring-tbl"):null;
+  if(!outerWrapper||!table){alert("Tidak ada data tabel untuk disimpan.");return;}
+
+  var savedOuter={overflow:outerWrapper.style.overflow,width:outerWrapper.style.width};
+  var savedScroll={overflowX:scrollDiv.style.overflowX,width:scrollDiv.style.width};
+  outerWrapper.style.overflow="visible";
+  outerWrapper.style.width=table.scrollWidth+"px";
+  scrollDiv.style.overflowX="visible";
+  scrollDiv.style.width=table.scrollWidth+"px";
+
+  html2canvas(outerWrapper,{
+    scrollX:0,scrollY:0,
+    windowWidth:outerWrapper.scrollWidth,windowHeight:outerWrapper.scrollHeight,
+    backgroundColor:"#0a0c10",scale:2
+  }).then(function(canvas){
+    outerWrapper.style.overflow=savedOuter.overflow;
+    outerWrapper.style.width=savedOuter.width;
+    scrollDiv.style.overflowX=savedScroll.overflowX;
+    scrollDiv.style.width=savedScroll.width;
+    var link=document.createElement("a");
+    link.download="Jadwal_PAW_"+BLN_L[st.ringMonth]+"_"+st.ringYear+".png";
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+  }).catch(function(err){
+    outerWrapper.style.overflow=savedOuter.overflow;
+    outerWrapper.style.width=savedOuter.width;
+    scrollDiv.style.overflowX=savedScroll.overflowX;
+    scrollDiv.style.width=savedScroll.width;
+    console.error(err);alert("Gagal membuat gambar. Silakan coba lagi.");
+  });
+}
+
+/* ── CATATAN ── */
+function renderCatatan(){
+  document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"></div><div class="ld-txt">Memuat catatan…</div></div>';
+  google.script.run.withSuccessHandler(function(notes){
+    if(!notes||!notes.length){document.getElementById("content").innerHTML='<div class="empty" style="padding-top:20px"><div class="empty-ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5070" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-msg">Belum ada catatan dari admin.</div></div>';return;}
+    var h='<div class="notes-list">';notes.forEach(function(n){h+='<div class="note-card">'+(n.tanggal?'<div class="note-date">'+esc(n.tanggal)+(n.oleh?' · '+esc(n.oleh):'')+'</div>':'')+(n.judul?'<div class="note-title">'+esc(n.judul)+'</div>':'')+(n.isi?'<div class="note-body">'+esc(n.isi).replace(/\n/g,'<br>')+'</div>':'')+'</div>';});h+='</div>';
+    document.getElementById("content").innerHTML=h;
+    requestAnimationFrame(function(){
+      document.getElementById("content").classList.add("ready");
+    });
+  }).withFailureHandler(function(e){showErr(e.message);}).getNotes();
+}
+
+/* ── MASUKAN ── */
+function renderMasukan(){
+  var pre=st.vol?st.vol.name:"";
+  document.getElementById("content").innerHTML='<div class="fb-wrap"><div class="fb-title">Kritik &amp; Saran</div><div class="fb-sub">Masukan kamu sangat berarti untuk kemajuan tim PAW. 🙏</div><div class="form-g"><label class="form-lbl">Nama</label><input class="form-inp" id="fb-n" type="text" placeholder="Nama kamu…" value="'+esc(pre)+'"></div><div class="form-g"><label class="form-lbl">Pesan</label><textarea class="form-inp" id="fb-p" placeholder="Tulis kritik atau saranmu di sini…"></textarea></div><button class="sub-btn" id="fb-btn" onclick="kirimMasukan()">Kirim Masukan</button></div>';
+  requestAnimationFrame(function(){
+    document.getElementById("content").classList.add("ready");
+  });
+}
+function kirimMasukan(){
+  var n=document.getElementById("fb-n").value.trim(),p=document.getElementById("fb-p").value.trim();if(!p){alert("Pesan tidak boleh kosong.");return;}
+  var btn=document.getElementById("fb-btn");btn.disabled=true;btn.textContent="Mengirim…";
+  google.script.run.withSuccessHandler(function(r){if(r.ok)document.getElementById("content").innerHTML='<div class="fb-ok"><div class="fb-ok-ico">🙏</div><div class="fb-ok-h">Terima kasih!</div><div class="fb-ok-p">'+esc(r.msg)+'</div></div>';else{btn.disabled=false;btn.textContent="Kirim Masukan";alert(r.msg);}}).withFailureHandler(function(e){btn.disabled=false;btn.textContent="Kirim Masukan";alert("Gagal: "+e.message);}).submitFeedback(n,p);
+}
+
+/* ── HELPERS ── */
+function switchST(t){st.schedTab=t;st.openKey=null;renderJadwal();window.scrollTo({top:0,behavior:"smooth"});}
+function chMonth(d){
+  st.monthDir=d;
+  st.viewMonth+=d;
+  if(st.viewMonth>11){st.viewMonth=0;st.viewYear++;}
+  if(st.viewMonth<0){st.viewMonth=11;st.viewYear--;}
+  st.openKey=null;
+  renderJadwal();
+}
+function scrollToDate(iso){var pre="card-"+iso.replace(/-/g,"_")+"_";var cards=document.querySelectorAll(".ecard");for(var i=0;i<cards.length;i++){if(cards[i].id.indexOf(pre)===0){var top=cards[i].getBoundingClientRect().top+window.pageYOffset-90;window.scrollTo({top:top,behavior:"smooth"});return;}}}
+
+function clearSrch(){
+  try{localStorage.removeItem("paw_volName");}catch(e){console.warn("localStorage remove failed",e);}
+  document.getElementById("sinp").value="";
+  hideSug();
+  st.vol=null;
+  st.allEvents=[];
+  st.openKey=null;
+  st.rosterCache={};
+  st.query="";
+  st.sugList=[];
+  document.getElementById("content").innerHTML=homeHTML();
+  document.getElementById("content").classList.add("ready");
+}
+
+function homeHTML(){return'<div class="home"><div class="home-orb"><svg viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div class="home-h">Welcome Home!</div><div class="home-p">Cari namamu untuk melihat<br>jadwal pelayananmu.</div></div>';}
+
+function showLoading(){
+  var el=document.getElementById("content");
+  el.innerHTML='<div class="loading"><div class="big-spin"></div><div class="ld-txt">Memuat jadwal…</div></div>';
+  el.classList.add("ready");
+}
+
+function showErr(msg){document.getElementById("content").innerHTML='<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-msg">'+esc(msg)+'</div></div>';}
+
+function av(url,name,size,role){var fz=Math.round(size*.27),init=initials(name),col=C(role||"soundman").fg,fb='<span style="font-size:'+fz+'px;font-weight:800;font-family:Syne,sans-serif;line-height:1;color:'+col+'">'+init+'</span>';if(!url)return fb;return'<img src="'+url+'" style="width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block" alt="'+esc(name)+'" onerror="this.outerHTML=\'<span style=font-size:'+fz+'px;font-weight:800;font-family:Syne,sans-serif;line-height:1;color:'+col+'>'+init+'</span>\'">';}
+function initials(n){if(!n)return"?";var p=n.trim().split(" ");return p.length===1?p[0][0].toUpperCase():(p[0][0]+p[p.length-1][0]).toUpperCase();}
+function isoToday(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function pad(n){return n<10?"0"+n:String(n);}
+function safeId(k){return k.replace(/[^a-z0-9]/gi,"_");}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escQ(s){return String(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+function mOf(iso){var p=iso.split("-");return{year:parseInt(p[0]),month:parseInt(p[1])-1,key:mKey(parseInt(p[0]),parseInt(p[1])-1)};}
+function mKey(y,m){return y+"-"+pad(m+1);}
+function mLabel(iso){var p=iso.split("-");return BLN_L[parseInt(p[1])-1]+" "+p[0];}
+
+document.addEventListener("touchstart",function(e){if(!e.target.closest(".srch"))hideSug();},{passive:true});
+document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hideSug();});
+(function(){var sx=0;document.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;},{passive:true});document.addEventListener("touchend",function(e){if(e.changedTouches[0].clientX-sx<-50&&document.getElementById("dr").classList.contains("on"))closeDr();},{passive:true});})();
+
+// ── GYRO LIGHT ──
+(function(){
+  var cx=50,cy=30;
+  var tx=50,ty=30;
+  var ticking=false;
+
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  function updateLight(){
+    cx=lerp(cx,tx,0.12);
+    cy=lerp(cy,ty,0.12);
+    document.body.style.setProperty('--gx',cx.toFixed(1)+'%');
+    document.body.style.setProperty('--gy',cy.toFixed(1)+'%');
+    ticking=false;
+  }
+
+  function onGyro(e){
+    if(ticking)return;
+    ticking=true;
+    var beta =Math.min(Math.max(e.beta ,-80),80);
+    var gamma=Math.min(Math.max(e.gamma,-80),80);
+    tx=50+(gamma/80)*72;
+    ty=30+(beta /80)*65;
+    requestAnimationFrame(updateLight);
+  }
+
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    document.addEventListener('touchend',function ask(){
+      DeviceOrientationEvent.requestPermission().then(function(state){
+        if(state==='granted')window.addEventListener('deviceorientation',onGyro,{passive:true});
+      }).catch(function(){});
+      document.removeEventListener('touchend',ask);
+    },{once:true});
+  } else {
+    window.addEventListener('deviceorientation',onGyro,{passive:true});
+  }
+})();
+
+// ── SERVICE WORKER (needed for PWA installability) ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(err){
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "name": "Jadwal Pelayanan PAW",
+  "short_name": "Jadwal PAW",
+  "description": "Jadwal pelayanan musik PAW - GMS Salatiga",
+  "start_url": "/jadwal-pelayanan/jadwal/PAW/",
+  "scope": "/jadwal-pelayanan/jadwal/PAW/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0a0c10",
+  "theme_color": "#0a0c10",
+  "icons": [
+    {
+      "src": "icons/PAW-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/PAW-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/PAW-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/PAW-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

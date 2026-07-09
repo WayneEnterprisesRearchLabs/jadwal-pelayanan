@@ -558,7 +558,7 @@ if(c.logoUrl){
 google.script.run.withSuccessHandler(function(list){
   st.allMusicians = list || [];
   var savedName = null;
-  try{ savedName = localStorage.getItem("APP_CONFIG.storagePrefix+"volName"Name"); }catch(e){ console.warn("localStorage read failed", e); }
+  try{ savedName = localStorage.getItem(APP_CONFIG.storagePrefix + "volName"); }catch(e){ console.warn("localStorage read failed", e); }
   if(savedName){
     var match = st.allMusicians.find(function(m){return m.name===savedName;});
     if(match){
@@ -632,7 +632,7 @@ function pickVol(idx){
   hideSug();
   document.getElementById("sinp").blur();
   showLoading();
-  try{localStorage.setItem("APP_CONFIG.storagePrefix+"volName"Name",v.name);}catch(e){console.warn("localStorage set failed",e);}
+  try{localStorage.setItem(APP_CONFIG.storagePrefix + "volName", v.name);}catch(e){console.warn("localStorage set failed",e);}
   google.script.run.withSuccessHandler(gotEvents).withFailureHandler(function(e){showErr(e.message);}).getMusicianSchedule(v.name);
 }
 
@@ -1054,7 +1054,7 @@ function chMonth(d){
 function scrollToDate(iso){var pre="card-"+iso.replace(/-/g,"_")+"_";var cards=document.querySelectorAll(".ecard");for(var i=0;i<cards.length;i++){if(cards[i].id.indexOf(pre)===0){var top=cards[i].getBoundingClientRect().top+window.pageYOffset-90;window.scrollTo({top:top,behavior:"smooth"});return;}}}
 
 function clearSrch(){
-  try{localStorage.removeItem("APP_CONFIG.storagePrefix+"volName"Name");}catch(e){console.warn("localStorage remove failed",e);}
+  try{localStorage.removeItem(APP_CONFIG.storagePrefix + "volName");}catch(e){console.warn("localStorage remove failed",e);}
   document.getElementById("sinp").value="";
   hideSug();
   st.vol=null;

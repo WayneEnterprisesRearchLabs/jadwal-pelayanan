@@ -1,107 +1,77 @@
-# Admin access key — backend setup (REQUIRED)
+# Admin access key — what's actually going on (code.gs v7)
 
-The login screen on the admin page is **only a UX wrapper**. The real
-protection has to live in your Google Apps Script, because anyone can read
-`EXEC_URL` from this public repo and POST write requests directly, bypassing
-the browser entirely. Until you complete the steps below, the admin API is
-effectively open.
-
-## 1. Make a `Keys` sheet
-
-In the same spreadsheet the script is bound to, add a tab named exactly `Keys`.
-Put one access key per row in **column A** (column B is a free-text label for
-your own reference):
-
-| A (key)            | B (label)     |
-|--------------------|---------------|
-| `paw-2026-hod`     | Head of Dept  |
-| `s0me-l0ng-random` | Backup key    |
-
-Anyone who knows a value in column A can write. Treat these like passwords:
-make them long, and delete a row to instantly revoke that key.
-
-## 2. Paste this guard into the script
-
-Add these two helpers to your Apps Script project (`Code.gs` or wherever
-`doGet`/`doPost` live):
+Your `code.gs` already has an access-key gate. It's simpler than a `Keys`
+sheet: one shared secret, checked in `apiDispatch_`:
 
 ```javascript
-// Returns true if `key` matches any non-empty value in the Keys sheet, col A.
-function isValidKey_(key) {
-  if (!key) return false;
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Keys');
-  if (!sh) return false;
-  var last = sh.getLastRow();
-  if (last < 1) return false;
-  var vals = sh.getRange(1, 1, last, 1).getValues(); // column A
-  key = String(key).trim();
-  for (var i = 0; i < vals.length; i++) {
-    var cell = String(vals[i][0]).trim();
-    if (cell && cell === key) return true;
-  }
-  return false;
-}
+var ADMIN_KEY = "<your-actual-key-is-in-code.gs-not-here>";
+var ADMIN_ACTIONS = ['getAdminData','saveServiceRoster','deleteService','saveNote','deleteNote'];
 
-function jsonOut_(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function apiDispatch_(action, p) {
+  if (ADMIN_ACTIONS.indexOf(action) !== -1) {
+    if (!p.key || p.key !== ADMIN_KEY) {
+      return { error: "Unauthorized" };
+    }
+  }
+  ...
 }
 ```
 
-## 3. Handle `verifyKey` in `doGet`
+**That string is your current admin password.** To change it, edit that one
+line and redeploy (Deploy → Manage deployments → active deployment → Version:
+New version → Deploy — the `EXEC_URL` doesn't change).
 
-The login screen calls this to check a key before letting the user in. Near the
-top of your existing `doGet(e)`:
+## The one thing missing: `verifyKey`
 
-```javascript
-function doGet(e) {
-  var action = e.parameter.action;
+The login screen on `admin/PAW/index.html` calls an action named `verifyKey`
+to check what the user typed before letting them in. Your `apiDispatch_`
+switch doesn't have a case for it yet — without it, the login screen will
+always fail with "Unknown action: verifyKey".
 
-  if (action === 'verifyKey') {
-    return jsonOut_({ ok: isValidKey_(e.parameter.key) });
-  }
-
-  // ... your existing read actions (getAdminData, getMonthStatus, getNotes) ...
-}
-```
-
-## 4. Gate every write in `doPost`
-
-This is the line that actually stops an attacker. At the very top of `doPost(e)`,
-before any sheet is modified:
+Add this one case to the `switch (action)` block in `apiDispatch_`, anywhere
+among the other `case` lines (order doesn't matter):
 
 ```javascript
-function doPost(e) {
-  var params = JSON.parse(e.postData.contents);
-
-  // Reject any write that doesn't carry a valid key.
-  if (!isValidKey_(params.key)) {
-    return jsonOut_({ error: 'UNAUTHORIZED' });
-  }
-
-  var action = params.action;
-  // ... your existing write actions (setMonthStatus, saveServiceRoster,
-  //     deleteService, saveNote, deleteNote) ...
-}
+    case 'verifyKey':           return { ok: (p.key === ADMIN_KEY) };
 ```
 
-The frontend recognises `{ error: 'UNAUTHORIZED' }` and automatically re-shows
-the lock screen, so a revoked key logs the user out cleanly.
+It intentionally sits outside the `ADMIN_ACTIONS` gate (it's not in that
+array) — otherwise you'd have a chicken-and-egg problem: you'd need a valid
+key to check whether your key is valid.
 
-## 5. Redeploy
+## Why `getAdminData` was probably already failing for you
 
-Apps Script serves the **deployed** version, not the saved one. After editing:
-**Deploy → Manage deployments → edit the active deployment → Version: New
-version → Deploy.** The `EXEC_URL` stays the same. Test by entering a key on the
-admin page, then by removing your key row and confirming writes start failing.
+`getAdminData` is in `ADMIN_ACTIONS`, which means it has required the key
+since before this login screen existed. The admin page's boot sequence calls
+`getAdminData` immediately on load — so until the frontend was sending a key
+(which it now does, after this session's changes), that first load was very
+likely already returning `{error:"Unauthorized"}` on every visit, regardless
+of any login screen. This wasn't something introduced by this session's
+work — it's how the deployed backend already behaved.
 
-## Notes / limits
+## Redeploy
 
-- `verifyKey` travels as a URL query param (it's a GET), so it can appear in
-  server logs. It's not a password to a bank — for a church roster this is a
-  reasonable trade-off — but don't reuse these keys anywhere sensitive.
-- This does not encrypt anything; it gates writes. Reads stay public, which is
-  fine because the volunteer page already exposes the same schedule data.
-- For stronger protection later, consider Google account–based auth
-  (`Session.getActiveUser()`), which requires no shared secret.
+Apps Script serves the deployed version, not the saved one. After adding the
+`verifyKey` case: **Deploy → Manage deployments → edit the active deployment
+→ Version: New version → Deploy.**
+
+## Test
+
+1. Open the admin page — you should see the lock screen (not a broken/blank
+   load).
+2. Enter the wrong key — should show "Kunci salah."
+3. Enter the value of `ADMIN_KEY` from your code.gs — should unlock and load
+   real data.
+4. Refresh the tab — should skip the lock screen (key persists in
+   `sessionStorage` for the tab's lifetime) and re-verify silently.
+
+## Note on this key's exposure
+
+You pasted the full `code.gs` — including `ADMIN_KEY` in plaintext — into
+this chat, so that value now exists in this conversation's history. It was
+**not** committed to this repo (an earlier draft of this file had it inline;
+that draft was caught before commit and rewritten to this placeholder
+version instead). Apps Script source itself is never sent to browsers, so
+the key was never exposed via GitHub. Still, given it's sat in a chat log,
+rotating it (edit the `ADMIN_KEY` line in code.gs, redeploy) is a reasonable
+precaution if you want one.

@@ -526,11 +526,17 @@ var API_PARAM_MAP = {
   saveNote:          ['idx','tanggal','judul','isi','oleh'],
   deleteNote:        ['idx']
 };
-var API_WRITE_ACTIONS = ['setMonthStatus','saveServiceRoster','deleteService','saveNote','deleteNote'];
+// Matches the backend's ADMIN_ACTIONS in code.gs exactly (getAdminData is
+// gated server-side too, not just the writes) — plus verifyKey, which needs
+// the key sent but must NOT have it overwritten by the stored ADMIN_KEY var.
+// All of these go over POST so the key never sits in a URL query string or
+// server log, even for the "read" (getAdminData).
+var API_KEY_REQUIRED = ['verifyKey','getAdminData','saveServiceRoster','deleteService','saveNote','deleteNote'];
 
 // Access key held only in sessionStorage (cleared when the tab closes).
-// It is attached to every write request; the Apps Script backend is what
-// actually enforces it — this frontend gate is UX, not the security boundary.
+// It is attached to every gated request; the Apps Script backend (ADMIN_KEY
+// check in apiDispatch_) is what actually enforces it — this frontend gate
+// is UX, not the security boundary.
 var ADMIN_KEY = sessionStorage.getItem('paw_admin_key') || "";
 function setAdminKey(k){ ADMIN_KEY = k || ""; if (k) sessionStorage.setItem('paw_admin_key', k); else sessionStorage.removeItem('paw_admin_key'); }
 
@@ -541,10 +547,12 @@ function callApi(action, args){
     var val = args[i];
     params[name] = (val===undefined || val===null) ? "" : val;
   });
-  // Attach the access key to writes (verifyKey carries its own key arg).
-  if (API_WRITE_ACTIONS.indexOf(action) !== -1) params.key = ADMIN_KEY;
+  var isKeyed = API_KEY_REQUIRED.indexOf(action) !== -1;
+  // verifyKey already carries the freshly-typed key via its own param (above);
+  // don't clobber it with the (possibly empty/stale) stored ADMIN_KEY.
+  if (isKeyed && action !== 'verifyKey') params.key = ADMIN_KEY;
 
-  if (API_WRITE_ACTIONS.indexOf(action) !== -1){
+  if (isKeyed){
     return fetch(EXEC_URL, {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -558,9 +566,12 @@ function callApi(action, args){
 }
 
 // If the backend rejects the key mid-session (revoked/changed), drop it and
-// re-show the lock screen instead of silently failing writes.
+// re-show the lock screen instead of silently failing writes. Backend
+// returns the literal string "Unauthorized" (apiDispatch_ in code.gs) —
+// matched case-insensitively so a future casing tweak server-side doesn't
+// silently break this.
 function handleAuth(data){
-  if (data && data.error === 'UNAUTHORIZED'){
+  if (data && data.error && String(data.error).toLowerCase() === 'unauthorized'){
     setAdminKey("");
     if (typeof showLock === 'function') showLock('Sesi berakhir. Masukkan kunci lagi.');
   }

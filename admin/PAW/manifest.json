@@ -1,0 +1,37 @@
+{
+  "name": "Admin — Jadwal Pelayanan PAW",
+  "short_name": "Admin PAW",
+  "description": "Halaman admin jadwal pelayanan PAW - GMS Salatiga",
+  "start_url": "/jadwal-pelayanan/admin/PAW/",
+  "scope": "/jadwal-pelayanan/admin/PAW/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0a0c10",
+  "theme_color": "#0a0c10",
+  "icons": [
+    {
+      "src": "icons/ADMIN-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ADMIN-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/ADMIN-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ADMIN-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

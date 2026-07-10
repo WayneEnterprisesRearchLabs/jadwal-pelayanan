@@ -382,9 +382,45 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
 .add-note-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:1.5px dashed rgba(255,255,255,.15);background:none;color:#8890aa;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px;transition:border-color .15s,color .15s}
 .add-note-btn:active{border-color:rgba(232,184,75,.4);color:#e8b84b}
 
+/* ── ADMIN LOGIN GATE ─────── */
+.lock{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0c10;transition:opacity .35s ease}
+.lock.hide{opacity:0;pointer-events:none}
+.lock-card{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.lock-ring{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.12);border:1.5px solid rgba(245,158,11,.3);color:#f59e0b;margin-bottom:20px}
+.lock-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-.02em}
+.lock-sub{font-family:'DM Sans',sans-serif;font-size:13px;color:#8890aa;margin-top:6px;margin-bottom:24px}
+.lock-form{width:100%;display:flex;flex-direction:column;gap:12px}
+.lock-input{width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-family:'DM Sans',sans-serif;font-size:16px;text-align:center;letter-spacing:.05em;outline:none;transition:border-color .15s}
+.lock-input:focus{border-color:rgba(245,158,11,.55)}
+.lock-input::placeholder{color:#4a5168;letter-spacing:0}
+.lock-btn{width:100%;padding:14px;border-radius:14px;border:none;background:#f59e0b;color:#0a0c10;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:opacity .15s,transform .1s}
+.lock-btn:active{transform:scale(.98)}
+.lock-btn:disabled{opacity:.5;cursor:default}
+.lock-err{font-family:'DM Sans',sans-serif;font-size:13px;color:#ff6b7a;min-height:18px;transition:opacity .15s}
+.lock-spin{width:16px;height:16px;border:2px solid rgba(10,12,16,.35);border-top-color:#0a0c10;border-radius:50%;display:inline-block;vertical-align:middle;animation:lock-spin .7s linear infinite}
+@keyframes lock-spin{to{transform:rotate(360deg)}}
+
 </style>
 </head>
 <body>
+
+<!-- ADMIN LOGIN GATE — shown by default so admin data never flashes pre-auth.
+     The key is verified server-side in Apps Script; this screen is the UX wrapper. -->
+<div class="lock" id="lock">
+  <div class="lock-card">
+    <div class="lock-ring">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div class="lock-title">Admin PAW</div>
+    <div class="lock-sub">Masukkan kunci akses untuk melanjutkan</div>
+    <form class="lock-form" id="lock-form" onsubmit="return submitKey(event)">
+      <input class="lock-input" id="lock-input" type="password" inputmode="text"
+             autocomplete="current-password" placeholder="Kunci akses" aria-label="Kunci akses">
+      <div class="lock-err" id="lock-err"></div>
+      <button class="lock-btn" id="lock-btn" type="submit">Masuk</button>
+    </form>
+  </div>
+</div>
 
 <div class="ov" id="ov" onclick="closeDr()"></div>
 
@@ -480,6 +516,7 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
 var EXEC_URL = "https://script.google.com/macros/s/AKfycbyRFSxg1KEJelSsBMs4rBBf6-h0G1jiWF04TsITRzFhkvGd-sIhLbjlaB3K3HgkghIA/exec";
 
 var API_PARAM_MAP = {
+  verifyKey:         ['key'],
   getAdminData:      ['year','month'],
   getMonthStatus:    ['year','month'],
   setMonthStatus:    ['year','month','status'],
@@ -491,6 +528,12 @@ var API_PARAM_MAP = {
 };
 var API_WRITE_ACTIONS = ['setMonthStatus','saveServiceRoster','deleteService','saveNote','deleteNote'];
 
+// Access key held only in sessionStorage (cleared when the tab closes).
+// It is attached to every write request; the Apps Script backend is what
+// actually enforces it — this frontend gate is UX, not the security boundary.
+var ADMIN_KEY = sessionStorage.getItem('paw_admin_key') || "";
+function setAdminKey(k){ ADMIN_KEY = k || ""; if (k) sessionStorage.setItem('paw_admin_key', k); else sessionStorage.removeItem('paw_admin_key'); }
+
 function callApi(action, args){
   var names = API_PARAM_MAP[action] || [];
   var params = {action: action};
@@ -498,18 +541,86 @@ function callApi(action, args){
     var val = args[i];
     params[name] = (val===undefined || val===null) ? "" : val;
   });
+  // Attach the access key to writes (verifyKey carries its own key arg).
+  if (API_WRITE_ACTIONS.indexOf(action) !== -1) params.key = ADMIN_KEY;
+
   if (API_WRITE_ACTIONS.indexOf(action) !== -1){
     return fetch(EXEC_URL, {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify(params)
-    }).then(function(r){ return r.json(); });
+    }).then(function(r){ return r.json(); }).then(handleAuth);
   }
   var qs = Object.keys(params).map(function(k){
     return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
   }).join('&');
-  return fetch(EXEC_URL + '?' + qs).then(function(r){ return r.json(); });
+  return fetch(EXEC_URL + '?' + qs).then(function(r){ return r.json(); }).then(handleAuth);
 }
+
+// If the backend rejects the key mid-session (revoked/changed), drop it and
+// re-show the lock screen instead of silently failing writes.
+function handleAuth(data){
+  if (data && data.error === 'UNAUTHORIZED'){
+    setAdminKey("");
+    if (typeof showLock === 'function') showLock('Sesi berakhir. Masukkan kunci lagi.');
+  }
+  return data;
+}
+
+// ── LOGIN GATE CONTROLLER ───────────────────────────────────
+function showLock(msg){
+  var lock = document.getElementById('lock');
+  if (lock) lock.classList.remove('hide');
+  var err = document.getElementById('lock-err');
+  if (err) err.textContent = msg || '';
+  var inp = document.getElementById('lock-input');
+  if (inp){ inp.value=''; try{ inp.focus(); }catch(e){} }
+}
+function hideLock(){
+  var lock = document.getElementById('lock');
+  if (lock) lock.classList.add('hide');
+}
+function setLockBusy(busy){
+  var btn = document.getElementById('lock-btn');
+  if (!btn) return;
+  btn.disabled = busy;
+  btn.innerHTML = busy ? '<span class="lock-spin"></span>' : 'Masuk';
+}
+function submitKey(ev){
+  if (ev) ev.preventDefault();
+  var inp = document.getElementById('lock-input');
+  var err = document.getElementById('lock-err');
+  var key = inp ? inp.value.trim() : '';
+  if (!key){ if(err) err.textContent='Kunci tidak boleh kosong.'; return false; }
+  if (err) err.textContent='';
+  setLockBusy(true);
+  callApi('verifyKey', [key]).then(function(data){
+    setLockBusy(false);
+    if (data && data.ok){
+      setAdminKey(key);
+      hideLock();
+    } else {
+      setAdminKey('');
+      if (err) err.textContent = (data && data.message) || 'Kunci salah.';
+      if (inp){ inp.value=''; inp.focus(); }
+    }
+  }).catch(function(e){
+    setLockBusy(false);
+    if (err) err.textContent = 'Gagal terhubung. Coba lagi.';
+  });
+  return false;
+}
+// On load: if a key is already stored this session, verify it silently and
+// skip the prompt; otherwise show the lock. Reads have already begun behind it.
+(function initLock(){
+  if (ADMIN_KEY){
+    callApi('verifyKey', [ADMIN_KEY]).then(function(data){
+      if (data && data.ok) hideLock(); else { setAdminKey(''); showLock(); }
+    }).catch(function(){ showLock(); });
+  } else {
+    showLock();
+  }
+})();
 
 function GasRun(){ this._s=null; this._f=null; }
 GasRun.prototype.withSuccessHandler=function(fn){ this._s=fn; return this; };

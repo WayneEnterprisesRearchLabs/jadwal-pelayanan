@@ -146,7 +146,7 @@ input, textarea {
 .big-spin-lbl{font-size:15px;color:#8890aa}
 
 /* ── MONTH NAV — centered, yellow, auto below ── */
-.month-nav-wrap{margin-top:8px;margin-bottom:16px}
+.month-nav-wrap{margin-top:8px;margin-bottom:28px}
 .month-nav-wrap{margin-top:20px}
 .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 /* Yellow, large month label */
@@ -155,12 +155,11 @@ input, textarea {
 .mon-btn:active{background:#222737;color:#f0f0f5}
 .mon-btn:disabled{opacity:.22;cursor:default}
 /* Auto assign all — full width below month nav */
-.auto-all-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;background:rgba(232,184,75,.13);border:1.5px solid rgba(232,184,75,.3);color:#e8b84b;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
-.auto-all-btn:active{background:rgba(232,184,75,.22)}
+.auto-all-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;background:rgba(232,184,75,.13);border:1.5px solid rgba(232,184,75,.3);color:#e8b84b;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;margin-bottom:16px}
 
 /* ── PUBLISH TOGGLE (per-month OPEN / CLOSE) ── */
 .pub-toggle{display:flex;gap:8px}
-.pub-btn{flex:1;padding:10px 0;border-radius:12px;background:#12151c;border:1.5px solid rgba(255,255,255,.13);color:#8890aa;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;letter-spacing:.03em;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.pub-btn{flex:1;padding:16px 0;border-radius:13px;background:#12151c;border:1.5px solid rgba(255,255,255,.13);color:#8890aa;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;letter-spacing:.03em;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
 .pub-btn:active{transform:translateY(1px)}
 .pub-btn.pub-close.active{background:rgba(220,53,69,.16);border-color:rgba(220,53,69,.6);color:#ff6b7a}
 .pub-btn.pub-open.active{background:rgba(40,167,69,.16);border-color:rgba(40,167,69,.6);color:#4ade80}
@@ -386,11 +385,12 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
 .lock{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0c10;transition:opacity .35s ease}
 .lock.hide{opacity:0;pointer-events:none}
 .lock-card{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;text-align:center}
-.lock-ring{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(232,184,75,.12);border:1.5px solid rgba(232,184,75,.3);color:#e8b84b;margin-bottom:20px}
-.lock-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-.02em}
-.lock-sub{font-family:'DM Sans',sans-serif;font-size:13px;color:#8890aa;margin-top:6px;margin-bottom:24px}
+.lock-ring{width:84px;height:84px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:rgba(232,184,75,.12);border:1.5px solid rgba(232,184,75,.3);color:#e8b84b;margin-bottom:22px}
+.lock-ring svg{width:36px;height:36px}
+.lock-title{font-family:'Syne',sans-serif;font-weight:800;font-size:27px;color:#fff;letter-spacing:-.02em}
+.lock-sub{font-family:'DM Sans',sans-serif;font-size:15px;color:#8890aa;margin-top:8px;margin-bottom:26px}
 .lock-form{width:100%;display:flex;flex-direction:column;gap:12px}
-.lock-input{width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-family:'DM Sans',sans-serif;font-size:16px;text-align:center;letter-spacing:.05em;outline:none;transition:border-color .15s}
+.lock-input{width:100%;padding:18px 18px;border-radius:14px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-family:'DM Sans',sans-serif;font-size:16px;text-align:left;letter-spacing:.02em;outline:none;transition:border-color .15s}
 .lock-input:focus{border-color:rgba(232,184,75,.55)}
 .lock-input::placeholder{color:#4a5168;letter-spacing:0}
 .lock-btn{width:100%;padding:14px;border-radius:14px;border:none;background:#e8b84b;color:#0a0c10;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:opacity .15s,transform .1s}

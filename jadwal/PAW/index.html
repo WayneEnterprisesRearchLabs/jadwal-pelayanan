@@ -640,13 +640,10 @@ function pickVol(idx){
   google.script.run.withSuccessHandler(gotEvents).withFailureHandler(function(e){showErr(e.message);}).getMusicianSchedule(v.name);
 }
 
-function gotEvents(events){
+function gotEvents(resp){
+  var events = (resp && resp.events) ? resp.events : (resp || []);
+  if (resp && resp.rosters) st.rosterCache = resp.rosters; // cards open with no server call
   st.allEvents=events;var now=new Date();st.viewYear=now.getFullYear();st.viewMonth=now.getMonth();
-  var mk0=mKey(st.viewYear,st.viewMonth);
-  var has=events.some(function(e){return !e.isPast&&mOf(e.date).key===mk0;});
-  if(!has){var fwd={};events.filter(function(e){return !e.isPast;}).forEach(function(e){var m=mOf(e.date);fwd[m.key]=m;});var s=Object.keys(fwd).sort();if(s.length){st.viewYear=fwd[s[0]].year;st.viewMonth=fwd[s[0]].month;}}
-  st.schedTab="jadwal";renderJadwal();
-}
 
 /* ── JADWAL TAB ── */
 function renderJadwal(){

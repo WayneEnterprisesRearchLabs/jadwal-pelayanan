@@ -1382,7 +1382,7 @@ function autoAssignAll(){
     var total=emptySlots.length,done=0,failed=0;
     showToast("Menyimpan "+total+" ibadah…","ok");
     emptySlots.forEach(function(slot,idx){
-      var groupName=groupNames[idx % groupNames.length]; // rotate groups across services
+      var groupName=groupNames[Math.floor(Math.random()*groupNames.length)]; // random group per service
       var res=buildGroupRoster(groupName,slot);
       var clean={};
       PAW_ROLES.forEach(function(role){

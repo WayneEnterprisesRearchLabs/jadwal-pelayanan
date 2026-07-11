@@ -400,6 +400,11 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
 .lock-spin{width:16px;height:16px;border:2px solid rgba(10,12,16,.35);border-top-color:#0a0c10;border-radius:50%;display:inline-block;vertical-align:middle;animation:lock-spin .7s linear infinite}
 @keyframes lock-spin{to{transform:rotate(360deg)}}
 
+.lock-input-wrap{position:relative;width:100%}
+.lock-input-wrap .lock-input{padding-right:46px}
+.lock-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:none;color:#8890aa;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;transition:color .15s}
+.lock-eye:active{color:#e8b84b}
+        
 </style>
 </head>
 <body>
@@ -414,8 +419,13 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
     <div class="lock-title">Admin PAW</div>
     <div class="lock-sub">Masukkan password untuk melanjutkan</div>
     <form class="lock-form" id="lock-form" onsubmit="return submitKey(event)">
-      <input class="lock-input" id="lock-input" type="password" inputmode="text"
-             autocomplete="current-password" placeholder="Password" aria-label="Password">
+<div class="lock-input-wrap">
+        <input class="lock-input" id="lock-input" type="password" inputmode="text"
+               autocomplete="current-password" placeholder="Password" aria-label="Password">
+        <button type="button" class="lock-eye" id="lock-eye" onclick="togglePass()" aria-label="Tampilkan password">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <div class="lock-err" id="lock-err"></div>
       <button class="lock-btn" id="lock-btn" type="submit">Masuk</button>
     </form>
@@ -1850,5 +1860,20 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<script>
+var _EYE_SHOW='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+var _EYE_HIDE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function togglePass(){
+  var inp=document.getElementById('lock-input');
+  var eye=document.getElementById('lock-eye');
+  if(!inp)return;
+  var willShow=inp.type==='password';
+  inp.type=willShow?'text':'password';
+  if(eye){eye.innerHTML=willShow?_EYE_HIDE:_EYE_SHOW;eye.setAttribute('aria-label',willShow?'Sembunyikan password':'Tampilkan password');}
+  try{inp.focus();}catch(e){}
+}
+</script>
+        
 </body>
 </html>

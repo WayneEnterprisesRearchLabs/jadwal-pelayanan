@@ -425,6 +425,17 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 .dp-save.dirty{background:#e8b84b;color:#0a0c10;cursor:pointer}
 .dp-open{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#e8b84b;text-decoration:none;padding:9px 12px;border:1px solid rgba(232,184,75,.3);border-radius:9px}
 .dp-empty{text-align:center;padding:40px 16px;color:#8890aa;font-size:14px}
+.sp-wrap{padding-bottom:40px}
+.sp-controls{background:#12151c;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;margin-bottom:20px}
+.sp-field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.sp-field:last-child{margin-bottom:0}
+.sp-field label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8890aa}
+.sp-inp{width:100%;background:#0f1218;border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:#f0f0f5;outline:none;-webkit-appearance:none}
+.sp-inp:focus{border-color:#e8b84b}
+.sp-grp-pills{display:flex;gap:8px;flex-wrap:wrap}
+.sp-grp-pill{padding:9px 16px;border-radius:20px;border:1.5px solid rgba(255,255,255,.13);background:#0f1218;color:#8890aa;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.sp-grp-pill.on{background:rgba(232,184,75,.15);border-color:#e8b84b;color:#e8b84b}
+.sp-hint{font-size:12px;color:#8890aa;line-height:1.5;margin-bottom:16px;background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:11px 13px}
 .modal-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-ov.on{opacity:1;pointer-events:all}
 .modal-box{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);z-index:401;width:100%;max-width:480px;background:#12151c;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,.1);padding:24px 24px calc(24px + env(safe-area-inset-bottom,0px));transition:transform .32s cubic-bezier(.22,1,.36,1)}
@@ -543,6 +554,7 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
     <div class="dr-item" id="dn-ringkasan" onclick="navTo('ringkasan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>Ringkasan</div>
     <div class="dr-item" id="dn-catatan" onclick="navTo('catatan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Catatan</div>
     <div class="dr-item" id="dn-masukan" onclick="navTo('masukan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Kritik &amp; Saran</div>
+    <div class="dr-item" id="dn-songlist" style="display:none" onclick="navTo('songlist')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Songlist</div>
     <div class="dr-item" id="dn-dresscode" style="display:none" onclick="navTo('dresscode')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Dresscode</div>
     <div class="dr-item" id="dn-selfie" style="display:none" onclick="navTo('selfie')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Approval Selfie</div>
     <div class="dr-item" id="dn-sheet" onclick="navTo('sheet')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Buka Sheet</div>
@@ -633,6 +645,7 @@ var API_PARAM_MAP = {
   getAvailabilityMatrix: ['dept','year','month'],
   setAvailStatus:        ['dept','year','month','status'],
   // slices 3c-2 / 3d / 3e (used by later admin panels):
+  getSongGroups:     [],
   getSonglist:       ['date','service'],
   saveSonglist:      ['date','service','songsJson'],
   deleteSonglist:    ['date','service'],
@@ -766,6 +779,8 @@ function applyDeptLabels(){
   if (selfieNav) selfieNav.style.display = (ADMIN_DEPT === 'CM') ? 'flex' : 'none';
   var dressNav = document.getElementById('dn-dresscode');
   if (dressNav) dressNav.style.display = (ADMIN_DEPT === 'CM') ? 'flex' : 'none';
+  var songNav = document.getElementById('dn-songlist');
+  if (songNav) songNav.style.display = (ADMIN_DEPT === 'PAW') ? 'flex' : 'none';
 }
 
 // Populate the login dept dropdown from getConfig (fixed list, no key needed).
@@ -853,7 +868,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
 
-var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",dressList:[]};
+var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",dressList:[],songGroup:"",songDate:"",songGroupList:[]};
 
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
@@ -908,11 +923,11 @@ function closeDr(){document.getElementById("dr").classList.remove("on");document
 
 function navTo(tab){
   st.tab=tab;closeDr();
-  ["jadwal","ringkasan","ketersediaan","catatan","masukan","dresscode","selfie","sheet"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
+  ["jadwal","ringkasan","ketersediaan","catatan","masukan","songlist","dresscode","selfie","sheet"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
   renderTab();
 }
 
-function renderTab(){if(!st.loaded)return;if(st.tab==="jadwal")renderJadwal();else if(st.tab==="ringkasan")renderRingkasan();else if(st.tab==="ketersediaan")renderKetersediaan();else if(st.tab==="catatan")renderCatatan();else if(st.tab==="masukan")renderMasukan();else if(st.tab==="selfie")renderSelfieQueue();else if(st.tab==="dresscode")renderDresscodePage();else renderSheet();}
+function renderTab(){if(!st.loaded)return;if(st.tab==="jadwal")renderJadwal();else if(st.tab==="ringkasan")renderRingkasan();else if(st.tab==="ketersediaan")renderKetersediaan();else if(st.tab==="catatan")renderCatatan();else if(st.tab==="masukan")renderMasukan();else if(st.tab==="selfie")renderSelfieQueue();else if(st.tab==="dresscode")renderDresscodePage();else if(st.tab==="songlist")renderSonglistPage();else renderSheet();}
 
 function chMonth(dir){
   st.month+=dir;if(st.month>11){st.month=0;st.year++;}if(st.month<0){st.month=11;st.year--;}
@@ -1182,12 +1197,6 @@ function renderRosterPage(){
     });
   });
   if(segOpen)h+='</div>';
-  if(st.dept==="PAW"){
-    h+='<div class="sl-section" id="sl-section">'+
-         '<div class="sl-head"><div class="sl-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Songlist</div></div>'+
-         '<div id="sl-body"><div class="sl-loading">Memuat lagu…</div></div>'+
-       '</div>';
-  }
   if(st.dept==="CM"){
     h+='<div class="dc-section" id="dc-section">'+
          '<div class="dc-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Dresscode PDF</div>'+
@@ -1196,7 +1205,6 @@ function renderRosterPage(){
   }
   document.getElementById("rp-body").innerHTML=h;
   updateWarnBox();
-  if(st.dept==="PAW")loadSonglistEditor();
   if(st.dept==="CM")loadDresscodeEditor();
 }
 
@@ -1642,19 +1650,6 @@ function autoAssignAll(){
 
 /* ── SAVE ROSTER ── */
 // ── SONGLIST EDITOR (PAW only, per service) ──────────────────
-function loadSonglistEditor(){
-  var slot=st.currentSlot; if(!slot)return;
-  if(st.songs!==null && st.songs!==undefined){ renderSonglistEditor(); return; }
-  callApi('getSonglist',[slot.date,slot.service]).then(function(res){
-    st.songs=((res&&res.songs)||[]).map(function(x){return {judul:x.judul||"",pencipta:x.pencipta||"",link:x.link||""};});
-    st.songDirty=false;
-    renderSonglistEditor();
-  }).catch(function(e){
-    var b=document.getElementById("sl-body");
-    if(b)b.innerHTML='<div class="sl-empty">Gagal memuat lagu: '+esc(e.message||e)+'</div>';
-  });
-}
-
 function renderSonglistEditor(){
   var b=document.getElementById("sl-body"); if(!b)return;
   var songs=st.songs||[];
@@ -1945,6 +1940,95 @@ function saveManualDresscode(){
       showToast((res&&res.msg)||"Gagal.","err");
     }
   }).catch(function(e){ showToast("Gagal: "+(e.message||e),"err"); });
+}
+
+// ── PAW STANDALONE SONGLIST PAGE (keyed date|group) ──────────
+function renderSonglistPage(){
+  if(st.dept!=="PAW"){document.getElementById("content").innerHTML='<div class="sq-empty">Halaman ini khusus departemen PAW.</div>';return;}
+  // default group + date
+  if(!st.songGroup)st.songGroup="Ibadah";
+  if(!st.songDate)st.songDate=isoDate(nextSunday_());
+  document.getElementById("content").innerHTML='<div class="init-loading"><div class="big-spin"></div><div class="big-spin-lbl">Memuat…</div></div>';
+  // fetch the group list once, then render
+  callApi('getSongGroups',[]).then(function(res){
+    st.songGroupList=(res&&res.groups)||["Ibadah","AOG","Voltage"];
+    buildSonglistPage();
+    loadGroupSonglist();
+  }).catch(function(){
+    st.songGroupList=["Ibadah","AOG","Voltage"];
+    buildSonglistPage();
+    loadGroupSonglist();
+  });
+}
+
+function nextSunday_(){
+  var d=new Date(); d.setDate(d.getDate()-d.getDay()+7); return d;
+}
+
+function buildSonglistPage(){
+  var groups=st.songGroupList||["Ibadah","AOG","Voltage"];
+  var h='<div class="sp-wrap">';
+  h+='<div class="sp-hint">Satu songlist dipakai bersama untuk semua ibadah dalam grup yang sama. Contoh: <b>Ibadah</b> berlaku untuk Ibadah 1, 2, dan 3.</div>';
+  h+='<div class="sp-controls">'+
+      '<div class="sp-field"><label>Grup Ibadah</label><div class="sp-grp-pills" id="sp-grp-pills">';
+  groups.forEach(function(g){
+    h+='<button class="sp-grp-pill'+(g===st.songGroup?" on":"")+'" onclick="selectSongGroup(\''+escQ(g)+'\')">'+esc(g)+'</button>';
+  });
+  h+='</div></div>'+
+      '<div class="sp-field"><label>Tanggal</label><input class="sp-inp" type="date" id="sp-date" value="'+esc(st.songDate)+'" onchange="onSongDateChange(this.value)"></div>'+
+     '</div>';
+  h+='<div id="sl-body"><div class="sl-loading">Memuat lagu…</div></div>'; // reuse existing editor renderer
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+function selectSongGroup(g){
+  if(st.songDirty && !confirm("Ada perubahan belum disimpan. Pindah grup tanpa simpan?"))return;
+  st.songGroup=g; st.songs=null; st.songDirty=false;
+  // update pill active states without full rebuild
+  var pills=document.querySelectorAll("#sp-grp-pills .sp-grp-pill");
+  pills.forEach(function(p){p.classList.toggle("on",p.textContent===g);});
+  loadGroupSonglist();
+}
+
+function onSongDateChange(v){
+  if(st.songDirty && !confirm("Ada perubahan belum disimpan. Ganti tanggal tanpa simpan?")){
+    document.getElementById("sp-date").value=st.songDate; return;
+  }
+  st.songDate=v; st.songs=null; st.songDirty=false;
+  loadGroupSonglist();
+}
+
+// Loads songs for the current (date|group) and hands off to the existing editor UI.
+function loadGroupSonglist(){
+  var b=document.getElementById("sl-body"); if(b)b.innerHTML='<div class="sl-loading">Memuat lagu…</div>';
+  callApi('getSonglist',[st.songDate,st.songGroup]).then(function(res){
+    st.songs=((res&&res.songs)||[]).map(function(x){return {judul:x.judul||"",pencipta:x.pencipta||"",link:x.link||""};});
+    st.songDirty=false;
+    renderSonglistEditor();
+  }).catch(function(e){
+    if(b)b.innerHTML='<div class="sl-empty">Gagal memuat: '+esc(e.message||e)+'</div>';
+  });
+}
+
+// Override save target: the standalone page saves by group+date (not currentSlot).
+function saveSonglist(){
+  var clean=(st.songs||[]).filter(function(s){return (s.judul||"").trim();})
+    .map(function(s){return {judul:s.judul.trim(),pencipta:(s.pencipta||"").trim(),link:(s.link||"").trim()};});
+  var btn=document.getElementById("sl-save");
+  if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
+  callApi('saveSonglist',[st.songDate,st.songGroup,JSON.stringify(clean)]).then(function(res){
+    if(res&&res.ok){
+      st.songs=clean; st.songDirty=false; renderSonglistEditor();
+      showToast(res.msg||"Songlist tersimpan.","ok");
+    } else {
+      if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Songlist ✓";}
+      showToast((res&&res.msg)||"Gagal menyimpan.","err");
+    }
+  }).catch(function(e){
+    if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Songlist ✓";}
+    showToast("Gagal: "+(e.message||e),"err");
+  });
 }
 
 function saveRoster(){

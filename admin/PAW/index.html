@@ -366,6 +366,16 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 .sl-save-btn{width:100%;padding:12px;border-radius:11px;border:none;background:#333744;color:#666a7a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:default;transition:background .2s,color .2s}
 .sl-save-btn.dirty{background:#e8b84b;color:#0a0c10;cursor:pointer}
 .sl-empty{font-size:13px;color:#8890aa;text-align:center;padding:10px 0}
+.dc-section{margin-top:22px;border-top:1px solid rgba(255,255,255,.09);padding-top:18px}
+.dc-title{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#e8b84b;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dc-hint{font-size:12px;color:#8890aa;line-height:1.55;margin-bottom:12px}
+.dc-inp{width:100%;background:#12151c;border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:#f0f0f5;outline:none;margin-bottom:10px;-webkit-appearance:none}
+.dc-inp:focus{border-color:#e8b84b}
+.dc-inp::placeholder{color:#4a5070}
+.dc-preview-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#e8b84b;text-decoration:none;margin-bottom:12px}
+.dc-save-btn{width:100%;padding:12px;border-radius:11px;border:none;background:#333744;color:#666a7a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:default;transition:background .2s,color .2s}
+.dc-save-btn.dirty{background:#e8b84b;color:#0a0c10;cursor:pointer}
+.dc-loading{font-size:13px;color:#8890aa;padding:8px 0}
 .modal-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-ov.on{opacity:1;pointer-events:all}
 .modal-box{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);z-index:401;width:100%;max-width:480px;background:#12151c;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,.1);padding:24px 24px calc(24px + env(safe-area-inset-bottom,0px));transition:transform .32s cubic-bezier(.22,1,.36,1)}
@@ -787,7 +797,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
 
-var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false};
+var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false};
 
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
@@ -1041,6 +1051,8 @@ function openRoster(key){
   document.getElementById("rp-edit-form").classList.remove("on");
   st.songDirty=false;
   st.songs=null;
+  st.dressUrl=null;
+  st.dressDirty=false;
   renderRosterPage();
   updateSaveBtn();
   renderGroupDropdown();
@@ -1120,9 +1132,16 @@ function renderRosterPage(){
          '<div id="sl-body"><div class="sl-loading">Memuat lagu…</div></div>'+
        '</div>';
   }
+  if(st.dept==="CM"){
+    h+='<div class="dc-section" id="dc-section">'+
+         '<div class="dc-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Dresscode PDF</div>'+
+         '<div id="dc-body"><div class="dc-loading">Memuat dresscode…</div></div>'+
+       '</div>';
+  }
   document.getElementById("rp-body").innerHTML=h;
   updateWarnBox();
   if(st.dept==="PAW")loadSonglistEditor();
+  if(st.dept==="CM")loadDresscodeEditor();
 }
 
 function renderInputRow(role,idx,sel){
@@ -1639,6 +1658,60 @@ function saveSonglist(){
     }
   }).catch(function(e){
     if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Songlist ✓";}
+    showToast("Gagal: "+(e.message||e),"err");
+  });
+}
+
+// ── DRESSCODE EDITOR (CM only, per service) ──────────────────
+function loadDresscodeEditor(){
+  var slot=st.currentSlot; if(!slot)return;
+  if(st.dressUrl!==null && st.dressUrl!==undefined){ renderDresscodeEditor(); return; }
+  callApi('getDresscode',[slot.date,slot.service]).then(function(res){
+    st.dressUrl=(res&&res.pdfUrl)||"";
+    st.dressDirty=false;
+    renderDresscodeEditor();
+  }).catch(function(e){
+    var b=document.getElementById("dc-body");
+    if(b)b.innerHTML='<div class="dc-loading">Gagal memuat: '+esc(e.message||e)+'</div>';
+  });
+}
+
+function renderDresscodeEditor(){
+  var b=document.getElementById("dc-body"); if(!b)return;
+  var url=st.dressUrl||"";
+  var h='<div class="dc-hint">Tempel link Google Drive PDF dresscode untuk ibadah ini. Pastikan file di-set <b>"Anyone with the link"</b> agar bisa dilihat volunteer.</div>';
+  h+='<input class="dc-inp" type="text" id="dc-url" placeholder="https://drive.google.com/file/d/…/view" value="'+esc(url)+'" oninput="onDressInput(this.value)">';
+  if(url){
+    h+='<a class="dc-preview-link" href="'+encodeURI(url)+'" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Buka PDF saat ini</a><br>';
+  }
+  h+='<button class="dc-save-btn'+(st.dressDirty?' dirty':'')+'" id="dc-save" onclick="saveDresscode()"'+(st.dressDirty?'':' disabled')+'>Simpan Dresscode ✓</button>';
+  b.innerHTML=h;
+}
+
+function onDressInput(val){
+  st.dressUrl=val;
+  st.dressDirty=true;
+  var btn=document.getElementById("dc-save");
+  if(btn){btn.classList.add("dirty");btn.disabled=false;btn.textContent="Simpan Dresscode ✓";}
+}
+
+function saveDresscode(){
+  var slot=st.currentSlot; if(!slot)return;
+  var url=(st.dressUrl||"").trim();
+  var btn=document.getElementById("dc-save");
+  if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
+  callApi('saveDresscode',[slot.date,slot.service,url]).then(function(res){
+    if(res&&res.ok){
+      st.dressUrl=url;
+      st.dressDirty=false;
+      renderDresscodeEditor();
+      showToast(res.msg||"Dresscode tersimpan.","ok");
+    } else {
+      if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Dresscode ✓";}
+      showToast((res&&res.msg)||"Gagal menyimpan.","err");
+    }
+  }).catch(function(e){
+    if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Dresscode ✓";}
     showToast("Gagal: "+(e.message||e),"err");
   });
 }

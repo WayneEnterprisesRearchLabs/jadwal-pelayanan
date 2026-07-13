@@ -496,10 +496,55 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .no-ev{background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:22px;text-align:center;font-size:14px;color:#8890aa}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ONBOARDING GATE ──────── */
+.gate{position:fixed;inset:0;z-index:280;background:#0a0c10;display:flex;align-items:center;justify-content:center;padding:28px var(--page-pad);opacity:1;transition:opacity .4s cubic-bezier(.22,1,.36,1)}
+.gate.closing{opacity:0;pointer-events:none}
+.gate-inner{width:100%;max-width:360px;animation:gatePop .46s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes gatePop{
+  0%  { opacity:0; transform:scale(.9) translateY(16px); }
+  60% { opacity:1; transform:scale(1.02) translateY(-2px); }
+  100%{ transform:scale(1) translateY(0); }
+}
+.gate-logo{width:64px;height:64px;border-radius:20px;background:rgba(232,184,75,.13);border:1px solid rgba(232,184,75,.22);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;overflow:hidden;animation:breathe 3s ease-in-out infinite}
+.gate-logo img{width:100%;height:100%;object-fit:cover;display:none}
+.gate-title{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em;text-align:center;margin-bottom:7px}
+.gate-sub{font-size:14px;color:#8890aa;text-align:center;line-height:1.6;margin-bottom:30px}
+.gate select.form-inp{-webkit-appearance:none;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%238890aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 15px center;padding-right:38px}
+.gate select.form-inp:disabled{opacity:.4;cursor:default}
+.gate .srch{margin-bottom:0}
+.gate .sug{left:0;right:0}
+.gate-name-wrap{transition:opacity .2s}
 </style>
 </head>
 <body>
 <div id="native-splash" style="position:fixed;inset:0;z-index:9999;background:#0a0c10;"></div>
+
+<div class="gate" id="gate">
+  <div class="gate-inner">
+    <div class="gate-logo" id="gate-logo"><img id="gate-logo-img" src="" alt="" style="display:none"></div>
+    <div class="gate-title" id="gate-title">Jadwal Pelayanan</div>
+    <div class="gate-sub">Pilih departemen dan nama kamu untuk masuk ke jadwal.</div>
+
+    <div class="form-g">
+      <label class="form-lbl">Departemen</label>
+      <select class="form-inp" id="gate-dept" onchange="onGateDept()">
+        <option value="">Pilih departemen…</option>
+      </select>
+    </div>
+
+    <div class="form-g">
+      <label class="form-lbl">Nama</label>
+      <div class="srch gate-name-wrap" id="gate-name-wrap" style="opacity:.4;pointer-events:none">
+        <input class="form-inp" id="gate-name-inp" type="text" placeholder="Pilih departemen dulu…" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" disabled oninput="onGateNameInput()">
+        <div class="sug" id="gate-sug"></div>
+      </div>
+    </div>
+
+    <button class="sub-btn" id="gate-enter-btn" disabled onclick="enterApp()">Masuk</button>
+  </div>
+</div>
+
 <div class="ov" id="ov" onclick="closeDr()"></div>
 <div class="dr" id="dr">
   <div class="dr-top">
@@ -690,7 +735,8 @@ var st={
   ringYear:0,ringMonth:0,ringCache:{},
   availOpenMonths:[],availSelYear:0,availSelMonth:0,availBlocked:{},availDirty:false,
   rolesByDept:{},structureByDept:{},
-  departments:[],deptFilter:""
+  departments:[],deptFilter:"",
+  gateDept:"",gateSelectedVol:null,gateSugList:[],gateDebounce:null
 };
 
 (function(){var now=new Date();st.ringYear=now.getFullYear();st.ringMonth=now.getMonth();})();
@@ -701,12 +747,13 @@ google.script.run.withSuccessHandler(function(c){
   document.getElementById("hdr-l2").textContent=APP_CONFIG.deptLabel;
   document.getElementById("dr-team").textContent=APP_CONFIG.appTitle;
   document.getElementById("dr-church").textContent=church;
+  document.getElementById("gate-title").textContent=APP_CONFIG.appTitle;
   st.rolesByDept=c.rolesByDept||{};
   st.structureByDept=c.structureByDept||{};
   st.departments=c.departments||Object.keys(st.rolesByDept);
   populateDeptFilter();
 if(c.logoUrl){
-  ["hdr-logo-img","dr-logo"].forEach(function(id){
+  ["hdr-logo-img","dr-logo","gate-logo-img"].forEach(function(id){
     var el=document.getElementById(id);
     if(el){
       el.style.display="block";
@@ -724,12 +771,9 @@ google.script.run.withSuccessHandler(function(list){
   if(savedName){
     var match = st.allMusicians.find(function(m){return m.name===savedName;});
     if(match){
-      st.vol = match;
-      st.justPicked = true;
-      document.getElementById("sinp").value = match.name;
-      document.getElementById("sbtn").style.display = "flex";
-      showLoading();
-      google.script.run.withSuccessHandler(gotEvents).withFailureHandler(function(e){showErr(e.message);}).getVolunteerSchedule(match.name);
+      hideGate();
+      loginAsVol(match);
+      return;
     }
   }
 }).getAllVolunteers();
@@ -746,6 +790,83 @@ function navTo(tab){
   else if(tab==="ringkasan")renderRingkasan();
   else if(tab==="catatan")renderCatatan();
   else renderMasukan();
+}
+
+/* ── ONBOARDING GATE ── */
+function hideGate(){
+  var g=document.getElementById("gate");
+  if(g)g.style.display="none";
+}
+
+function onGateDept(){
+  var d=document.getElementById("gate-dept").value;
+  st.gateDept=d;
+  st.gateSelectedVol=null;
+  var wrap=document.getElementById("gate-name-wrap");
+  var inp=document.getElementById("gate-name-inp");
+  document.getElementById("gate-enter-btn").disabled=true;
+  hideGateSug();
+  if(!d){
+    wrap.style.opacity=".4";wrap.style.pointerEvents="none";
+    inp.disabled=true;inp.value="";inp.placeholder="Pilih departemen dulu…";
+    return;
+  }
+  wrap.style.opacity="1";wrap.style.pointerEvents="all";
+  inp.disabled=false;inp.value="";inp.placeholder="Cari namamu…";
+  inp.focus();
+}
+
+function onGateNameInput(){
+  var q=document.getElementById("gate-name-inp").value.trim();
+  st.gateSelectedVol=null;
+  document.getElementById("gate-enter-btn").disabled=true;
+  if(!q){hideGateSug();return;}
+  clearTimeout(st.gateDebounce);
+  st.gateDebounce=setTimeout(function(){doGateSearch(q);},150);
+}
+
+function doGateSearch(q){
+  var dept=st.gateDept;
+  function withList(list){
+    var ql=q.toLowerCase();
+    var filtered=list.filter(function(m){
+      return (!dept||m.dept===dept) && m.name.toLowerCase().indexOf(ql)!==-1;
+    }).slice(0,15);
+    showGateSug(filtered);
+  }
+  if(st.allMusicians && st.allMusicians.length){withList(st.allMusicians);return;}
+  google.script.run.withSuccessHandler(withList).searchVolunteers(q);
+}
+
+function showGateSug(list){
+  st.gateSugList=list||[];
+  var box=document.getElementById("gate-sug");
+  if(!st.gateSugList.length){
+    box.innerHTML='<div class="sug-empty">Nama tidak ditemukan</div>';
+  } else {
+    box.innerHTML=st.gateSugList.map(function(m,i){
+      return '<div class="sug-item" onclick="pickGateVol('+i+')"><div class="sug-av" style="'+avCss(m.roles[0]||"soundman")+'">'+av(m.photo,m.name,36,m.roles[0])+'</div><div><div class="sug-name">'+esc(m.name)+'</div><div class="sug-badges">'+m.roles.map(function(r){return'<span class="badge" style="'+chipCss(r)+'">'+esc(roleLabel(r))+'</span>';}).join('')+'</div></div></div>';
+    }).join('');
+  }
+  box.style.display="block";
+}
+function hideGateSug(){var b=document.getElementById("gate-sug");if(b)b.style.display="none";}
+
+function pickGateVol(idx){
+  var v=st.gateSugList[idx];if(!v)return;
+  st.gateSelectedVol=v;
+  document.getElementById("gate-name-inp").value=v.name;
+  hideGateSug();
+  document.getElementById("gate-enter-btn").disabled=false;
+}
+
+function enterApp(){
+  var v=st.gateSelectedVol;
+  if(!v)return;
+  var g=document.getElementById("gate");
+  g.classList.add("closing");
+  setTimeout(function(){g.style.display="none";},420);
+  loginAsVol(v);
 }
 
 /* ── SEARCH ── */
@@ -766,9 +887,11 @@ function onFocus(){
 
 function populateDeptFilter(){
   var sel=document.getElementById("dept-filter");
-  if(!sel||!st.departments)return;
+  var gateSel=document.getElementById("gate-dept");
+  if(!st.departments)return;
   st.departments.forEach(function(d){
-    var o=document.createElement("option");o.value=d;o.textContent=d;sel.appendChild(o);
+    if(sel){var o=document.createElement("option");o.value=d;o.textContent=d;sel.appendChild(o);}
+    if(gateSel){var o2=document.createElement("option");o2.value=d;o2.textContent=d;gateSel.appendChild(o2);}
   });
   var saved="";
   try{saved=localStorage.getItem(APP_CONFIG.storagePrefix+"deptFilter")||"";}catch(e){}
@@ -810,16 +933,20 @@ function showSug(list){
 }
 function hideSug(){document.getElementById("sug").style.display="none";}
 
-function pickVol(idx){
-  var v=st.sugList[idx];if(!v)return;
+function loginAsVol(v){
   st.vol=v;st.justPicked=true;st.openKey=null;st.rosterCache={};
   document.getElementById("sinp").value=v.name;
   document.getElementById("sbtn").style.display="flex";
   hideSug();
-  document.getElementById("sinp").blur();
   showLoading();
   try{localStorage.setItem(APP_CONFIG.storagePrefix + "volName", v.name);}catch(e){console.warn("localStorage set failed",e);}
   google.script.run.withSuccessHandler(gotEvents).withFailureHandler(function(e){showErr(e.message);}).getVolunteerSchedule(v.name);
+}
+
+function pickVol(idx){
+  var v=st.sugList[idx];if(!v)return;
+  document.getElementById("sinp").blur();
+  loginAsVol(v);
 }
 
 // Fetches the dept-scoped availability-open-months list and shows/hides the

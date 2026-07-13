@@ -300,6 +300,25 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
 .ring-tbl .cell-special{background:rgba(167,139,250,.09)}
 .ring-tbl tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
+/* ── KETERSEDIAAN (ADMIN) ── */
+.avail-wrap{animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.avail-legend{display:flex;gap:16px;align-items:center;margin:4px 0 18px;font-size:12px;color:#8890aa}
+.avail-legend span{display:inline-flex;align-items:center;gap:6px}
+.avail-legend i{width:20px;height:11px;border-radius:20px;display:inline-block}
+.avail-role-block{margin-bottom:22px}
+.avail-role-hdr{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;margin-bottom:8px;letter-spacing:-.01em}
+.avail-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+table.avail-tbl{border-collapse:collapse;font-size:12px}
+.avail-tbl th,.avail-tbl td{border:1px solid rgba(255,255,255,.07);padding:6px 8px;text-align:center;vertical-align:middle;white-space:nowrap}
+.avail-tbl th{background:#1a1e28;font-weight:700;font-size:11px;color:#8890aa;line-height:1.25}
+.avail-name-col{position:sticky;left:0;z-index:2;background:#12151c;text-align:left;font-weight:600;color:#f0f0f5;min-width:118px;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.avail-tbl th.avail-name-col{color:#8890aa;font-weight:700}
+.avail-date-col{min-width:44px}
+.avail-cell{padding:5px 6px}
+.avail-pill{display:inline-block;width:22px;height:12px;border-radius:20px}
+.avail-pill.ok{background:rgba(74,222,128,.85)}
+.avail-pill.blk{background:rgba(248,113,113,.9)}
+
 /* ── MASUKAN ── */
 .masukan-list{display:flex;flex-direction:column;gap:10px}
 .masukan-card{background:#12151c;border:1.5px solid rgba(255,255,255,.07);border-radius:14px;padding:16px;animation:fadeUp .25s cubic-bezier(.22,1,.36,1) both}
@@ -416,9 +435,12 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
     <div class="lock-ring">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
-    <div class="lock-title">Admin PAW</div>
+    <div class="lock-title">Admin GMS</div>
     <div class="lock-sub">Masukkan password untuk melanjutkan</div>
     <form class="lock-form" id="lock-form" onsubmit="return submitKey(event)">
+      <select class="lock-input" id="lock-dept" style="margin-bottom:10px;-webkit-appearance:none;appearance:none;cursor:pointer">
+        <option value="">Pilih Departemen…</option>
+      </select>
 <div class="lock-input-wrap">
         <input class="lock-input" id="lock-input" type="password" inputmode="text"
                autocomplete="current-password" placeholder="Password" aria-label="Password">
@@ -442,6 +464,7 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
   </div>
   <nav class="dr-nav">
     <div class="dr-item on" id="dn-jadwal" onclick="navTo('jadwal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Atur Jadwal</div>
+    <div class="dr-item" id="dn-ketersediaan" onclick="navTo('ketersediaan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 15 11 17 15 13"/></svg>Ketersediaan</div>
     <div class="dr-item" id="dn-ringkasan" onclick="navTo('ringkasan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>Ringkasan</div>
     <div class="dr-item" id="dn-catatan" onclick="navTo('catatan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Catatan</div>
     <div class="dr-item" id="dn-masukan" onclick="navTo('masukan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Kritik &amp; Saran</div>
@@ -455,7 +478,7 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
   <div class="hdr">
     <div class="hdr-top">
       <button class="menu-btn" onclick="openDr()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <div class="hdr-text"><div class="hdr-title" id="hdr-title">Admin Page</div><div class="hdr-badge">PAW DEPARTMENT</div></div>
+      <div class="hdr-text"><div class="hdr-title" id="hdr-title">Admin</div><div class="hdr-badge" id="hdr-dept-badge">—</div></div>
       <div class="hdr-logo" id="hdr-logo"><img id="hdr-logo-img" src="" alt="" style="display:none"></div>
     </div>
   </div>
@@ -520,29 +543,42 @@ table.ring-tbl{border-collapse:collapse;min-width:100%;font-size:12px}
 var EXEC_URL = "https://script.google.com/macros/s/AKfycbyRFSxg1KEJelSsBMs4rBBf6-h0G1jiWF04TsITRzFhkvGd-sIhLbjlaB3K3HgkghIA/exec";
 
 var API_PARAM_MAP = {
-  verifyKey:         ['key'],
-  getAdminData:      ['year','month'],
-  getMonthStatus:    ['year','month'],
-  setMonthStatus:    ['year','month','status'],
-  saveServiceRoster: ['dateStr','service','time','dayName','rosterJson','isSpecial'],
-  deleteService:     ['dateStr','service','time'],
-  getNotes:          [],
-  saveNote:          ['idx','tanggal','judul','isi','oleh'],
-  deleteNote:        ['idx']
+  getConfig:         [],
+  verifyKey:         ['dept','key'],
+  getAdminData:      ['dept','year','month'],
+  getMonthStatus:    ['dept','year','month'],
+  setMonthStatus:    ['dept','year','month','status'],
+  saveServiceRoster: ['dept','dateStr','service','time','dayName','rosterJson','isSpecial'],
+  deleteService:     ['dept','dateStr','service','time'],
+  getNotes:          ['dept'],
+  saveNote:          ['dept','idx','tanggal','judul','isi','oleh'],
+  deleteNote:        ['dept','idx'],
+  getAvailabilityMatrix: ['dept','year','month'],
+  setAvailStatus:        ['dept','year','month','status'],
+  // slices 3c-2 / 3d / 3e (used by later admin panels):
+  getSonglist:       ['date','service'],
+  saveSonglist:      ['date','service','songsJson'],
+  deleteSonglist:    ['date','service'],
+  getDresscode:      ['date','service'],
+  saveDresscode:     ['date','service','pdfUrl'],
+  getSelfieQueue:    [],
+  approveSelfie:     ['date','service','name','decision','approvedBy']
 };
 // Matches the backend's ADMIN_ACTIONS in code.gs exactly (getAdminData is
 // gated server-side too, not just the writes) — plus verifyKey, which needs
 // the key sent but must NOT have it overwritten by the stored ADMIN_KEY var.
 // All of these go over POST so the key never sits in a URL query string or
 // server log, even for the "read" (getAdminData).
-var API_KEY_REQUIRED = ['verifyKey','getAdminData','saveServiceRoster','deleteService','saveNote','deleteNote','setMonthStatus'];
+var API_KEY_REQUIRED = ['verifyKey','getAdminData','saveServiceRoster','deleteService','saveNote','deleteNote','setMonthStatus','getAvailabilityMatrix','setAvailStatus','saveSonglist','deleteSonglist','saveDresscode','getSelfieQueue','approveSelfie'];
 
 // Access key held only in sessionStorage (cleared when the tab closes).
 // It is attached to every gated request; the Apps Script backend (ADMIN_KEY
 // check in apiDispatch_) is what actually enforces it — this frontend gate
 // is UX, not the security boundary.
-var ADMIN_KEY = sessionStorage.getItem('paw_admin_key') || "";
-function setAdminKey(k){ ADMIN_KEY = k || ""; if (k) sessionStorage.setItem('paw_admin_key', k); else sessionStorage.removeItem('paw_admin_key'); }
+var ADMIN_KEY  = sessionStorage.getItem('gms_admin_key')  || "";
+var ADMIN_DEPT = sessionStorage.getItem('gms_admin_dept') || "";
+function setAdminKey(k){ ADMIN_KEY = k || ""; if (k) sessionStorage.setItem('gms_admin_key', k); else sessionStorage.removeItem('gms_admin_key'); }
+function setAdminDept(d){ ADMIN_DEPT = d || ""; if (d) sessionStorage.setItem('gms_admin_dept', d); else sessionStorage.removeItem('gms_admin_dept'); }
 
 function callApi(action, args){
   var names = API_PARAM_MAP[action] || [];
@@ -552,9 +588,12 @@ function callApi(action, args){
     params[name] = (val===undefined || val===null) ? "" : val;
   });
   var isKeyed = API_KEY_REQUIRED.indexOf(action) !== -1;
-  // verifyKey already carries the freshly-typed key via its own param (above);
-  // don't clobber it with the (possibly empty/stale) stored ADMIN_KEY.
+  // verifyKey already carries the freshly-typed key+dept via its own params;
+  // don't clobber those with the stored values.
   if (isKeyed && action !== 'verifyKey') params.key = ADMIN_KEY;
+  // Any call that declares a 'dept' param but didn't get one passed gets the
+  // stored admin dept auto-filled, so individual call sites don't each repeat it.
+  if (names.indexOf('dept') !== -1 && (params.dept === undefined || params.dept === "")) params.dept = ADMIN_DEPT;
 
   if (isKeyed){
     return fetch(EXEC_URL, {
@@ -603,16 +642,21 @@ function setLockBusy(busy){
 }
 function submitKey(ev){
   if (ev) ev.preventDefault();
-  var inp = document.getElementById('lock-input');
-  var err = document.getElementById('lock-err');
-  var key = inp ? inp.value.trim() : '';
+  var inp  = document.getElementById('lock-input');
+  var dsel = document.getElementById('lock-dept');
+  var err  = document.getElementById('lock-err');
+  var key  = inp ? inp.value.trim() : '';
+  var dept = dsel ? dsel.value : '';
+  if (!dept){ if(err) err.textContent='Pilih departemen dulu.'; return false; }
   if (!key){ if(err) err.textContent='Password tidak boleh kosong.'; return false; }
   if (err) err.textContent='';
   setLockBusy(true);
-  callApi('verifyKey', [key]).then(function(data){
+  callApi('verifyKey', [dept, key]).then(function(data){
     setLockBusy(false);
     if (data && data.ok){
+      setAdminDept(dept);
       setAdminKey(key);
+      applyDeptLabels();
       hideLock();
       loadData(); // key is valid now — (re)load the admin data it gates
     } else {
@@ -626,12 +670,40 @@ function submitKey(ev){
   });
   return false;
 }
+
+// Sets the header/drawer/title to the active dept. Called after login and on
+// silent-resume. Kept separate so onDataLoaded doesn't fight it.
+function applyDeptLabels(){
+  var t = ADMIN_DEPT ? ("Admin " + ADMIN_DEPT) : "Admin";
+  var h = document.getElementById('hdr-title'); if (h) h.textContent = t;
+  var d = document.getElementById('dr-title');  if (d) d.textContent = t;
+  var b = document.getElementById('hdr-dept-badge'); if (b) b.textContent = ADMIN_DEPT || "";
+}
+
+// Populate the login dept dropdown from getConfig (fixed list, no key needed).
+function populateLoginDepts(){
+  var sel = document.getElementById('lock-dept');
+  if (!sel) return;
+  callApi('getConfig', []).then(function(c){
+    var depts = (c && c.departments) || ["PAW","Sound","MM","CM"];
+    depts.forEach(function(d){
+      var o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o);
+    });
+    if (ADMIN_DEPT) sel.value = ADMIN_DEPT;
+  }).catch(function(){
+    ["PAW","Sound","MM","CM"].forEach(function(d){
+      var o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o);
+    });
+  });
+}
 // On load: if a key is already stored this session, verify it silently and
 // skip the prompt; otherwise show the lock. Reads have already begun behind it.
 (function initLock(){
-  if (ADMIN_KEY){
-    callApi('verifyKey', [ADMIN_KEY]).then(function(data){
-      if (data && data.ok) hideLock(); else { setAdminKey(''); showLock(); }
+  populateLoginDepts();
+  if (ADMIN_KEY && ADMIN_DEPT){
+    callApi('verifyKey', [ADMIN_DEPT, ADMIN_KEY]).then(function(data){
+      if (data && data.ok){ applyDeptLabels(); hideLock(); }
+      else { setAdminKey(''); showLock(); }
     }).catch(function(){ showLock(); });
   } else {
     showLock();
@@ -693,9 +765,9 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
 
-var st={tab:"jadwal",year:0,month:0,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false};
+var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false};
 
-(function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();if(ADMIN_KEY)loadData();})();
+(function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
 function loadData(){
   document.getElementById("content").innerHTML='<div class="init-loading"><div class="big-spin"></div><div class="big-spin-lbl">Memuat data bulan ini…</div></div>';
@@ -708,8 +780,7 @@ function loadData(){
 function onDataLoaded(data){
   st.data=data;st.loaded=true;
   console.log("groups:",JSON.stringify(data.groups));
-  document.getElementById("hdr-title").textContent="Admin Page";
-  document.getElementById("dr-title").textContent="Admin Page";
+  applyDeptLabels();
   if(data.churchName){document.getElementById("dr-church").textContent=data.churchName;}
 if(data.logoUrl){
   ["hdr-logo-img","dr-logo"].forEach(function(id){
@@ -721,7 +792,9 @@ if(data.logoUrl){
     }
   });
 }
-  if(data.pawRoles)PAW_ROLES=data.pawRoles;
+  if(data.roles)PAW_ROLES=data.roles;
+  else if(data.pawRoles)PAW_ROLES=data.pawRoles;
+  if(data.rosterStructure)ROST=data.rosterStructure;
   st.slots=generateSlots(st.year,st.month,data.services||[]);
   renderTab();
 }
@@ -746,11 +819,11 @@ function closeDr(){document.getElementById("dr").classList.remove("on");document
 
 function navTo(tab){
   st.tab=tab;closeDr();
-  ["jadwal","ringkasan","catatan","masukan","sheet"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
+  ["jadwal","ringkasan","ketersediaan","catatan","masukan","sheet"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
   renderTab();
 }
 
-function renderTab(){if(!st.loaded)return;if(st.tab==="jadwal")renderJadwal();else if(st.tab==="ringkasan")renderRingkasan();else if(st.tab==="catatan")renderCatatan();else if(st.tab==="masukan")renderMasukan();else renderSheet();}
+function renderTab(){if(!st.loaded)return;if(st.tab==="jadwal")renderJadwal();else if(st.tab==="ringkasan")renderRingkasan();else if(st.tab==="ketersediaan")renderKetersediaan();else if(st.tab==="catatan")renderCatatan();else if(st.tab==="masukan")renderMasukan();else renderSheet();}
 
 function chMonth(dir){
   st.month+=dir;if(st.month>11){st.month=0;st.year++;}if(st.month<0){st.month=11;st.year--;}
@@ -1656,6 +1729,111 @@ function saveRingkasanAsImage(){
     scrollDiv.style.width=savedScroll.width;
     console.error(err);alert("Gagal membuat gambar. Silakan coba lagi.");
   });
+}
+
+/* ── KETERSEDIAAN (AVAILABILITY) ── */
+function renderKetersediaan(){
+  document.getElementById("content").innerHTML='<div class="init-loading"><div class="big-spin"></div><div class="big-spin-lbl">Memuat ketersediaan…</div></div>';
+  google.script.run
+    .withSuccessHandler(function(data){st.availData=data;buildKetersediaanUI(data);})
+    .withFailureHandler(function(e){document.getElementById("content").innerHTML='<div class="empty-state">Gagal memuat: '+esc(e.message)+'</div>';})
+    .getAvailabilityMatrix(st.availYear,st.availMonth);
+}
+
+function chAvailMonth(dir){
+  st.availMonth+=dir;
+  if(st.availMonth>11){st.availMonth=0;st.availYear++;}
+  if(st.availMonth<0){st.availMonth=11;st.availYear--;}
+  renderKetersediaan();
+}
+
+function availToggleHtml(isOpen){
+  return '<div class="pub-toggle">'+
+      '<button type="button" class="pub-btn pub-close'+(!isOpen?' active':'')+'" onclick="setAvailPub(\'CLOSE\')">CLOSE</button>'+
+      '<button type="button" class="pub-btn pub-open'+(isOpen?' active':'')+'" onclick="setAvailPub(\'OPEN\')">OPEN</button>'+
+    '</div>'+
+    '<div class="pub-note '+(isOpen?'open':'closed')+'">'+
+      (isOpen
+        ? 'Halaman ketersediaan TAMPIL untuk volunteer bulan ini — mereka bisa blokir tanggal.'
+        : 'Halaman ketersediaan DISEMBUNYIKAN dari volunteer bulan ini.')+
+    '</div>';
+}
+
+function setAvailPub(status){
+  if(!st.availData)return;
+  var cur=st.availData.availStatus||"CLOSE";
+  if(cur===status)return;
+  st.availData.availStatus=status;
+  document.getElementById("avail-toggle-wrap").innerHTML=availToggleHtml(status==="OPEN"); // optimistic
+  google.script.run
+    .withSuccessHandler(function(res){
+      if(res&&res.ok){
+        st.availData.availStatus=res.availStatus;
+        document.getElementById("avail-toggle-wrap").innerHTML=availToggleHtml(res.availStatus==="OPEN");
+        showToast(res.availStatus==="OPEN"?"Ketersediaan DIBUKA untuk volunteer.":"Ketersediaan DITUTUP.","ok");
+      } else {
+        st.availData.availStatus=cur;
+        document.getElementById("avail-toggle-wrap").innerHTML=availToggleHtml(cur==="OPEN");
+        showToast("Gagal mengubah status.","err");
+      }
+    })
+    .withFailureHandler(function(e){
+      st.availData.availStatus=cur;
+      document.getElementById("avail-toggle-wrap").innerHTML=availToggleHtml(cur==="OPEN");
+      showToast("Error: "+(e&&e.message||e),"err");
+    })
+    .setAvailStatus(st.availYear,st.availMonth,status);
+}
+
+function buildKetersediaanUI(data){
+  var isOpen=data.availStatus==="OPEN";
+  var chevL='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  var chevR='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+  var h='<div class="avail-wrap">'+
+    '<div class="month-nav-wrap"><div class="month-nav">'+
+      '<button class="mon-btn" onclick="chAvailMonth(-1)">'+chevL+'</button>'+
+      '<div class="month-lbl">'+BLN_L[st.availMonth]+' '+st.availYear+'</div>'+
+      '<button class="mon-btn" onclick="chAvailMonth(1)">'+chevR+'</button>'+
+    '</div>'+
+    '<div id="avail-toggle-wrap">'+availToggleHtml(isOpen)+'</div></div>';
+
+  var dates=data.dates||[];
+  var anyPeople=data.roles.some(function(r){return ((data.byRole||{})[r]||[]).length;});
+  if(!dates.length){
+    h+='<div class="empty-state">Tidak ada tanggal Sabtu/Minggu di bulan ini.</div>';
+  } else if(!anyPeople){
+    h+='<div class="empty-state">Belum ada musisi aktif.</div>';
+  } else {
+    h+='<div class="avail-legend"><span><i style="background:rgba(74,222,128,.85)"></i>Bisa</span><span><i style="background:rgba(248,113,113,.9)"></i>Blokir</span></div>';
+    h+=buildKetersediaanTables(data);
+  }
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+function buildKetersediaanTables(data){
+  var dates=data.dates||[],h="";
+  data.roles.forEach(function(role){
+    var people=((data.byRole||{})[role])||[];
+    if(!people.length)return;
+    var c=C(role);
+    h+='<div class="avail-role-block">'+
+      '<div class="avail-role-hdr" style="color:'+c.fg+'">'+esc(roleLabel(role))+' <span style="color:#4a5070;font-weight:500;font-size:12px">('+people.length+')</span></div>'+
+      '<div class="avail-scroll"><table class="avail-tbl"><tr><th class="avail-name-col">Nama</th>';
+    dates.forEach(function(dt){h+='<th class="avail-date-col">'+HARI_S[dt.dow]+'<br>'+dt.day+'</th>';});
+    h+='</tr>';
+    people.forEach(function(p){
+      var bset={};(p.blocked||[]).forEach(function(d){bset[d]=true;});
+      h+='<tr><td class="avail-name-col">'+esc(p.name)+'</td>';
+      dates.forEach(function(dt){
+        var blk=!!bset[dt.day];
+        h+='<td class="avail-cell"><span class="avail-pill '+(blk?'blk':'ok')+'"></span></td>';
+      });
+      h+='</tr>';
+    });
+    h+='</table></div></div>';
+  });
+  return h;
 }
 
 /* ── MASUKAN ── */

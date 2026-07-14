@@ -436,6 +436,22 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 .sp-grp-pill{padding:9px 16px;border-radius:20px;border:1.5px solid rgba(255,255,255,.13);background:#0f1218;color:#8890aa;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .sp-grp-pill.on{background:rgba(232,184,75,.15);border-color:#e8b84b;color:#e8b84b}
 .sp-hint{font-size:12px;color:#8890aa;line-height:1.5;margin-bottom:16px;background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:11px 13px}
+.sl-page-wrap{padding-bottom:40px}
+.sl-hint-top{font-size:12px;color:#8890aa;line-height:1.55;margin-bottom:18px;background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:11px 13px}
+.slc-daygroup{margin-bottom:20px}
+.slc-daylbl{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#8890aa;margin-bottom:10px}
+.slc-card{display:flex;align-items:center;gap:13px;background:#12151c;border:1.5px solid rgba(255,255,255,.08);border-radius:15px;padding:14px 15px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,background .15s}
+.slc-card:active{background:#1a1e28}
+.slc-card.has{border-color:rgba(74,222,128,.3)}
+.slc-card.special{border-color:rgba(192,132,252,.4)}
+.slc-icon{width:42px;height:42px;border-radius:12px;background:rgba(232,184,75,.13);color:#e8b84b;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.slc-card.special .slc-icon{background:rgba(192,132,252,.15);color:#c084fc}
+.slc-info{flex:1;min-width:0}
+.slc-grp{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#f0f0f5;display:flex;align-items:center;gap:8px}
+.slc-spec-tag{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#c084fc;background:rgba(192,132,252,.15);padding:2px 7px;border-radius:20px}
+.slc-count{font-size:12px;color:#8890aa;margin-top:2px}
+.slc-card.has .slc-count{color:#4ade80}
+.slc-arrow{color:#4a5070;flex-shrink:0}
 .modal-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-ov.on{opacity:1;pointer-events:all}
 .modal-box{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);z-index:401;width:100%;max-width:480px;background:#12151c;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,.1);padding:24px 24px calc(24px + env(safe-area-inset-bottom,0px));transition:transform .32s cubic-bezier(.22,1,.36,1)}
@@ -619,6 +635,20 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
       <button class="rp-del-btn" onclick="deleteThisService()">Hapus</button>
     </div>
   </div> 
+
+  <!-- SONGLIST EDITOR PAGE (slides from right) -->
+  <div class="roster-page" id="slp">
+    <div class="rp-hdr">
+      <div class="rp-hdr-row1">
+        <button class="rp-back" onclick="closeSonglistEditor()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="rp-info">
+          <div class="rp-date" id="slp-date">—</div>
+          <div class="rp-svc" id="slp-grp">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="rp-body" id="slp-body"></div>
+  </div> 
 </div>
 
 <div class="toast" id="toast"></div>
@@ -646,6 +676,7 @@ var API_PARAM_MAP = {
   setAvailStatus:        ['dept','year','month','status'],
   // slices 3c-2 / 3d / 3e (used by later admin panels):
   getSongGroups:     [],
+  getSonglistCards:  ['year','month'],
   getSonglist:       ['date','service'],
   saveSonglist:      ['date','service','songsJson'],
   deleteSonglist:    ['date','service'],
@@ -868,7 +899,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
 
-var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",dressList:[],songGroup:"",songDate:"",songGroupList:[]};
+var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[]};
 
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
@@ -1650,8 +1681,9 @@ function autoAssignAll(){
 
 /* ── SAVE ROSTER ── */
 // ── SONGLIST EDITOR (PAW only, per service) ──────────────────
-function renderSonglistEditor(){
-  var b=document.getElementById("sl-body"); if(!b)return;
+function renderSonglistEditor(){ renderSonglistEditorInto("sl-body"); }
+function renderSonglistEditorInto(targetId){
+  var b=document.getElementById(targetId); if(!b)return;
   var songs=st.songs||[];
   var h='';
   songs.forEach(function(s,i){
@@ -1689,28 +1721,6 @@ function removeSong(i){
   st.songs.splice(i,1);
   st.songDirty=true;
   renderSonglistEditor();
-}
-
-function saveSonglist(){
-  var slot=st.currentSlot; if(!slot)return;
-  var clean=(st.songs||[]).filter(function(s){return (s.judul||"").trim();})
-    .map(function(s){return {judul:s.judul.trim(),pencipta:(s.pencipta||"").trim(),link:(s.link||"").trim()};});
-  var btn=document.getElementById("sl-save");
-  if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
-  callApi('saveSonglist',[slot.date,slot.service,JSON.stringify(clean)]).then(function(res){
-    if(res&&res.ok){
-      st.songs=clean;
-      st.songDirty=false;
-      renderSonglistEditor();
-      showToast(res.msg||"Songlist tersimpan.","ok");
-    } else {
-      if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Songlist ✓";}
-      showToast((res&&res.msg)||"Gagal menyimpan.","err");
-    }
-  }).catch(function(e){
-    if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Songlist ✓";}
-    showToast("Gagal: "+(e.message||e),"err");
-  });
 }
 
 // ── DRESSCODE EDITOR (CM only, per service) ──────────────────
@@ -1945,73 +1955,72 @@ function saveManualDresscode(){
 // ── PAW STANDALONE SONGLIST PAGE (keyed date|group) ──────────
 function renderSonglistPage(){
   if(st.dept!=="PAW"){document.getElementById("content").innerHTML='<div class="sq-empty">Halaman ini khusus departemen PAW.</div>';return;}
-  // default group + date
-  if(!st.songGroup)st.songGroup="Ibadah";
-  if(!st.songDate)st.songDate=isoDate(nextSunday_());
-  document.getElementById("content").innerHTML='<div class="init-loading"><div class="big-spin"></div><div class="big-spin-lbl">Memuat…</div></div>';
-  // fetch the group list once, then render
-  callApi('getSongGroups',[]).then(function(res){
-    st.songGroupList=(res&&res.groups)||["Ibadah","AOG","Voltage"];
+  document.getElementById("content").innerHTML='<div class="init-loading"><div class="big-spin"></div><div class="big-spin-lbl">Memuat songlist…</div></div>';
+  callApi('getSonglistCards',[st.year,st.month]).then(function(res){
+    st.songCards=(res&&res.cards)||[];
     buildSonglistPage();
-    loadGroupSonglist();
-  }).catch(function(){
-    st.songGroupList=["Ibadah","AOG","Voltage"];
-    buildSonglistPage();
-    loadGroupSonglist();
+  }).catch(function(e){
+    document.getElementById("content").innerHTML='<div class="sq-empty">Gagal memuat: '+esc(e.message||e)+'</div>';
   });
 }
 
-function nextSunday_(){
-  var d=new Date(); d.setDate(d.getDate()-d.getDay()+7); return d;
-}
-
+// Card grid, grouped by date, mirroring Atur Jadwal. Tap a card -> slide-in editor.
 function buildSonglistPage(){
-  var groups=st.songGroupList||["Ibadah","AOG","Voltage"];
-  var h='<div class="sp-wrap">';
-  h+='<div class="sp-hint">Satu songlist dipakai bersama untuk semua ibadah dalam grup yang sama. Contoh: <b>Ibadah</b> berlaku untuk Ibadah 1, 2, dan 3.</div>';
-  h+='<div class="sp-controls">'+
-      '<div class="sp-field"><label>Grup Ibadah</label><div class="sp-grp-pills" id="sp-grp-pills">';
-  groups.forEach(function(g){
-    h+='<button class="sp-grp-pill'+(g===st.songGroup?" on":"")+'" onclick="selectSongGroup(\''+escQ(g)+'\')">'+esc(g)+'</button>';
-  });
-  h+='</div></div>'+
-      '<div class="sp-field"><label>Tanggal</label><input class="sp-inp" type="date" id="sp-date" value="'+esc(st.songDate)+'" onchange="onSongDateChange(this.value)"></div>'+
-     '</div>';
-  h+='<div id="sl-body"><div class="sl-loading">Memuat lagu…</div></div>'; // reuse existing editor renderer
+  var cards=st.songCards||[];
+  var h='<div class="sl-page-wrap">';
+  h+='<div class="sl-hint-top">Ketuk kartu untuk mengisi lagu. Satu songlist berlaku untuk semua ibadah dalam grup yang sama (mis. <b>Ibadah</b> = Ibadah 1, 2, 3).</div>';
+
+  if(!cards.length){
+    h+='<div class="sq-empty">Belum ada ibadah PAW terjadwal bulan ini.<br>Atur jadwal dulu di halaman Atur Jadwal.</div>';
+  } else {
+    // group by date
+    var byDate={},order=[];
+    cards.forEach(function(c){ if(!byDate[c.date]){byDate[c.date]=[];order.push(c.date);} byDate[c.date].push(c); });
+    order.forEach(function(ds){
+      var d=new Date(ds+"T00:00:00");
+      h+='<div class="slc-daygroup">';
+      h+='<div class="slc-daylbl">'+HARI_L[d.getDay()]+', '+d.getDate()+' '+BLN_L[d.getMonth()]+'</div>';
+      byDate[ds].forEach(function(c){
+        var has=c.songCount>0;
+        var spec=c.isSpecial;
+        h+='<div class="slc-card'+(has?" has":"")+(spec?" special":"")+'" onclick="openSonglistEditor(\''+escQ(c.date)+'\',\''+escQ(c.group)+'\','+(spec?"true":"false")+')">'+
+            '<div class="slc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>'+
+            '<div class="slc-info"><div class="slc-grp">'+esc(c.group)+(spec?' <span class="slc-spec-tag">Spesial</span>':'')+'</div>'+
+              '<div class="slc-count">'+(has?(c.songCount+' lagu'):'Belum ada lagu')+'</div></div>'+
+            '<div class="slc-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>'+
+          '</div>';
+      });
+      h+='</div>';
+    });
+  }
   h+='</div>';
   document.getElementById("content").innerHTML=h;
 }
 
-function selectSongGroup(g){
-  if(st.songDirty && !confirm("Ada perubahan belum disimpan. Pindah grup tanpa simpan?"))return;
-  st.songGroup=g; st.songs=null; st.songDirty=false;
-  // update pill active states without full rebuild
-  var pills=document.querySelectorAll("#sp-grp-pills .sp-grp-pill");
-  pills.forEach(function(p){p.classList.toggle("on",p.textContent===g);});
-  loadGroupSonglist();
-}
-
-function onSongDateChange(v){
-  if(st.songDirty && !confirm("Ada perubahan belum disimpan. Ganti tanggal tanpa simpan?")){
-    document.getElementById("sp-date").value=st.songDate; return;
-  }
-  st.songDate=v; st.songs=null; st.songDirty=false;
-  loadGroupSonglist();
-}
-
-// Loads songs for the current (date|group) and hands off to the existing editor UI.
-function loadGroupSonglist(){
-  var b=document.getElementById("sl-body"); if(b)b.innerHTML='<div class="sl-loading">Memuat lagu…</div>';
-  callApi('getSonglist',[st.songDate,st.songGroup]).then(function(res){
+// Open the slide-in songlist editor for a (date, group).
+function openSonglistEditor(date,group,isSpecial){
+  st.songDate=date; st.songGroup=group; st.songs=null; st.songDirty=false;
+  var d=new Date(date+"T00:00:00");
+  document.getElementById("slp-date").textContent=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
+  document.getElementById("slp-grp").textContent=group+(isSpecial?" · Spesial":"");
+  document.getElementById("slp").classList.add("on");
+  document.getElementById("slp-body").innerHTML='<div class="sl-loading">Memuat lagu…</div>';
+  callApi('getSonglist',[date,group]).then(function(res){
     st.songs=((res&&res.songs)||[]).map(function(x){return {judul:x.judul||"",pencipta:x.pencipta||"",link:x.link||""};});
     st.songDirty=false;
-    renderSonglistEditor();
+    renderSonglistEditorInto("slp-body");
   }).catch(function(e){
-    if(b)b.innerHTML='<div class="sl-empty">Gagal memuat: '+esc(e.message||e)+'</div>';
+    document.getElementById("slp-body").innerHTML='<div class="sl-empty">Gagal memuat: '+esc(e.message||e)+'</div>';
   });
 }
 
-// Override save target: the standalone page saves by group+date (not currentSlot).
+function closeSonglistEditor(){
+  if(st.songDirty && !confirm("Ada perubahan belum disimpan. Tutup tanpa simpan?"))return;
+  document.getElementById("slp").classList.remove("on");
+  st.songDirty=false;
+  renderSonglistPage(); // refresh counts on the cards
+}
+
 function saveSonglist(){
   var clean=(st.songs||[]).filter(function(s){return (s.judul||"").trim();})
     .map(function(s){return {judul:s.judul.trim(),pencipta:(s.pencipta||"").trim(),link:(s.link||"").trim()};});
@@ -2019,7 +2028,7 @@ function saveSonglist(){
   if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
   callApi('saveSonglist',[st.songDate,st.songGroup,JSON.stringify(clean)]).then(function(res){
     if(res&&res.ok){
-      st.songs=clean; st.songDirty=false; renderSonglistEditor();
+      st.songs=clean; st.songDirty=false; renderSonglistEditorInto("slp-body");
       showToast(res.msg||"Songlist tersimpan.","ok");
     } else {
       if(btn){btn.disabled=false;btn.classList.add("dirty");btn.textContent="Simpan Songlist ✓";}

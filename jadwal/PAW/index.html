@@ -332,7 +332,22 @@ input, textarea {
 .sub-badge.in{background:rgba(74,222,128,.18);color:#4ade80}
 .ecard-arr{color:#4a5070;flex-shrink:0;display:flex;align-items:center;margin-left:4px;transition:transform .22s cubic-bezier(.34,1.7,.64,1),color .15s}
 .ecard.open .ecard-arr{transform:rotate(90deg);color:#e8b84b}
+        
+/* ── ECARD DRESSCODE NOTIF ── */
+/* Sits outside .roster, so it stays visible when the card is collapsed — that's
+   the point: the status should be readable without opening anything. */
+.ecard-notif{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;font-weight:600;cursor:pointer;line-height:1.35;transition:filter .15s}
+.ecard-notif:active{filter:brightness(1.3)}
+.ecard-notif svg{flex-shrink:0}
+.ecard-notif-arr{margin-left:auto;opacity:.55}
+.ecard-notif.none    {background:rgba(232,184,75,.10);color:#e8b84b}
+.ecard-notif.pending {background:rgba(255,255,255,.04);color:#8890aa}
+.ecard-notif.approved{background:rgba(74,222,128,.10);color:#4ade80}
+.ecard-notif.rejected{background:rgba(248,113,113,.12);color:#f87171}
 
+/* ── ROSTER PANEL ─────── */
+        
+        
 /* ── ROSTER PANEL ─────────── */
 .roster{max-height:0;overflow:hidden;transform-origin:top;transition:max-height .34s cubic-bezier(.22,1,.36,1)}
 
@@ -563,8 +578,10 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:264px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both}
 .dept-opt{display:flex;align-items:center;gap:8px;padding:6px;border-radius:10px;cursor:pointer;transition:background .1s}
 .dept-opt:active{background:#1a1e28}
-.dept-opt.sel{background:rgba(255,255,255,.04)}
-.dept-opt-check{margin-left:auto;color:#e8b84b;flex-shrink:0;opacity:0;transition:opacity .12s}
+/* --d-fg/--d-bg are set inline per option from DEPT_META, so the selected row
+   and its check pick up that dept's own color instead of a generic white tint. */
+.dept-opt.sel{background:var(--d-bg,rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px var(--d-fg,transparent)}
+.dept-opt-check{margin-left:auto;color:var(--d-fg,#e8b84b);flex-shrink:0;opacity:0;transition:opacity .12s}
 .dept-opt.sel .dept-opt-check{opacity:1}
         
 </style>
@@ -825,7 +842,7 @@ var st={
   schedCache:{},schedInflight:{},
   ringYear:0,ringMonth:0,ringCache:{},
   availOpenMonths:[],availSelYear:0,availSelMonth:0,availBlocked:{},availDirty:false,
-  rolesByDept:{},structureByDept:{},
+  rolesByDept:{},structureByDept:{},cardTabsByDept:{},
   departments:[],deptFilter:"",
   gateDept:"",gateSelectedVol:null,gateSugList:[],gateDebounce:null
 };
@@ -847,6 +864,7 @@ google.script.run.withSuccessHandler(function(c){
   document.getElementById("gate-title").textContent=APP_CONFIG.appTitle;
   st.rolesByDept=c.rolesByDept||{};
   st.structureByDept=c.structureByDept||{};
+  st.cardTabsByDept=c.cardTabsByDept||{};
   st.departments=c.departments||Object.keys(st.rolesByDept);
   populateDeptFilter();
 if(c.logoUrl){
@@ -1057,8 +1075,8 @@ function populateDeptFilter(){
   var menu=document.getElementById("gate-dept-menu");
   if(!st.departments||!menu)return;
   menu.innerHTML=st.departments.map(function(d){
-    return '<div class="dept-opt" id="dopt-'+safeId(d)+'" onclick="pickGateDept(\''+escQ(d)+'\')">'+
-      deptPillHTML(d)+
+    var m=deptMeta(d);
+    return '<div class="dept-opt" id="dopt-'+safeId(d)+'" style="--d-fg:'+m.fg+';--d-bg:'+m.bg+'" onclick="pickGateDept(\''+escQ(d)+'\')">'+
       '<span class="dept-opt-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'+
     '</div>';
   }).join('');
@@ -1284,7 +1302,7 @@ function cardHTML(ev,idx){
   var displayTime=ev.time||defaultTimesFor(ev.service);
   var subBadge="";if(ss==="digantikan")subBadge='<span class="sub-badge out">Diganti</span>';else if(ss==="menggantikan")subBadge='<span class="sub-badge in">Mengganti</span>';
   var cardCls="ecard"+(ev.isPast?" past":"")+(ss==="digantikan"?" digantikan":ss==="menggantikan"?" menggantikan":(ev.isSpecial?" special":""));
-  return'<div class="'+cardCls+'" id="card-'+kid+'"><div class="ecard-top" onclick="toggleCard(\''+escQ(key)+'\',\''+escQ(ev.name)+'\')"><div class="date-blk'+(isTod?" today":"")+'"><div class="db-dow">'+HARI_L[dObj.getDay()]+'</div><div class="db-num">'+parseInt(dp[2])+'</div><div class="db-mon">'+BLN_S[parseInt(dp[1])-1]+'</div></div><div class="ecard-info">'+(displayTime?'<div class="ecard-time-top">'+esc(displayTime)+'</div>':'')+'<div class="ecard-svc">'+esc(serviceLabel(ev.service))+'</div><div class="ecard-meta-row"><div class="ecard-tags-wrap"><span class="role-chip" style="'+chipCss(ev.role)+'">'+esc(roleLabel(ev.role))+'</span>'+(subBadge||"")+'</div><span class="ecard-arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div></div></div><div class="roster" id="r-'+kid+'">'+cardBody(kid,ev)+'</div></div>';
+  return'<div class="'+cardCls+'" id="card-'+kid+'"><div class="ecard-top" onclick="toggleCard(\''+escQ(key)+'\',\''+escQ(ev.name)+'\')"><div class="date-blk'+(isTod?" today":"")+'"><div class="db-dow">'+HARI_L[dObj.getDay()]+'</div><div class="db-num">'+parseInt(dp[2])+'</div><div class="db-mon">'+BLN_S[parseInt(dp[1])-1]+'</div></div><div class="ecard-info">'+(displayTime?'<div class="ecard-time-top">'+esc(displayTime)+'</div>':'')+'<div class="ecard-svc">'+esc(serviceLabel(ev.service))+'</div><div class="ecard-meta-row"><div class="ecard-tags-wrap"><span class="role-chip" style="'+chipCss(ev.role)+'">'+esc(roleLabel(ev.role))+'</span>'+(subBadge||"")+'</div><span class="ecard-arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></div></div></div><div class="roster" id="r-'+kid+'">'+cardBody(kid,ev)+'</div>'+notifHTML_(kid,ev)+'</div>';
 }
 
 function scrollToCard(card){
@@ -1508,19 +1526,32 @@ function saveAvail(){
     .saveMyAvailability(st.vol.name,st.vol.dept,st.availSelYear,st.availSelMonth,days.join(","));
 }
 
-// Team pane always exists. Songlist/Dresscode panes only for PAW.
+// Tabs are per-dept (config.cardTabsByDept): PAW team+song+dress, Sound team+song,
+// CM team+dress, MM team only. A dept with one tab gets no tab bar at all.
+var TAB_META={
+  team: {label:"Team",     icon:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>'},
+  song: {label:"Songlist", icon:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},
+  dress:{label:"Dresscode",icon:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>'}
+};
+
+function cardTabsFor_(dept){var t=st.cardTabsByDept[dept];return(t&&t.length)?t:["team"];}
+function deptHasTab_(dept,t){return cardTabsFor_(dept).indexOf(t)!==-1;}
+
 function cardBody(kid,ev){
-  var isPaw = st.vol && st.vol.dept === "PAW";
+  var dept=st.vol&&st.vol.dept;
+  var tabs=cardTabsFor_(dept);
   var teamPane='<div class="card-pane on" id="pane-team-'+kid+'"><div class="roster-inner" id="ri-'+kid+'"><div class="roster-spin"><div class="r-spin"><span></span><span></span><span></span></div>Memuat tim…</div></div></div>';
-  if(!isPaw) return teamPane;
-  var tabs='<div class="card-tabs">'+
-    '<button class="card-tab on" id="ct-team-'+kid+'" onclick="cardTab(event,\''+kid+'\',\'team\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Team</button>'+
-    '<button class="card-tab" id="ct-song-'+kid+'" onclick="cardTab(event,\''+kid+'\',\'song\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Songlist</button>'+
-    '<button class="card-tab" id="ct-dress-'+kid+'" onclick="cardTab(event,\''+kid+'\',\'dress\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Dresscode</button>'+
-  '</div>';
-  var songPane='<div class="card-pane" id="pane-song-'+kid+'" data-loaded="0">'+paneLoadingHTML("Memuat lagu…")+'</div>';
-  var dressPane='<div class="card-pane" id="pane-dress-'+kid+'" data-loaded="0">'+paneLoadingHTML("Memuat dresscode…")+'</div>';
-  return tabs+teamPane+songPane+dressPane;
+  if(tabs.length<2)return teamPane;
+
+  var bar='<div class="card-tabs">'+tabs.map(function(t,i){
+    var m=TAB_META[t];if(!m)return"";
+    return '<button class="card-tab'+(i===0?' on':'')+'" id="ct-'+t+'-'+kid+'" onclick="cardTab(event,\''+kid+'\',\''+t+'\')">'+m.icon+m.label+'</button>';
+  }).join('')+'</div>';
+
+  var panes=teamPane;
+  if(deptHasTab_(dept,"song")) panes+='<div class="card-pane" id="pane-song-'+kid+'" data-loaded="0">'+paneLoadingHTML("Memuat lagu…")+'</div>';
+  if(deptHasTab_(dept,"dress"))panes+='<div class="card-pane" id="pane-dress-'+kid+'" data-loaded="0">'+paneLoadingHTML("Memuat dresscode…")+'</div>';
+  return bar+panes;
 }
 
 function paneLoadingHTML(msg){
@@ -1528,28 +1559,28 @@ function paneLoadingHTML(msg){
     '<div class="ld-txt">'+esc(msg)+'</div></div>';
 }
 
-var CARD_TABS=["team","song","dress"];
 var PANE_OUT_MS=150, PANE_DX=18;
 
 function cardTab(e,kid,which){
   e.stopPropagation();
   var card=document.getElementById("card-"+kid);
   var beforeTop=card?card.getBoundingClientRect().top:null;   // remember header position
+  var TABS=cardTabsFor_(st.vol&&st.vol.dept);   // every card on screen is one dept
 
   var cur=null;
-  CARD_TABS.forEach(function(t){
+  TABS.forEach(function(t){
     var p=document.getElementById("pane-"+t+"-"+kid);
     if(p&&p.classList.contains("on"))cur=t;
   });
   if(cur===which)return;   // re-tapping the active tab shouldn't replay the animation
 
   // buttons flip immediately — the tap should feel answered before the pane moves
-  CARD_TABS.forEach(function(t){
+  TABS.forEach(function(t){
     var tab=document.getElementById("ct-"+t+"-"+kid);
     if(tab)tab.classList.toggle("on",t===which);
   });
 
-  var dir=(CARD_TABS.indexOf(which)>CARD_TABS.indexOf(cur))?1:-1;   // slide follows tab order
+  var dir=(TABS.indexOf(which)>TABS.indexOf(cur))?1:-1;   // slide follows tab order
   var oldPane=cur?document.getElementById("pane-"+cur+"-"+kid):null;
 
   function mountNew(){
@@ -1580,6 +1611,56 @@ function cardTab(e,kid,which){
   } else mountNew();
 }
 
+/* ── DRESSCODE NOTIF ──
+   Renders from the same cache the dress pane reads, so it costs no extra call.
+   Only shown when CM has actually published a dresscode for that service —
+   otherwise there's nothing to confirm and the nudge would be noise. */
+var NOTIF_META={
+  none:    {t:"Belum upload selfie dresscode",     i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'},
+  pending: {t:"Selfie menunggu approval CM",       i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'},
+  approved:{t:"Dresscode kamu sudah disetujui",    i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'},
+  rejected:{t:"Selfie ditolak — upload ulang",     i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'}
+};
+
+function notifHTML_(kid,ev){
+  if(!st.vol||!ev||ev.isPast)return"";
+  if(!deptHasTab_(st.vol.dept,"dress"))return"";
+  var dress=st.dressCache["dress|"+ev.date+"|"+svcOf_(ev)];
+  if(!dress||!dress.pdfUrl)return"";          // no dresscode published yet → no notif
+  var sel=st.selfieCache[selfieKey_(ev)];
+  var s=(sel&&sel.status)||"none";
+  var m=NOTIF_META[s]||NOTIF_META.none;
+  return '<div class="ecard-notif '+s+'" id="notif-'+kid+'" onclick="openDressFromNotif(event,\''+kid+'\')">'+
+    m.i+'<span>'+esc(m.t)+'</span>'+
+    '<span class="ecard-notif-arr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>'+
+  '</div>';
+}
+
+// Swaps the strip in place. Handles appear/disappear too, since extras can land
+// after the first paint (loadCardExtras_ is a background call).
+function refreshNotif_(kid){
+  var ev=findEventByKid_(kid);
+  if(!ev)return;
+  var html=notifHTML_(kid,ev), el=document.getElementById("notif-"+kid);
+  if(el){ if(html)el.outerHTML=html; else el.remove(); return; }
+  if(!html)return;
+  var card=document.getElementById("card-"+kid);
+  if(card)card.insertAdjacentHTML("beforeend",html);
+}
+
+function refreshAllNotifs_(){
+  st.allEvents.forEach(function(e){ refreshNotif_(safeId(e.date+"|"+e.service)); });
+}
+
+function openDressFromNotif(e,kid){
+  e.stopPropagation();
+  var ev=findEventByKid_(kid), card=document.getElementById("card-"+kid);
+  if(!ev||!card)return;
+  if(!card.classList.contains("open"))toggleCard(ev.date+"|"+ev.service,ev.name);
+  var btn=document.getElementById("ct-dress-"+kid);
+  if(btn)setTimeout(function(){btn.click();},40);   // let toggleCard's rAF settle first
+}
+        
 function findEventByKid_(kid){
   for(var i=0;i<st.allEvents.length;i++){
     var e=st.allEvents[i];
@@ -1657,24 +1738,28 @@ function revalidateSelfie_(kid,ev){
 
 // Warm all three the moment a card opens, in parallel with the roster.
 function prefetchCardExtras_(ev,kid){
-  if(!ev||!(st.vol&&st.vol.dept==="PAW"))return;
-  fetchSonglist_(ev,function(res){renderSonglistPane_(kid,res);},function(){});
-  fetchDresscode_(ev,function(res){renderDressPane_(kid,ev,res);},function(){});
-  fetchSelfie_(ev,function(){},function(){});   // cache only; the dress pane reads it
+  if(!ev||!st.vol)return;
+  var dept=st.vol.dept;
+  if(deptHasTab_(dept,"song"))fetchSonglist_(ev,function(res){renderSonglistPane_(kid,res);},function(){});
+  if(deptHasTab_(dept,"dress")){
+    fetchDresscode_(ev,function(res){renderDressPane_(kid,ev,res);},function(){});
+    fetchSelfie_(ev,function(){},function(){});   // cache only; the dress pane reads it
+  }
 }
 
 // One background request for the next few services' extras, fired after the
 // schedule has painted. Replaces per-card prefetching (which cost 3 calls/card).
 var EXTRAS_MAX=8;
 function loadCardExtras_(){
-  if(!(st.vol&&st.vol.dept==="PAW")||st.extrasLoaded)return;
+  if(!st.vol||st.extrasLoaded)return;
+  if(!deptHasTab_(st.vol.dept,"song")&&!deptHasTab_(st.vol.dept,"dress"))return;
   var keys=st.allEvents.filter(function(e){return !e.isPast;})
     .slice(0,EXTRAS_MAX)
     .map(function(e){return e.date+"|"+svcOf_(e);});
   if(!keys.length)return;
   st.extrasLoaded=true;
   google.script.run
-    .withSuccessHandler(function(res){if(res&&res.extras)seedExtras_(res.extras);})
+    .withSuccessHandler(function(res){if(res&&res.extras){seedExtras_(res.extras);refreshAllNotifs_();}})
     .withFailureHandler(function(){st.extrasLoaded=false;})   // let a later render retry
     .getCardExtras(st.vol.name,keys.join(";"));
 }
@@ -1767,6 +1852,7 @@ function setSelfiePreview_(kid,url){
 function applySelfie_(kid,res){
   renderSelfieStatus(kid,(res&&res.status)||"none");
   setSelfiePreview_(kid,res&&res.url);
+  refreshNotif_(kid);   // upload + revalidate both land here, so the strip follows for free
 }
 
 function loadMySelfie(kid,ev){

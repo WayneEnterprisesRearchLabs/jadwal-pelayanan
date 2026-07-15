@@ -586,6 +586,7 @@ var API_PARAM_MAP = {
   getConfig: [], getAllVolunteers: [], getNotes: ['dept'],
   searchVolunteers: ['query'],
   getVolunteerSchedule: ['name'],
+  getCardExtras: ['name','keys'],
   getServiceRoster: ['date','service','dept'],
   submitFeedback: ['dept','nama','pesan'],
   getPublicMonthData: ['year','month','dept'],
@@ -754,7 +755,7 @@ function deptChipCss(dept){ var c=deptColor(dept); return "color:"+c.fg+";backgr
 var st={
   mainTab:"jadwal",
   vol:null,allEvents:[],schedTab:"jadwal",viewYear:0,viewMonth:0,monthDir:1,openKey:null,rosterCache:{},query:"",debounce:null,sugList:[],justPicked:false,
-  songCache:{},dressCache:{},selfieCache:{},inflight:{},
+  songCache:{},dressCache:{},selfieCache:{},inflight:{},extrasLoaded:false,
   ringYear:0,ringMonth:0,ringCache:{},
   availOpenMonths:[],availSelYear:0,availSelMonth:0,availBlocked:{},availDirty:false,
   rolesByDept:{},structureByDept:{},
@@ -948,7 +949,7 @@ function renderJadwal(){
   requestAnimationFrame(function(){
   document.getElementById("content").classList.add("ready");
 });
-  schedulePrefetchExtras_();
+  loadCardExtras_();
 }
 
 function buildSched(){
@@ -1162,6 +1163,8 @@ function toggleCard(key,myName){
 function growRoster(kid){
   var el=document.getElementById("r-"+kid);
   if(!el)return;
+  var card=document.getElementById("card-"+kid);
+  if(!card||!card.classList.contains("open"))return;  // closed card: never resize it open
   requestAnimationFrame(function(){
     el.style.maxHeight=el.scrollHeight+"px";
   });
@@ -1443,19 +1446,20 @@ function prefetchCardExtras_(ev,kid){
   fetchSelfie_(ev,function(){},function(){});   // cache only; the dress pane reads it
 }
 
-// Quietly warm the next few upcoming cards once the list is idle.
-var PREFETCH_MAX=4;
-function schedulePrefetchExtras_(){
-  if(!(st.vol&&st.vol.dept==="PAW")||st.schedTab!=="jadwal")return;
-  st.allEvents.filter(function(e){
-    return !e.isPast&&mOf(e.date).key===mKey(st.viewYear,st.viewMonth);
-  }).slice(0,PREFETCH_MAX).forEach(function(ev,i){
-    var kid=safeId(ev.date+"|"+ev.service);
-    setTimeout(function(){
-      var run=function(){prefetchCardExtras_(ev,kid);};
-      if(window.requestIdleCallback)requestIdleCallback(run,{timeout:1500});else run();
-    },250*i);
-  });
+// One background request for the next few services' extras, fired after the
+// schedule has painted. Replaces per-card prefetching (which cost 3 calls/card).
+var EXTRAS_MAX=8;
+function loadCardExtras_(){
+  if(!(st.vol&&st.vol.dept==="PAW")||st.extrasLoaded)return;
+  var keys=st.allEvents.filter(function(e){return !e.isPast;})
+    .slice(0,EXTRAS_MAX)
+    .map(function(e){return e.date+"|"+svcOf_(e);});
+  if(!keys.length)return;
+  st.extrasLoaded=true;
+  google.script.run
+    .withSuccessHandler(function(res){if(res&&res.extras)seedExtras_(res.extras);})
+    .withFailureHandler(function(){st.extrasLoaded=false;})   // let a later render retry
+    .getCardExtras(st.vol.name,keys.join(";"));
 }
 
 function renderSonglistPane_(kid,res){
@@ -1856,7 +1860,7 @@ function logoutToGate(){
   st.allEvents=[];
   st.openKey=null;
   st.rosterCache={};
-  st.songCache={};st.dressCache={};st.selfieCache={};st.inflight={};
+  st.songCache={};st.dressCache={};st.selfieCache={};st.inflight={};st.extrasLoaded=false;
   st.availOpenMonths=[];
   toggleAvailNav();
   setDeptHeader(null);

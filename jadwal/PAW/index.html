@@ -322,7 +322,6 @@ input, textarea {
 .roster-fadein{animation:rosterFadeIn 1.2s cubic-bezier(.16,1,.3,1) both}
 .roster-inner{border-top:1px solid rgba(255,255,255,.06);padding:10px;background:#1a1e28;display:flex;flex-direction:column;gap:7px}
 .roster-spin{display:flex;align-items:center;gap:8px;font-size:13px;color:#8890aa;padding:4px}
-.r-spin{width:15px;height:15px;border-radius:50%;border:2px solid #222737;border-top-color:#e8b84b;animation:spin .6s linear infinite;flex-shrink:0}
 
 /* ── GROUP LABEL ──────────── */
 .group-lbl{text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#e8b84b;letter-spacing:.08em;text-transform:uppercase;padding:3px 0}
@@ -488,8 +487,8 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
   0%{ opacity:0; transform:scale(.9); }
   100%{ opacity:1; transform:scale(1); }
 }
-.big-spin{width:28px;height:28px;border-radius:50%;border:3px solid #222737;border-top-color:#e8b84b;animation:spin .7s linear infinite;margin:0 auto 12px}
-.ld-txt{font-size:14px;color:#8890aa}
+/* .big-spin / .ld-txt live once, near the top (dot-bounce loader). The circle-spinner
+   overrides that used to sit here were silently killing the dots everywhere. */
 .no-ev{background:#12151c;border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:22px;text-align:center;font-size:14px;color:#8890aa}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -514,17 +513,34 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .gate-name-wrap{transition:opacity .2s}
 
 /* ── GATE LOADING OVERLAY ── */
-.gate-load{position:absolute;inset:0;z-index:10;background:#0a0c10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease}
+.gate-load{position:absolute;inset:0;z-index:10;background:#0a0c10;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .35s ease}
 .gate-load.off{opacity:0;pointer-events:none}
-.gate-load-dots{display:flex;gap:8px;align-items:flex-end;height:30px}
-.gate-load-dots span{width:12px;height:12px;border-radius:50%;background:#e8b84b;display:inline-block;animation:dotBounce .9s cubic-bezier(.34,1.56,.64,1) infinite}
-.gate-load-dots span:nth-child(2){animation-delay:.13s}
-.gate-load-dots span:nth-child(3){animation-delay:.26s}
-.gate-load-txt{font-size:14px;color:#8890aa;animation:ldPulse 1.3s ease-in-out infinite}
+.gate-load .big-spin{margin:0 auto 14px}
+
+/* ── PANE LOADER (Lagu / Dresscode tabs) ── */
+.pane-load{padding:24px 14px;text-align:center}
+.pane-load .big-spin{margin:0 auto 10px}
+
+/* ── GATE DEPT PICKER — same pill as the main header ── */
+.dept-pick{position:relative}
+.dept-trig{width:100%;min-height:48px;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:13px;padding:9px 14px 9px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.dept-trig.on{border-color:#e8b84b;box-shadow:0 0 0 3px rgba(232,184,75,.1)}
+.dept-trig-ph{font-size:15px;color:#4a5070;padding-left:4px}
+.dept-trig-chev{margin-left:auto;color:#8890aa;flex-shrink:0;transition:transform .22s cubic-bezier(.34,1.7,.64,1)}
+.dept-trig.on .dept-trig-chev{transform:rotate(180deg)}
+.dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:264px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both}
+.dept-opt{display:flex;align-items:center;gap:8px;padding:6px;border-radius:10px;cursor:pointer;transition:background .1s}
+.dept-opt:active{background:#1a1e28}
+.dept-opt.sel{background:rgba(255,255,255,.04)}
+.dept-opt-check{margin-left:auto;color:#e8b84b;flex-shrink:0;opacity:0;transition:opacity .12s}
+.dept-opt.sel .dept-opt-check{opacity:1}
+        
 </style>
 </head>
 <body>
-<div id="native-splash" style="position:fixed;inset:0;z-index:9999;background:#0a0c10;"></div>
+<div id="native-splash" style="position:fixed;inset:0;z-index:9999;background:#0a0c10;display:flex;align-items:center;justify-content:center;">
+  <div class="big-spin"><span></span><span></span><span></span></div>
+</div>
 
 <div class="gate" id="gate">
   <div class="gate-inner">
@@ -534,9 +550,13 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 
     <div class="form-g">
       <label class="form-lbl">Departemen</label>
-      <select class="form-inp" id="gate-dept" onchange="onGateDept()">
-        <option value="">Pilih departemen…</option>
-      </select>
+      <div class="dept-pick">
+        <div class="dept-trig" id="gate-dept-trig" onclick="toggleDeptMenu(event)">
+          <span id="gate-dept-body"><span class="dept-trig-ph">Pilih departemen…</span></span>
+          <span class="dept-trig-chev"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+        <div class="dept-menu" id="gate-dept-menu"></div>
+      </div>
     </div>
 
     <div class="form-g">
@@ -551,8 +571,8 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
   </div>
 
   <div class="gate-load" id="gate-load">
-    <div class="gate-load-dots"><span></span><span></span><span></span></div>
-    <div class="gate-load-txt">Menyiapkan data…</div>
+    <div class="big-spin"><span></span><span></span><span></span></div>
+    <div class="ld-txt">Menyiapkan data…</div>
   </div>
 </div>
         
@@ -844,24 +864,10 @@ function prefillGateFromMemory_(){
   var match=(st.allMusicians||[]).find(function(m){return m.name===savedName;});
   if(!match)return;
 
-  var deptSel=document.getElementById("gate-dept"),hasDept=false;
-  if(deptSel&&match.dept){
-    for(var i=0;i<deptSel.options.length;i++){
-      if(deptSel.options[i].value===match.dept){hasDept=true;break;}
-    }
-  }
-  if(!hasDept)return;   // dept no longer exists in config → make them pick fresh
+ if(!match.dept||(st.departments||[]).indexOf(match.dept)===-1)return;  // dept gone from config → pick fresh
 
-  // set the fields directly instead of calling onGateDept(), which would clear
-  // the selection and pop the keyboard open with a focus()
-  deptSel.value=match.dept;
-  st.gateDept=match.dept;
-
-  var wrap=document.getElementById("gate-name-wrap");
-  var inp=document.getElementById("gate-name-inp");
-  wrap.style.opacity="1";wrap.style.pointerEvents="all";
-  inp.disabled=false;inp.placeholder="Cari namamu…";inp.value=match.name;
-
+  setGateDept_(match.dept);   // no focus() in here, so the keyboard stays down
+  document.getElementById("gate-name-inp").value=match.name;
   st.gateSelectedVol=match;
   hideGateSug();
   document.getElementById("gate-enter-btn").disabled=false;
@@ -894,10 +900,56 @@ function hideGate(){
   if(g)g.style.display="none";
 }
 
-function onGateDept(){
-  var d=document.getElementById("gate-dept").value;
+/* ── DEPT PICKER — custom dropdown so options can carry the real dept pill
+   (icon + color from DEPT_META), which a native <select> can't render. ── */
+function deptPillHTML(dept){
+  var m=deptMeta(dept);
+  return '<span class="dept-pill" style="background:'+m.bg+';color:'+m.fg+'">'+
+    '<span class="dept-pill-icon">'+m.icon+'</span>'+
+    '<span class="dept-pill-name">'+esc(dept)+'</span></span>';
+}
+
+function toggleDeptMenu(e){
+  if(e)e.stopPropagation();   // keep the document-click closer from firing on us
+  var menu=document.getElementById("gate-dept-menu");
+  var trig=document.getElementById("gate-dept-trig");
+  if(!menu||!trig)return;
+  var open=menu.style.display!=="block";
+  menu.style.display=open?"block":"none";
+  trig.classList.toggle("on",open);
+  if(open)hideGateSug();
+}
+
+function hideDeptMenu(){
+  var menu=document.getElementById("gate-dept-menu");
+  var trig=document.getElementById("gate-dept-trig");
+  if(menu)menu.style.display="none";
+  if(trig)trig.classList.remove("on");
+}
+
+function pickGateDept(d){
+  hideDeptMenu();
+  if(d===st.gateDept)return;   // re-tapping the same dept shouldn't wipe the name
+  setGateDept_(d);
+  var inp=document.getElementById("gate-name-inp");
+  if(inp)inp.focus();
+}
+
+function renderDeptTrigger_(d){
+  var body=document.getElementById("gate-dept-body");
+  if(body)body.innerHTML=d?deptPillHTML(d):'<span class="dept-trig-ph">Pilih departemen…</span>';
+  (st.departments||[]).forEach(function(x){
+    var o=document.getElementById("dopt-"+safeId(x));
+    if(o)o.classList.toggle("sel",x===d);
+  });
+}
+
+// Sets dept + resets the name field. Deliberately no focus() — prefill reuses
+// this and must not pop the keyboard open on page load.
+function setGateDept_(d){
   st.gateDept=d;
   st.gateSelectedVol=null;
+  renderDeptTrigger_(d);
   var wrap=document.getElementById("gate-name-wrap");
   var inp=document.getElementById("gate-name-inp");
   document.getElementById("gate-enter-btn").disabled=true;
@@ -909,7 +961,6 @@ function onGateDept(){
   }
   wrap.style.opacity="1";wrap.style.pointerEvents="all";
   inp.disabled=false;inp.value="";inp.placeholder="Cari namamu…";
-  inp.focus();
 }
 
 function onGateNameInput(){
@@ -968,13 +1019,17 @@ function enterApp(){
 /* dept-filter and in-page search bar were removed — identity now only comes
    from the onboarding gate (see "ONBOARDING GATE" above) or a saved localStorage name. */
 function populateDeptFilter(){
-  var gateSel=document.getElementById("gate-dept");
-  if(!st.departments||!gateSel)return;
-  st.departments.forEach(function(d){
-    var o=document.createElement("option");o.value=d;o.textContent=d;gateSel.appendChild(o);
-  });
+  var menu=document.getElementById("gate-dept-menu");
+  if(!st.departments||!menu)return;
+  menu.innerHTML=st.departments.map(function(d){
+    return '<div class="dept-opt" id="dopt-'+safeId(d)+'" onclick="pickGateDept(\''+escQ(d)+'\')">'+
+      deptPillHTML(d)+
+      '<span class="dept-opt-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'+
+    '</div>';
+  }).join('');
+  renderDeptTrigger_(st.gateDept);
 }
-
+        
 function loginAsVol(v){
   st.vol=v;st.openKey=null;st.rosterCache={};
   showLoading();
@@ -1402,9 +1457,14 @@ function cardBody(kid,ev){
     '<button class="card-tab" id="ct-song-'+kid+'" onclick="cardTab(event,\''+kid+'\',\'song\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Lagu</button>'+
     '<button class="card-tab" id="ct-dress-'+kid+'" onclick="cardTab(event,\''+kid+'\',\'dress\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Dresscode</button>'+
   '</div>';
-  var songPane='<div class="card-pane" id="pane-song-'+kid+'" data-loaded="0"><div class="song-empty">Memuat lagu…</div></div>';
-  var dressPane='<div class="card-pane" id="pane-dress-'+kid+'" data-loaded="0"><div class="dress-empty">Memuat dresscode…</div></div>';
+  var songPane='<div class="card-pane" id="pane-song-'+kid+'" data-loaded="0">'+paneLoadingHTML("Memuat lagu…")+'</div>';
+  var dressPane='<div class="card-pane" id="pane-dress-'+kid+'" data-loaded="0">'+paneLoadingHTML("Memuat dresscode…")+'</div>';
   return tabs+teamPane+songPane+dressPane;
+}
+
+function paneLoadingHTML(msg){
+  return '<div class="pane-load"><div class="big-spin"><span></span><span></span><span></span></div>'+
+    '<div class="ld-txt">'+esc(msg)+'</div></div>';
 }
 
 function cardTab(e,kid,which){
@@ -1586,7 +1646,7 @@ function selfieBoxHTML(kid,ev){
   return '<div class="selfie-box">'+
     '<div class="selfie-h">Konfirmasi Dresscode</div>'+
     '<div class="selfie-sub">Upload selfie untuk konfirmasi warna dresscode-mu. Tim CM akan meninjau.</div>'+
-    '<div id="selfie-status-'+kid+'"><span class="selfie-status none">Memuat status…</span></div>'+
+    '<div id="selfie-status-'+kid+'"><span class="selfie-status none"><span class="r-spin"><span></span><span></span><span></span></span>Memuat status…</span></div>'+
     '<div id="selfie-preview-'+kid+'"></div>'+
     '<input type="file" accept="image/*" capture="user" class="selfie-input" id="selfie-input-'+kid+'" onchange="onSelfiePicked(event,\''+kid+'\')">'+
     '<button class="selfie-btn" id="selfie-btn-'+kid+'" onclick="triggerSelfie(event,\''+kid+'\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Upload Selfie</button>'+
@@ -1941,15 +2001,8 @@ function showGateAgain(){
   if(!g)return;
   g.classList.remove("closing");
   g.style.display="flex";
-  st.gateDept="";st.gateSelectedVol=null;
-  var deptSel=document.getElementById("gate-dept");
-  if(deptSel)deptSel.value="";
-  var wrap=document.getElementById("gate-name-wrap");
-  var inp=document.getElementById("gate-name-inp");
-  wrap.style.opacity=".4";wrap.style.pointerEvents="none";
-  inp.disabled=true;inp.value="";inp.placeholder="Pilih departemen dulu…";
-  document.getElementById("gate-enter-btn").disabled=true;
-  hideGateSug();
+  hideDeptMenu();
+  setGateDept_("");   // resets trigger, name field, and the Masuk button in one go
 }
 
 function setDeptHeader(dept){
@@ -1990,8 +2043,8 @@ function mOf(iso){var p=iso.split("-");return{year:parseInt(p[0]),month:parseInt
 function mKey(y,m){return y+"-"+pad(m+1);}
 function mLabel(iso){var p=iso.split("-");return BLN_L[parseInt(p[1])-1]+" "+p[0];}
 
-document.addEventListener("touchstart",function(e){if(!e.target.closest(".srch"))hideGateSug();},{passive:true});
-document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hideGateSug();});
+document.addEventListener("touchstart",function(e){if(!e.target.closest(".srch"))hideGateSug();if(!e.target.closest(".dept-pick"))hideDeptMenu();},{passive:true});
+document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hideGateSug();if(!e.target.closest(".dept-pick"))hideDeptMenu();});
 (function(){var sx=0;document.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;},{passive:true});document.addEventListener("touchend",function(e){if(e.changedTouches[0].clientX-sx<-50&&document.getElementById("dr").classList.contains("on"))closeDr();},{passive:true});})();
 
 // ── GYRO LIGHT ──

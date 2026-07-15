@@ -2659,12 +2659,29 @@ function onNavBack(){
   var msg=st.dirty
     ? "Ada perubahan yang belum disimpan. Yakin keluar dari aplikasi Admin?"
     : "Yakin keluar dari aplikasi Admin?";
-  showModal("Keluar Aplikasi",msg,"Keluar",function(){
-    _navGuardArmed=false;
-    window.removeEventListener("popstate",onPopGuard);
-    history.go(-2);                                     // back past the sentinel AND this page
-    setTimeout(function(){ try{window.close();}catch(e){} },150);
-  });
+   showModal("Keluar Aplikasi",msg,"Keluar",function(){ exitApp_(); });
+}
+
+/* Best-effort exit. JS can't force-close an installed PWA: history.go() only
+   leaves if there's somewhere to go, and window.close() only works on
+   script-opened windows. So try both, then check whether we're still here — if
+   we are, RE-ARM the guard (otherwise back would be dead for the rest of the
+   session) and say so plainly instead of pretending it worked. */
+function exitApp_(){
+  _navGuardArmed=false;
+  window.removeEventListener("popstate",onPopGuard);
+
+  var t=setTimeout(function(){
+    window.addEventListener("popstate",onPopGuard);
+    armNavGuard();
+    showToast("Tidak bisa menutup otomatis — tutup lewat tombol sistem.","warn");
+  },600);
+  window.addEventListener("pagehide",function(){clearTimeout(t);},{once:true});   // we left → cancel the retry
+
+  // history.length is 2 on a fresh launch (initial entry + our sentinel), so
+  // >2 means there's real prior history to fall back to.
+  if(history.length>2)history.go(-2);
+  else { try{ window.close(); }catch(e){} }
 }
 
 function onPopGuard(){ if(_navGuardArmed)onNavBack(); }

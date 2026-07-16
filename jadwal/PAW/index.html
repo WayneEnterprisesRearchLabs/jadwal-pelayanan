@@ -26,7 +26,7 @@
 
 :root {
   --page-pad: 25px;
-  --gate-top: 2svh;    /* how far down the gate content starts — smaller = higher up the page */
+  --gate-top: 12svh;    /* how far down the gate content starts — smaller = higher up the page */
   --hdr-space: 190px;  /* header + bottom padding the full-page loader discounts when centering */
 }
 
@@ -553,7 +553,7 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── ONBOARDING GATE ──────── */
-.gate{position:fixed;inset:0;z-index:280;background:#0a0c10;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 24px) var(--page-pad) 24px;overflow-y:auto;
+.gate{position:fixed;inset:0;z-index:280;background:#0a0c10;display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + var(--gate-top)) var(--page-pad) 16px;overflow-y:auto;
 /* Masuk → the whole gate squashes down to load up, then springs off the top,
    stretching thin as it goes. The app is already painted underneath (loader and
    all), so lifting the gate IS the reveal. No opacity in this sequence. */

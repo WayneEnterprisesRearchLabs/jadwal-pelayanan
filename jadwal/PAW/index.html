@@ -754,22 +754,39 @@ Object.defineProperty(google.script, 'run', { get: function(){ return new GasRun
 
 var SPLASH_MIN_MS = 1200;
 var splashStart = Date.now();
+
+// Decoupled from splash removal on purpose: if this never runs, the gate (and
+// everything behind it) stays permanently invisible against the near-black
+// background — a silent "black screen, nothing opens" hang. Idempotent so the
+// safety-valve timeout below can't double-fire the animation.
+function revealGate_(){
+  var gi = document.querySelector('.gate-inner');
+  if(gi && !gi.classList.contains('gate-in')){
+    gi.classList.remove('gate-in'); void gi.offsetWidth; gi.classList.add('gate-in');
+  }
+}
+
 function hideSplash(){
   var el = document.getElementById('native-splash');
-  if(!el) return;
   var elapsed = Date.now() - splashStart;
   var wait = Math.max(0, SPLASH_MIN_MS - elapsed);
   setTimeout(function(){
-    // Kick off the gate's pop-in in the same frame the splash starts dissolving —
-    // otherwise gatePop plays instantly at parse time, fully finished and invisible
-    // behind the splash, and the reveal reads as an abrupt swap instead of one move.
-    var gi = document.querySelector('.gate-inner');
-    if(gi){ gi.classList.remove('gate-in'); void gi.offsetWidth; gi.classList.add('gate-in'); }
-    el.classList.add('hide');
-    setTimeout(function(){ el.remove(); }, 650);
+    revealGate_();
+    if(el){
+      el.classList.add('hide');
+      setTimeout(function(){ el.remove(); }, 650);
+    }
   }, wait);
 }
-window.addEventListener('load', hideSplash);
+// This script tag sits at the end of <body>, so the DOM (including .gate-inner)
+// is already parsed by the time it runs — no need to wait for the 'load' event,
+// which also blocks on the Google Fonts + html2canvas CDN requests finishing.
+// That extra wait (previously harmless, since the gate used to auto-play its
+// pop-in via plain CSS regardless of JS/network timing) became load-bearing
+// once the reveal moved into JS, so a slow/blocked resource could strand
+// people on a black screen. Fire immediately, plus a hard fallback no matter what.
+hideSplash();
+setTimeout(revealGate_, 4000);
 
 // ============================================================
 //  APP TEMPLATE CONFIG — edit these when cloning for a new department

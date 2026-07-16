@@ -361,7 +361,9 @@ body:not(.app-in) .home{animation:none}   /* first paint sits behind the gate �
         
 /* ── ROSTER PANEL ─────────── */
 .roster{max-height:0;overflow:hidden;transform-origin:top;transition:max-height .34s cubic-bezier(.22,1,.36,1)}
-
+.roster {
+    background:#12151c;
+}
 @keyframes rosterFadeIn{
   0%  { opacity:0; transform:translateY(-8px) scaleY(.9); }
   60% { opacity:1; transform:translateY(1px) scaleY(1.03); }

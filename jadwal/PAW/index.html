@@ -967,7 +967,7 @@ var SS={1:"background:rgba(244,160,110,.10)",2:"background:rgba(250,200,100,.09)
 
 var PAW_ROLES=["Speaker","WL","Singer","Keys","Guitar","Bass","Drums","SPV","MD","Sequencer","SD","CM","Soundman"];
 
-var REGULAR_SERVICES=["Voltage","AOG Teens","AOG Youth","Ibadah 1","Ibadah 2","Ibadah 3"];
+var REGULAR_SERVICES=["Voltage","AOG Teens","AOG Youth","Umum 1","Umum 2","Umum 3"];
 
 function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function chipCss(r){var c=C(r);return"color:"+c.fg+";background:"+c.bg;}
@@ -978,7 +978,7 @@ function serviceLabel(s){var map={};return map[s]||s;}
 function fmtGroup(g){g=String(g||"").trim();if(!g)return"";return /^group/i.test(g)?g.replace(/^group\s*/i,"Group "):"Group "+g;}
 
 function defaultTimesFor(rawService,firstOnly){
-  var full={"Ibadah 123":"07:00, 09:30, 17:00","AOG":"17:00, 18:30"};
+  var full={"Umum":"07:00, 09:30, 17:00","AOG":"16:00, 18:30"};
   var val=full[rawService]||"";
   if(firstOnly&&val)return val.split(",")[0].trim();
   return val;
@@ -1362,7 +1362,7 @@ function gotEvents(resp){
   st.allEvents=mergeServiceGroups_(events);var now=new Date();st.viewYear=now.getFullYear();st.viewMonth=now.getMonth();
 // Role-based tool nav
   st.isWL = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("WL") !== -1 && dept === "PAW");
-  st.isQC = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("QC") !== -1 && dept === "CM");
+  st.isQC = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("Stylist") !== -1 && dept === "CM");
   var slNav = document.getElementById("dn-tool-songlist");
   if (slNav) slNav.style.display = st.isWL ? "flex" : "none";
   var dcNav = document.getElementById("dn-tool-dresscode");
@@ -1445,8 +1445,8 @@ function buildRiwayat(){
    Voltage always stays on its own. A group only merges when the role is the
    SAME across every member service; otherwise the cards stay separate. */
 var MERGE_GROUPS=[
-  {members:["Ibadah 1","Ibadah 2","Ibadah 3"], label:"Ibadah 123", time:"07:00, 09:30, 17:00"},
-  {members:["AOG Teens","AOG Youth"],           label:"AOG",        time:"17:00, 18:30"}
+  {members:["Umum 1","Umum 2","Umum 3"], label:"Umum", time:"07:00, 09:30, 17:00"},
+  {members:["AOG Teens","AOG Youth"],     label:"AOG",  time:"16:00, 18:30"}
 ];
 
 // representative service for song/dress/selfie on a merged card (first member)
@@ -2390,8 +2390,8 @@ function kirimMasukan(){
 /* ══════════════════════════════════════════════════════════════
    TOOL PAGES — WL: Songlist  |  QC: Dresscode + Selfie Approval
    ══════════════════════════════════════════════════════════════ */
-var SAT_TEMPLATES=[{service:"Voltage",time:"14:00"},{service:"AOG Teens",time:"17:00"},{service:"AOG Youth",time:"19:00"}];
-var SUN_TEMPLATES=[{service:"Ibadah 1",time:"07:00"},{service:"Ibadah 2",time:"09:30"},{service:"Ibadah 3",time:"12:00"}];
+var SAT_TEMPLATES=[{service:"Voltage",time:"13:00"},{service:"AOG Teens",time:"16:00"},{service:"AOG Youth",time:"18:30"}];
+var SUN_TEMPLATES=[{service:"Umum 1",time:"07:00"},{service:"Umum 2",time:"09:30"},{service:"Umum 3",time:"17:00"}];
 
 /* ── WL SONGLIST TOOL ───────────────────────────────────────── */
 function renderToolSonglist(){
@@ -2495,37 +2495,67 @@ function saveToolSonglist(){
 
 /* ── QC DRESSCODE TOOL ──────────────────────────────────────── */
 function dressWeekVol_(dateStr){return Math.ceil(parseInt(dateStr.split("-")[2],10)/7);}
+// Groups templates the same way songlist does: Umum 1/2/3 → "Umum",
+// AOG Teens/Youth → "AOG", Voltage stays "Voltage". One dresscode per group.
+function dressGroupOf_(svc){
+  var s=String(svc||"").trim();
+  if(/^umum(\s*[123])?$/i.test(s))return "Umum";
+  if(/^aog(\s|$)/i.test(s))return "AOG";
+  if(/^voltage$/i.test(s))return "Voltage";
+  return s;
+}
+
 function generateDressSlotsVol(year,month,saved){
-  var map={},order=[];var d=new Date(year,month,1);
+  var map={},order=[];
+  var d=new Date(year,month,1);
   while(d.getMonth()===month){
     var dow=d.getDay(),tpls=(dow===6)?SAT_TEMPLATES:(dow===0)?SUN_TEMPLATES:null;
-    if(tpls){var ds=isoToday().substring(0,4)===String(year)?year+"-"+pad(month+1)+"-"+pad(d.getDate()):year+"-"+pad(month+1)+"-"+pad(d.getDate());
-      ds=year+"-"+pad(month+1)+"-"+pad(d.getDate());
-      tpls.forEach(function(t){var k=ds+"|"+t.service;if(!map[k]){map[k]={date:ds,service:t.service,pdfUrl:"",isCustom:false};order.push(k);}});}
+    if(tpls){
+      var ds=year+"-"+pad(month+1)+"-"+pad(d.getDate());
+      var seen={};
+      tpls.forEach(function(t){
+        var grp=dressGroupOf_(t.service);
+        if(seen[grp])return;seen[grp]=true;
+        var k=ds+"|"+grp;
+        if(!map[k]){map[k]={date:ds,service:grp,pdfUrl:"",isCustom:false};order.push(k);}
+      });
+    }
     d.setDate(d.getDate()+1);
   }
-  (saved||[]).forEach(function(s){var k=s.date+"|"+s.service;if(map[k]){map[k].pdfUrl=s.pdfUrl;}else{map[k]={date:s.date,service:s.service,pdfUrl:s.pdfUrl,isCustom:true};order.push(k);}});
+  (saved||[]).forEach(function(s){
+    var grp=dressGroupOf_(s.service);
+    var k=s.date+"|"+grp;
+    if(map[k]){map[k].pdfUrl=s.pdfUrl;}
+    else{map[k]={date:s.date,service:grp,pdfUrl:s.pdfUrl,isCustom:true};order.push(k);}
+  });
   order.sort();return order.map(function(k){return map[k];});
 }
 
 function renderToolDresscode(){
-  if(!st.isQC){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk QC.</div>';return;}
+  if(!st.isQC){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk Stylist.</div>';return;}
   if(!st.toolDressDept)st.toolDressDept=(st.toolDressDepts[0]||"PAW");
+  var ckey="tdress|"+st.viewYear+"-"+st.viewMonth+"|"+st.toolDressDept;
+  if(st._toolDressCache&&st._toolDressCache.key===ckey){
+    st.toolDressList=st._toolDressCache.list;
+    st.toolDressDepts=st._toolDressCache.depts;
+    buildToolDresscodePage();return;
+  }
   document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat dresscode…</div></div>';
   callApi('getDresscodeList',[st.viewYear,st.viewMonth,st.toolDressDept]).then(function(res){
     st.toolDressDepts=(res&&res.depts)||["PAW","Usher"];
     if(st.toolDressDepts.indexOf(st.toolDressDept)===-1)st.toolDressDept=st.toolDressDepts[0];
     st.toolDressList=generateDressSlotsVol(st.viewYear,st.viewMonth,(res&&res.items)||[]);
+    st._toolDressCache={key:"tdress|"+st.viewYear+"-"+st.viewMonth+"|"+st.toolDressDept,list:st.toolDressList,depts:st.toolDressDepts};
     buildToolDresscodePage();
   }).catch(function(e){document.getElementById("content").innerHTML='<div class="tsq-empty">Gagal: '+esc(e.message||e)+'</div>';});
 }
 
-function setToolDressDept(d){st.toolDressDept=d;renderToolDresscode();}
-function chToolDressMonth(dir){st.viewMonth+=dir;if(st.viewMonth>11){st.viewMonth=0;st.viewYear++;}if(st.viewMonth<0){st.viewMonth=11;st.viewYear--;}renderToolDresscode();}
+function setToolDressDept(d){st.toolDressDept=d;st._toolDressCache=null;renderToolDresscode();}
+function chToolDressMonth(dir){st.viewMonth+=dir;if(st.viewMonth>11){st.viewMonth=0;st.viewYear++;}if(st.viewMonth<0){st.viewMonth=11;st.viewYear--;}st._toolDressCache=null;renderToolDresscode();}
 
 function buildToolDresscodePage(){
   var list=st.toolDressList||[];
-  var h='<div class="tool-wrap"><div class="tool-title">Atur Dresscode</div>'+
+  var h='<div class="tool-wrap">'+
     '<div class="tool-month-nav">'+
       '<button class="mon-btn" onclick="chToolDressMonth(-1)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>'+
       '<div class="tool-month-lbl">'+BLN_L[st.viewMonth]+' '+st.viewYear+'</div>'+
@@ -2571,7 +2601,9 @@ function saveToolDresscode(i){
   var inp=document.getElementById("tdc-url-"+i),url=inp?inp.value.trim():"";
   var btn=document.getElementById("tdc-save-"+i);if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
   callApi('saveDresscode',[it.date,it.service,url,st.toolDressDept,st.vol.name]).then(function(res){
-    if(res&&res.ok){it.pdfUrl=url;alert(res.msg||"Tersimpan.");buildToolDresscodePage();}
+    if(res&&res.ok){it.pdfUrl=url;st._toolDressCache=null;
+      Object.keys(st.dressCache).forEach(function(k){if(k.indexOf(it.date)!==-1)delete st.dressCache[k];});
+      alert(res.msg||"Tersimpan.");buildToolDresscodePage();}
     else{if(btn){btn.disabled=false;btn.classList.add("dirty");}alert((res&&res.msg)||"Gagal.");}
   }).catch(function(e){if(btn){btn.disabled=false;btn.classList.add("dirty");}alert("Gagal: "+(e.message||e));});
 }
@@ -2605,10 +2637,11 @@ var TOOL_SELFIE_GROUP_ORDER=["Voltage","AOG","Ibadah"];
 function toolSelfieGroupOf(it){return it.group||it.service||"";}
 
 function renderToolSelfie(){
-  if(!st.isQC){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk QC.</div>';return;}
+  if(!st.isQC){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk Stylist.</div>';return;}
+  if(st._toolSelfieLoaded&&st.toolSelfieItems.length){buildToolSelfieQueue();return;}
   document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat selfie…</div></div>';
   callApi('getSelfieQueue',[st.vol.name]).then(function(res){
-    st.toolSelfieItems=(res&&res.items)||[];buildToolSelfieQueue();
+    st.toolSelfieItems=(res&&res.items)||[];st._toolSelfieLoaded=true;buildToolSelfieQueue();
   }).catch(function(e){document.getElementById("content").innerHTML='<div class="tsq-empty">Gagal: '+esc(e.message||e)+'</div>';});
 }
 
@@ -2711,7 +2744,7 @@ function logoutToGate(){
   st.isWL=false;st.isQC=false;
   st.toolSongCards=[];st.toolSongCardsKey="";st.toolSongs=null;st.toolSongDirty=false;
   st.toolDressList=[];st.toolDressDepts=[];st.toolDressDept="";
-  st.toolSelfieItems=[];
+  st.toolSelfieItems=[];st._toolSelfieLoaded=false;st._toolDressCache=null;
   toggleAvailNav();
   ["dn-tool-songlist","dn-tool-dresscode","dn-tool-selfie"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display="none";});
   setDeptHeader(null);

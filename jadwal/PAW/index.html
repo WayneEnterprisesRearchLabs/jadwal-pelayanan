@@ -2391,6 +2391,27 @@ function mOf(iso){var p=iso.split("-");return{year:parseInt(p[0]),month:parseInt
 function mKey(y,m){return y+"-"+pad(m+1);}
 function mLabel(iso){var p=iso.split("-");return BLN_L[parseInt(p[1])-1]+" "+p[0];}
 
+/* ── HAPTICS ──
+   navigator.vibrate is Android Chrome only (iOS Safari has no vibration API at
+   all — this stays silent there, not broken). One delegated listener instead of
+   touching every onclick: tag the elements that should buzz and match by closest(). */
+var HAPTIC_MS=10;
+var HAPTIC_SEL=[
+  ".sub-btn",".mon-btn",".menu-btn",".sched-tab",".card-tab",
+  ".dept-trig",".dept-opt",".av-cell.svc",".av-month-pill",
+  ".vol-card",".ecard-top",".ecard-notif",".selfie-btn",
+  ".sug-item",".dr-item",".cal-cell.has-event"
+].join(",");
+
+function buzz_(ms){
+  try{ if(navigator.vibrate) navigator.vibrate(ms||HAPTIC_MS); }catch(e){}
+}
+
+document.addEventListener("click",function(e){
+  var hit=e.target.closest(HAPTIC_SEL);
+  if(hit && !hit.disabled) buzz_();
+},true);   // capture phase — fires even if the handler below stops propagation
+
 document.addEventListener("touchstart",function(e){if(!e.target.closest(".srch"))hideGateSug();if(!e.target.closest(".dept-pick"))hideDeptMenu();},{passive:true});
 document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hideGateSug();if(!e.target.closest(".dept-pick"))hideDeptMenu();});
 (function(){var sx=0;document.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;},{passive:true});document.addEventListener("touchend",function(e){if(e.changedTouches[0].clientX-sx<-50&&document.getElementById("dr").classList.contains("on"))closeDr();},{passive:true});})();

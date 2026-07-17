@@ -1109,6 +1109,30 @@ var RC={
   sound:    {fg:"#b8c2d9",bg:"rgba(184,194,217,.16)"}
 };
 
+// Service → eligibility key (mirrors Code.gs)
+function eligKeyOf_(service) {
+  var s = String(service || "").trim();
+  if (/^voltage$/i.test(s)) return "Voltage";
+  if (/^aog/i.test(s))      return "AOG";
+  if (/^umum/i.test(s))     return "Umum";
+  return null;
+}   
+
+// Client-side eligibility check using the musician list from getAdminData.
+function isVolEligible_(name, serviceName) {
+  if (!name || !serviceName) return true;
+  var key = eligKeyOf_(serviceName);
+  if (!key) return true;   // unknown service type → no restriction
+  var vols = (st.data && (st.data.musicians || st.data.volunteers)) || [];
+  for (var i = 0; i < vols.length; i++) {
+    if (vols[i].name === name) {
+      if (!vols[i].elig) return true;   // null = no restriction
+      return !!vols[i].elig[key];
+    }
+  }
+  return true;
+}        
+
 function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){return s;}
@@ -1596,7 +1620,17 @@ function filterDd(role,idx,query){
   if(!list)return;
   var musicians=getMusiciansByRole(role);
   var q=(query||"").toLowerCase().trim();
-  var filtered=q?musicians.filter(function(m){return m.name.toLowerCase().indexOf(q)!==-1;}):musicians;
+  // Filter by search query AND service eligibility
+    var svcName = st.currentSlot && st.currentSlot.service;
+    var filtered = musicians.filter(function(m) {
+      if (q && m.name.toLowerCase().indexOf(q) === -1) return false;
+      // Eligibility check: null elig = no restriction
+      if (m.elig && svcName) {
+        var key = eligKeyOf_(svcName);
+        if (key && !m.elig[key]) return false;
+      }
+      return true;
+    });
   var currentVal=st.rosterState[role]&&st.rosterState[role][idx]||"";
   var h="";
   if(!filtered.length){h='<div class="rs-dd-empty">Tidak ditemukan</div>';}
@@ -1889,7 +1923,7 @@ function buildGroupRoster(groupName, slot){
   // Per spec, a blocked member is simply left blank rather than substituted;
   // the group stays cohesive and the admin fills the gap by hand.
   GROUP_ROLES_JS.forEach(function(role){
-    var names = (group[role] || []).filter(function(n){ return n && !isBlocked_(n, slot.date); });
+    var names = (group[role] || []).filter(function(n){ return n && !isBlocked_(n, slot.date) && isVolEligible_(n, slot.service); });
     result[role] = names.length ? names : [""];
   });
 
@@ -1912,7 +1946,7 @@ function buildGroupRoster(groupName, slot){
   });
   PAW_ROLES.forEach(function(role){
     if(GROUP_ROLES_JS.indexOf(role)!==-1) return; // band already done
-    var cands=(pool[role]||[]).filter(function(n){return !used[n]&&!isBlocked_(n,slot.date);});
+    var cands=(pool[role]||[]).filter(function(n){return !used[n]&&!isBlocked_(n,slot.date)&&isVolEligible_(n,slot.service);});
     cands.sort(function(a,b){return (cntMap[a]||0)-(cntMap[b]||0);});
     var picked=[];
     if(cands.length){ picked.push(cands[0]); used[cands[0]]=true; }
@@ -2558,8 +2592,9 @@ function groupLabel(g){
 
 /* ── RINGKASAN ── */
 function renderRingkasan(){
+  var RING_ROLES = (st.data && st.data.ringkasanRoles) || PAW_ROLES;
   var satSun=st.slots.filter(function(s){
-    return PAW_ROLES.some(function(r){return s.slots&&s.slots[r]&&s.slots[r].length>0;});
+    return RING_ROLES.some(function(r){return s.slots&&s.slots[r]&&s.slots[r].length>0;});
   });
 
   var h='<div class="ring-wrap">'+
@@ -2660,7 +2695,7 @@ function renderRingkasan(){
   });
   h+='</tr>';
 
-  PAW_ROLES.forEach(function(role){
+  RING_ROLES.forEach(function(role){
     if(role==="Speaker")return;
     var c=C(role);
     var tint=dimBg(c.bg,0.5);

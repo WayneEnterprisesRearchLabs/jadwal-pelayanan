@@ -1084,8 +1084,8 @@ var HARI_S=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
 // var SAT_TEMPLATES=[{service:"Voltage",time:"14:00"},{service:"AOG Teens",time:"17:00"},{service:"AOG Youth",time:"19:00"}];
 // var SUN_TEMPLATES=[{service:"Ibadah 1",time:"07:00"},{service:"Ibadah 2",time:"09:30"},{service:"Ibadah 3",time:"12:00"}];
 
-var SAT_TEMPLATES=[{service:"Voltage",time:"14:00"},{service:"AOG Teens",time:"17:00"},{service:"AOG Youth",time:"19:00"}];
-var SUN_TEMPLATES=[{service:"Ibadah 1",time:"07:00"},{service:"Ibadah 2",time:"09:30"},{service:"Ibadah 3",time:"12:00"}];
+var SAT_TEMPLATES=[{service:"Voltage",time:"13:00"},{service:"AOG Teens",time:"16:00"},{service:"AOG Youth",time:"18:30"}];
+var SUN_TEMPLATES=[{service:"Umum 1",time:"07:00"},{service:"Umum 2",time:"09:30"},{service:"Umum 3",time:"17:00"}];
 
 var PAW_ROLES=["Speaker","WL","Singer","Keys","Guitar","Bass","Drums","SPV","MD","Sequencer","SD","CM","Soundman"];
 var ROST=[{seg:1,roles:["Speaker"]},{seg:2,sub:1,roles:["WL","Singer"]},{seg:2,sub:2,roles:["Keys","Guitar","Bass","Drums"]},{seg:3,sub:1,roles:["SPV","MD","Sequencer","SD"]},{seg:3,sub:2,roles:["CM"]},{seg:4,roles:["Soundman"]}];
@@ -1111,7 +1111,7 @@ var RC={
 
 function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
-function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
+function serviceLabel(s){return s;}
 
 var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",origSpecial:false,loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[],songIdx:null,songCardsKey:""};
 
@@ -2456,7 +2456,7 @@ function saveSonglist(){
    the sheet and eat each other's rows, which is what broke auto-assign. */
 function svcGroupOf_(svc){
   var t=String(svc||"").trim().toLowerCase();
-  if(/^ibadah\s*[123]\b/.test(t))return "Ibadah";
+  if(/^umum\s*[123]\b/.test(t))return "Umum";
   if(/^aog\b/.test(t))return "AOG";
   return "";   // Voltage and one-off specials have no siblings
 }

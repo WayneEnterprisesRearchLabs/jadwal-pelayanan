@@ -1098,7 +1098,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
 
-var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[]};
+var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[]};
 
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
@@ -1129,6 +1129,7 @@ if(data.logoUrl){
   if(data.roles)PAW_ROLES=data.roles;
   else if(data.pawRoles)PAW_ROLES=data.pawRoles;
   if(data.rosterStructure)ROST=data.rosterStructure;
+  if(data.groupRoles)GROUP_ROLES_JS=data.groupRoles;   // [] for non-PAW depts
   st.slots=generateSlots(st.year,st.month,data.services||[]);
   renderTab();
 }
@@ -1350,6 +1351,10 @@ function findSlot(key){for(var i=0;i<st.slots.length;i++){if(st.slots[i].key===k
 function openRoster(key){
   var slot=findSlot(key);if(!slot)return;
   st.currentSlot=slot;
+  // Identity AS LOADED. applyEdit mutates slot.service/time in place, so without
+  // this the original rows can never be found again to delete them.
+  st.origService=slot.service;
+  st.origTime=slot.time;
   st.dirty=false;
   st.rosterState={};
   st.subState={};
@@ -1515,9 +1520,9 @@ function onSelectChange(role,idx,val){
   if(!st.rosterState[role])st.rosterState[role]=[""];
   st.rosterState[role][idx]=val;
   clearSubHint_(role,idx);
-  st.dirty=true;
   st.dirty=true;updateSaveBtn();
-  var el=document.querySelector("#rs-row-"+safeId(role)+"-"+idx+" .rs-select");
+  // was ".rs-select" — that class no longer exists. Speaker rows render .rs-text-inp.
+  var el=document.querySelector("#rs-row-"+safeId(role)+"-"+idx+" .rs-text-inp, #rs-row-"+safeId(role)+"-"+idx+" .rs-dd-input");
   if(el)el.classList.toggle("warn-select",isOverLimit(val));
   updateWarnBox();
 }
@@ -1814,13 +1819,20 @@ function applyGroup(){
   var slotDate=st.currentSlot&&st.currentSlot.date;
   var skipped=[];
   GROUP_ROLES_JS.forEach(function(role){
-    st.rosterState[role]=[""]; // clear first so stale names from a previous group don't linger
+    // subState must be reset in lockstep with rosterState. It wasn't, so a stale
+    // "sub" survived at that index and saveRoster wrote {name:newGroupMember,
+    // sub:someoneFromThePreviousGroup} straight to the sheet.
+    st.rosterState[role]=[""];
+    st.subState[role]=[""];
     var names=(group[role]||[]).filter(function(n){
       if(!n)return false;
       if(isBlocked_(n,slotDate)){skipped.push(n);return false;}   // blocked member → left blank
       return true;
     });
-    if(names.length)st.rosterState[role]=names;
+    if(names.length){
+      st.rosterState[role]=names;
+      st.subState[role]=names.map(function(){return "";});
+    }
   });
   st.dirty=true;updateSaveBtn();
   renderRosterPage();
@@ -2455,18 +2467,30 @@ function saveRoster(){
   }
   function fail(e){btn.disabled=false;btn.textContent="Simpan Jadwal ✓";showToast("Error: "+(e&&e.message||e),"err");}
 
-  if(targets.length>1){
-    // One batched request for all siblings — each keeps its own time and
-    // isSpecial flag, only the roster is copied across.
-    var payload=targets.map(function(t){
-      return {dateStr:t.date,service:t.service,time:t.time,dayName:t.day,roster:clean,isSpecial:!!t.isSpecial};
-    });
-    google.script.run.withSuccessHandler(ok).withFailureHandler(fail)
-      .saveManyRosters(JSON.stringify(payload));
-  } else {
-    google.script.run.withSuccessHandler(ok).withFailureHandler(fail)
-      .saveServiceRoster(slot.date,slot.service,slot.time,slot.day,JSON.stringify(clean),!!slot.isSpecial);
+function doSave(){
+    if(targets.length>1){
+      // One batched request for all siblings — each keeps its own time and
+      // isSpecial flag, only the roster is copied across.
+      var payload=targets.map(function(t){
+        return {dateStr:t.date,service:t.service,time:t.time,dayName:t.day,roster:clean,isSpecial:!!t.isSpecial};
+      });
+      google.script.run.withSuccessHandler(ok).withFailureHandler(fail)
+        .saveManyRosters(JSON.stringify(payload));
+    } else {
+      google.script.run.withSuccessHandler(ok).withFailureHandler(fail)
+        .saveServiceRoster(slot.date,slot.service,slot.time,slot.day,JSON.stringify(clean),!!slot.isSpecial);
+    }
   }
+
+  // Renamed via applyEdit? The backend replaces rows by date|service|time, so the
+  // OLD rows would survive untouched and the service would appear twice. Delete
+  // them first, then save under the new identity.
+  if(st.origService && (st.origService!==slot.service || st.origTime!==slot.time)){
+    google.script.run
+      .withSuccessHandler(function(){ st.origService=slot.service; st.origTime=slot.time; doSave(); })
+      .withFailureHandler(fail)
+      .deleteService(slot.date,st.origService,st.origTime);
+  } else doSave();
 }
 
 function deleteThisService(){
@@ -2476,7 +2500,7 @@ function deleteThisService(){
     google.script.run
       .withSuccessHandler(function(){showToast("Jadwal dihapus.","ok");slot.slots={};closeRoster();renderJadwal();})
       .withFailureHandler(function(e){showToast("Gagal: "+e.message,"err");})
-      .deleteService(slot.date,slot.service,slot.time);
+      .deleteService(slot.date,st.origService||slot.service,st.origTime||slot.time);
   });
 }
 
@@ -2524,7 +2548,7 @@ function renderRingkasan(){
   h+='<div id="ring-table-wrap" style="background:#0a0c10;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">';
 
   h+='<div style="padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,.08);background:#12151c">'+
-    '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#f0f0f5">PAW</span>'+
+    '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#f0f0f5">'+esc(st.dept)+'</span>'+
     '<span style="font-family:Syne,sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;color:#e8b84b;margin-left:10px">'+BLN_L[st.month].toUpperCase()+' '+st.year+'</span>'+
   '</div>';
 
@@ -2570,7 +2594,7 @@ function renderRingkasan(){
 
   h+='<tr><th class="role-col" style="color:#8890aa;font-size:10px;letter-spacing:.06em;text-transform:uppercase">Group</th>';
   satSun.forEach(function(s){
-    var bandRoles=["WL","Singer","Keys","Guitar","Bass","Drums"];
+    var bandRoles=GROUP_ROLES_JS;
     var g=null,isMix=false;
     bandRoles.forEach(function(role){
       (s.slots[role]||[]).forEach(function(p){
@@ -2630,7 +2654,7 @@ function saveRingkasanAsImage(){
     scrollDiv.style.overflowX=savedScroll.overflowX;
     scrollDiv.style.width=savedScroll.width;
     var link=document.createElement("a");
-    link.download="Jadwal_PAW_"+BLN_L[st.month]+"_"+st.year+".png";
+    link.download="Jadwal_"+(st.dept||"GMS")+"_"+BLN_L[st.month]+"_"+st.year+".png";
     link.href=canvas.toDataURL("image/png");
     link.click();
   }).catch(function(err){

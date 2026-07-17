@@ -878,6 +878,7 @@ function setDeptHeader(dept){
   pill.style.color=m.fg;   // the ::after halo borrows currentColor for free
   document.getElementById("dept-pill-icon").innerHTML=m.icon;
   document.getElementById("dept-pill-name").textContent=dept;
+  pill.classList.add("in");   // opacity:0 until this lands — deptSlideIn has fill-mode:both
 }
 
 function titleTwoLines(text){
@@ -1098,7 +1099,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){var map={"Ibadah 123":"Umum"};return map[s]||s;}
 
-var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[]};
+var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",origSpecial:false,loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[]};
 
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
@@ -1355,6 +1356,7 @@ function openRoster(key){
   // this the original rows can never be found again to delete them.
   st.origService=slot.service;
   st.origTime=slot.time;
+  st.origSpecial=!!slot.isSpecial;   // ← add
   st.dirty=false;
   st.rosterState={};
   st.subState={};
@@ -1383,12 +1385,25 @@ function openRoster(key){
   document.getElementById("rp-body").scrollTop=0;
 }
 
+/* applyEdit mutates the slot in st.slots right away, so "Keluar Tanpa Simpan"
+   has to put the identity back — otherwise the list keeps a renamed slot whose
+   key no card's onclick matches, and it becomes unclickable. */
+function revertEdit_(){
+  var slot=st.currentSlot; if(!slot)return;
+  if(st.origService)slot.service=st.origService;
+  if(st.origTime)slot.time=st.origTime;
+  if(st.origSpecial!==undefined)slot.isSpecial=st.origSpecial;
+  slot.key=slot.date+"|"+slot.service+"|"+slot.time;
+}
+        
 function closeRoster(){
   if(st.dirty){
       showModal("Belum Disimpan","Ada perubahan yang belum disimpan. Yakin keluar?","Keluar Tanpa Simpan",function(){
+      revertEdit_();                     // ← add
       st.dirty=false;updateSaveBtn();
       document.getElementById("rp").classList.remove("on");
       st.currentSlot=null;
+      renderJadwal();                    // ← add: repaint cards with reverted name+key
     });
     return;
   }
@@ -1418,15 +1433,22 @@ function applyEdit(){
   var newName=(document.getElementById("edit-svc-name").value||"").trim();
   var newTime=(document.getElementById("edit-svc-time").value||"").trim();
   if(!newName||!newTime){showToast("Isi nama dan waktu.","warn");return;}
-  if(st.currentSlot){
-    st.currentSlot.service=newName;
-    st.currentSlot.time=newTime;
-    st.currentSlot.key=st.currentSlot.date+"|"+newName+"|"+newTime;
-    st.currentSlot.isSpecial=document.getElementById("edit-svc-special").checked;
-    document.getElementById("rp-svc").textContent=newName+" · "+newTime;
+  var slot=st.currentSlot; if(!slot)return;
+  var newKey=slot.date+"|"+newName+"|"+newTime;
+  // Renaming onto an existing service would delete this one's rows and then
+  // overwrite that one's roster under the same key. Block it.
+  if(newKey!==slot.key && st.slots.some(function(s){return s.key===newKey;})){
+    showToast("Ibadah dengan nama & waktu itu sudah ada.","warn");return;
   }
+  slot.service=newName;
+  slot.time=newTime;
+  slot.key=newKey;
+  slot.isSpecial=document.getElementById("edit-svc-special").checked;
+  document.getElementById("rp-svc").textContent=newName+" · "+newTime;
   document.getElementById("rp-edit-form").classList.remove("on");
-  showToast("Nama & waktu diperbarui. Simpan untuk menyimpan.","ok");
+  st.dirty=true;updateSaveBtn();   // ← THE FIX: nothing set this, so Simpan stayed grey
+  refreshCopyRow_();               // sibling detection keys off the NAME, so recompute
+  showToast("Nama & waktu diperbarui. Tekan Simpan Jadwal untuk menyimpan.","ok");
 }
 
 function renderRosterPage(){
@@ -1538,7 +1560,6 @@ function openDd(role,idx){
     inp.readOnly=false;
     inp.placeholder="Cari nama…";
     inp.value="";
-    inp.blur();
   }
   filterDd(role,idx,"");
   var list=document.getElementById('rs-ddlist-'+sr+'-'+idx);
@@ -1746,7 +1767,6 @@ function openGrpDd(){
   inp.readOnly=false;
   inp.placeholder="Cari group…";
   inp.value="";
-  inp.blur();
   filterGrpDd("");
   var rect=inp.getBoundingClientRect();
   list.style.position="fixed";

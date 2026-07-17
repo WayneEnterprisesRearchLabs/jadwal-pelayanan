@@ -630,6 +630,94 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .dept-opt.sel{background:var(--d-bg,rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px var(--d-fg,transparent)}
 .dept-opt-check{margin-left:auto;color:var(--d-fg,#e8b84b);flex-shrink:0;opacity:0;transition:opacity .12s}
 .dept-opt.sel .dept-opt-check{opacity:1}
+
+/* ── TOOL PAGES (WL songlist / QC dresscode+selfie) ── */
+.tool-wrap{padding-top:6px;animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.tool-title{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:6px}
+.tool-sub{font-size:13px;color:#8890aa;line-height:1.55;margin-bottom:18px}
+.tool-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tool-month-lbl{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#e8b84b}
+/* songlist cards */
+.tsl-card{display:flex;align-items:center;gap:13px;background:#12151c;border:1.5px solid rgba(255,255,255,.08);border-radius:15px;padding:14px 15px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;animation:fadeUp .28s cubic-bezier(.22,1,.36,1) both}
+.tsl-card:active{background:#1a1e28}
+.tsl-card.has{border-color:rgba(74,222,128,.3)}
+.tsl-icon{width:42px;height:42px;border-radius:12px;background:rgba(232,184,75,.13);color:#e8b84b;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tsl-info{flex:1;min-width:0}
+.tsl-grp{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#f0f0f5}
+.tsl-count{font-size:12px;color:#8890aa;margin-top:2px}
+.tsl-card.has .tsl-count{color:#4ade80}
+.tsl-arrow{color:#4a5070;flex-shrink:0}
+.tsl-daygroup{margin-bottom:20px}
+.tsl-daylbl{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#8890aa;margin-bottom:10px}
+/* songlist editor (slide-in) */
+.tool-editor{position:fixed;top:0;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;z-index:100;background:#0d0f14;transform:translateX(100%);visibility:hidden;transition:transform .32s cubic-bezier(.22,1,.36,1),visibility 0s linear .32s;display:flex;flex-direction:column;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
+.tool-editor.on{transform:translateX(0);visibility:visible;transition:transform .32s cubic-bezier(.22,1,.36,1),visibility 0s}
+@media(max-width:480px){.tool-editor{transform:translateX(100vw)}.tool-editor.on{transform:translateX(0)}}
+.te-hdr{padding:14px var(--page-pad);background:#0d0f14;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.te-hdr-row{display:flex;align-items:center;gap:12px}
+.te-back{width:36px;height:36px;border-radius:10px;background:none;border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#f0f0f5;flex-shrink:0}
+.te-info{flex:1;min-width:0}
+.te-date{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#f0f0f5}
+.te-sub{font-size:13px;color:#8890aa;margin-top:2px}
+.te-body{flex:1;overflow-y:auto;padding:16px var(--page-pad) 120px}
+/* reuse admin's .sl-* classes for song rows */
+.tsl-row{background:#1a1e28;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px;margin-bottom:10px;position:relative}
+.tsl-row-no{margin-bottom:9px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4a5070}
+.tsl-inp{width:100%;background:#12151c;border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:#f0f0f5;outline:none;margin-bottom:8px;-webkit-appearance:none}
+.tsl-inp:focus{border-color:#e8b84b}
+.tsl-inp::placeholder{color:#4a5070}
+.tsl-inp:last-of-type{margin-bottom:0}
+.tsl-remove{margin-top:14px;background:none;border:none;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;padding:2px 0;display:inline-flex;align-items:center;gap:4px}
+.tsl-add-btn{width:100%;padding:11px;border-radius:11px;border:1.5px dashed rgba(232,184,75,.4);background:rgba(232,184,75,.06);color:#e8b84b;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
+.tsl-save-btn{width:100%;padding:12px;border-radius:11px;border:none;background:#333744;color:#666a7a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:default;transition:background .2s,color .2s}
+.tsl-save-btn.dirty{background:#e8b84b;color:#0a0c10;cursor:pointer}
+.tsl-empty{font-size:13px;color:#8890aa;text-align:center;padding:10px 0}
+/* dresscode tool */
+.tdc-dept-tabs{display:flex;gap:5px;background:#12151c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:5px;margin-bottom:16px}
+.tdc-dept-tab{flex:1;padding:11px 0;border:none;border-radius:10px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .18s}
+.tdc-dept-tab.on{box-shadow:inset 0 0 0 1px currentColor}
+.tdc-week{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8890aa;background:rgba(255,255,255,.06);padding:2px 7px;border-radius:20px;margin-left:7px}
+.tdc-daygroup{margin-bottom:20px}
+.tdc-daylbl{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#e8b84b;margin-bottom:10px}
+.tdc-card{background:#12151c;border:1.5px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:10px}
+.tdc-card.has{border-color:rgba(74,222,128,.3)}
+.tdc-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.tdc-svc{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#f0f0f5}
+.tdc-stat{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.tdc-stat.has{background:rgba(74,222,128,.16);color:#4ade80}
+.tdc-stat.none{background:rgba(255,255,255,.06);color:#8890aa}
+.tdc-url-inp{width:100%;background:#0f1218;border:1.5px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:#f0f0f5;outline:none;margin-bottom:8px;-webkit-appearance:none}
+.tdc-url-inp:focus{border-color:#e8b84b}
+.tdc-row-actions{display:flex;gap:8px;align-items:center}
+.tdc-save{flex:1;padding:9px;border-radius:9px;border:none;background:#333744;color:#666a7a;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:default}
+.tdc-save.dirty{background:#e8b84b;color:#0a0c10;cursor:pointer}
+.tdc-open{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#e8b84b;text-decoration:none;padding:9px 12px;border:1px solid rgba(232,184,75,.3);border-radius:9px}
+.tdc-custom-tag{font-size:10px;font-weight:700;text-transform:uppercase;color:#c084fc;background:rgba(192,132,252,.15);padding:2px 7px;border-radius:20px;margin-left:7px}
+/* selfie queue */
+.tsq-groups{display:flex;gap:5px;background:#12151c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:5px;margin-bottom:10px}
+.tsq-gbtn{flex:1;padding:12px 0;border:none;border-radius:10px;background:none;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#8890aa;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .18s}
+.tsq-gbtn.on{background:rgba(232,184,75,.15);color:#e8b84b;box-shadow:inset 0 0 0 1px rgba(232,184,75,.35)}
+.tsq-gdot{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:20px;background:#e8b84b;color:#0a0c10;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700}
+.tsq-filter{display:flex;gap:6px;margin-bottom:16px}
+.tsq-fbtn{flex:1;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:#12151c;color:#8890aa;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.tsq-fbtn.on{background:#222737;color:#f0f0f5;border-color:rgba(232,184,75,.4)}
+.tsq-card{background:#12151c;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;margin-bottom:14px}
+.tsq-card.approved{border-color:rgba(74,222,128,.35)}
+.tsq-card.rejected{border-color:rgba(248,113,113,.35)}
+.tsq-img{width:100%;max-height:340px;object-fit:contain;background:#000;display:block;cursor:zoom-in}
+.tsq-body{padding:13px 15px}
+.tsq-name{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#f0f0f5}
+.tsq-meta{font-size:12px;color:#8890aa;margin-top:2px}
+.tsq-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:8px}
+.tsq-badge.pending{background:rgba(232,184,75,.16);color:#e8b84b}
+.tsq-badge.approved{background:rgba(74,222,128,.16);color:#4ade80}
+.tsq-badge.rejected{background:rgba(248,113,113,.16);color:#f87171}
+.tsq-actions{display:flex;gap:8px;margin-top:12px}
+.tsq-btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.tsq-approve{background:#4ade80;color:#08210f}
+.tsq-reject{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.35)}
+.tsq-btn:disabled{opacity:.5;cursor:default}
+.tsq-empty{text-align:center;padding:48px 16px;color:#8890aa;font-size:14px}        
         
 </style>
 </head>
@@ -674,6 +762,9 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
   </div>
   <nav class="dr-nav">
     <div class="dr-item on" id="dn-jadwal" onclick="navTo('jadwal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Jadwal</div>
+    <div class="dr-item" id="dn-tool-songlist" style="display:none" onclick="navTo('tool-songlist')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Atur Songlist</div>
+    <div class="dr-item" id="dn-tool-dresscode" style="display:none" onclick="navTo('tool-dresscode')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Atur Dresscode</div>
+    <div class="dr-item" id="dn-tool-selfie" style="display:none" onclick="navTo('tool-selfie')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Approval Selfie</div>      
     <div class="dr-item" id="dn-ketersediaan" style="display:none" onclick="navTo('ketersediaan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 15 11 17 15 13"/></svg>Ketersediaan</div>
     <div class="dr-item" id="dn-ringkasan" onclick="navTo('ringkasan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>Ringkasan</div>
     <div class="dr-item" id="dn-catatan" onclick="navTo('catatan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Catatan</div>
@@ -700,6 +791,20 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
   </div>
 </div>
 
+<!-- SONGLIST EDITOR (WL tool, slides from right) -->
+  <div class="tool-editor" id="tsl-editor">
+    <div class="te-hdr">
+      <div class="te-hdr-row">
+        <button class="te-back" onclick="closeToolSongEditor()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="te-info">
+          <div class="te-date" id="tsl-ed-date">—</div>
+          <div class="te-sub" id="tsl-ed-grp">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="te-body" id="tsl-ed-body"></div>
+  </div>        
+        
 <script>
 // ============================================================
 //  GAS SHIM — makes google.script.run work over fetch() on GitHub Pages
@@ -720,9 +825,15 @@ var API_PARAM_MAP = {
   getSonglist: ['date','service'],
   getDresscode: ['date','service'],
   getMySelfie: ['name','date','service'],
-  uploadSelfie: ['name','date','service','imageData','mimeType']
+  uploadSelfie: ['name','date','service','imageData','mimeType'],
+  getSonglistCards: ['year','month'],
+  saveSonglist: ['date','service','songsJson','callerName'],
+  getDresscodeList: ['year','month','forDept'],
+  saveDresscode: ['date','service','pdfUrl','forDept','callerName'],
+  getSelfieQueue: ['callerName'],
+  approveSelfie: ['date','service','name','decision','approvedBy']
 };
-var API_WRITE_ACTIONS = ['submitFeedback','saveMyAvailability','uploadSelfie'];
+var API_WRITE_ACTIONS = ['submitFeedback','saveMyAvailability','uploadSelfie','saveSonglist','saveDresscode','approveSelfie'];
 
 function callApi(action, args){
   var names = API_PARAM_MAP[action] || [];
@@ -894,6 +1005,10 @@ var st={
   schedCache:{},schedInflight:{},
   ringYear:0,ringMonth:0,ringCache:{},notesCache:{},
   availOpenMonths:[],availSelYear:0,availSelMonth:0,availBlocked:{},availDirty:false,
+  isWL:false,isQC:false,
+  toolSongCards:[],toolSongIdx:null,toolSongs:null,toolSongDirty:false,toolSongDate:"",toolSongGroup:"",toolSongCardsKey:"",
+  toolDressList:[],toolDressDepts:[],toolDressDept:"",
+  toolSelfieItems:[],toolSelfieFilter:"pending",toolSelfieGroup:"",
   rolesByDept:{},structureByDept:{},cardTabsByDept:{},
   departments:[],deptFilter:"",
   gateDept:"",gateSelectedVol:null,gateSugList:[],gateDebounce:null
@@ -984,9 +1099,12 @@ function closeDr(){document.getElementById("dr").classList.remove("on");document
 
 function navTo(tab){
   st.mainTab=tab;closeDr();
-  ["jadwal","ketersediaan","ringkasan","catatan","masukan"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
+ ["jadwal","tool-songlist","tool-dresscode","tool-selfie","ketersediaan","ringkasan","catatan","masukan"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
   contentOut_();   // reset the fade so EVERY page entry animates in, not just the first
   if(tab==="jadwal")renderJadwal();
+  else if(tab==="tool-songlist")renderToolSonglist();
+  else if(tab==="tool-dresscode")renderToolDresscode();
+  else if(tab==="tool-selfie")renderToolSelfie();
   else if(tab==="ketersediaan")renderKetersediaan();
   else if(tab==="ringkasan")renderRingkasan();
   else if(tab==="catatan")renderCatatan();
@@ -1244,9 +1362,19 @@ function gotEvents(resp){
   if (dept && st.rolesByDept[dept]) PAW_ROLES = st.rolesByDept[dept];
   setDeptHeader(dept);
   st.allEvents=mergeServiceGroups_(events);var now=new Date();st.viewYear=now.getFullYear();st.viewMonth=now.getMonth();
+// Role-based tool nav
+  st.isWL = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("WL") !== -1 && dept === "PAW");
+  st.isQC = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("QC") !== -1 && dept === "CM");
+  var slNav = document.getElementById("dn-tool-songlist");
+  if (slNav) slNav.style.display = st.isWL ? "flex" : "none";
+  var dcNav = document.getElementById("dn-tool-dresscode");
+  if (dcNav) dcNav.style.display = st.isQC ? "flex" : "none";
+  var sfNav = document.getElementById("dn-tool-selfie");
+  if (sfNav) sfNav.style.display = st.isQC ? "flex" : "none";
+
   refreshAvailNav_(dept);
   renderJadwal();
-  prefetchNotes_(dept);   // warm it now — Catatan then opens with no round-trip
+  prefetchNotes_(dept);
 }
 
 function prefetchNotes_(dept){
@@ -2261,6 +2389,303 @@ function kirimMasukan(){
   google.script.run.withSuccessHandler(function(r){if(r.ok)document.getElementById("content").innerHTML='<div class="fb-ok"><div class="fb-ok-ico">🙏</div><div class="fb-ok-h">Terima kasih!</div><div class="fb-ok-p">'+esc(r.msg)+'</div></div>';else{btn.disabled=false;btn.textContent="Kirim Masukan";alert(r.msg);}}).withFailureHandler(function(e){btn.disabled=false;btn.textContent="Kirim Masukan";alert("Gagal: "+e.message);}).submitFeedback(st.vol&&st.vol.dept,n,p);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   TOOL PAGES — WL: Songlist  |  QC: Dresscode + Selfie Approval
+   ══════════════════════════════════════════════════════════════ */
+var SAT_TEMPLATES=[{service:"Voltage",time:"14:00"},{service:"AOG Teens",time:"17:00"},{service:"AOG Youth",time:"19:00"}];
+var SUN_TEMPLATES=[{service:"Ibadah 1",time:"07:00"},{service:"Ibadah 2",time:"09:30"},{service:"Ibadah 3",time:"12:00"}];
+
+/* ── WL SONGLIST TOOL ───────────────────────────────────────── */
+function renderToolSonglist(){
+  if(!st.isWL){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk WL.</div>';return;}
+  var y=st.viewYear,m=st.viewMonth,mkey=y+"-"+m;
+  if(st.toolSongCardsKey===mkey&&(st.toolSongCards||[]).length){buildToolSonglistPage();return;}
+  document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat songlist…</div></div>';
+  google.script.run.withSuccessHandler(function(res){
+    st.toolSongCards=(res&&res.cards)||[];st.toolSongCardsKey=mkey;buildToolSonglistPage();
+  }).withFailureHandler(function(e){document.getElementById("content").innerHTML='<div class="tsq-empty">Gagal: '+esc(e.message)+'</div>';}).getSonglistCards(y,m);
+}
+
+function chToolSongMonth(dir){
+  st.viewMonth+=dir;if(st.viewMonth>11){st.viewMonth=0;st.viewYear++;}if(st.viewMonth<0){st.viewMonth=11;st.viewYear--;}
+  st.toolSongCardsKey="";renderToolSonglist();
+}
+
+function buildToolSonglistPage(){
+  var cards=st.toolSongCards||[];
+  var h='<div class="tool-wrap"><div class="tool-title">Atur Songlist</div>'+
+    '<div class="tool-sub">Ketuk kartu untuk mengisi lagu. Satu songlist berlaku untuk semua ibadah dalam grup yang sama.</div>'+
+    '<div class="tool-month-nav">'+
+      '<button class="mon-btn" onclick="chToolSongMonth(-1)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>'+
+      '<div class="tool-month-lbl">'+BLN_L[st.viewMonth]+' '+st.viewYear+'</div>'+
+      '<button class="mon-btn" onclick="chToolSongMonth(1)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>'+
+    '</div>';
+  if(!cards.length){h+='<div class="tsq-empty">Belum ada ibadah terjadwal bulan ini.</div>';}
+  else{
+    var byDate={},order=[];
+    cards.forEach(function(c,i){c._i=i;if(!byDate[c.date]){byDate[c.date]=[];order.push(c.date);}byDate[c.date].push(c);});
+    order.forEach(function(ds){
+      var d=new Date(ds+"T00:00:00");
+      h+='<div class="tsl-daygroup"><div class="tsl-daylbl">'+HARI_L[d.getDay()]+', '+d.getDate()+' '+BLN_L[d.getMonth()]+'</div>';
+      byDate[ds].forEach(function(c){
+        var has=c.songCount>0;
+        h+='<div class="tsl-card'+(has?" has":"")+'" onclick="openToolSongEditor('+c._i+')">'+
+          '<div class="tsl-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>'+
+          '<div class="tsl-info"><div class="tsl-grp">'+esc(c.group)+'</div><div class="tsl-count">'+(has?c.songCount+' lagu':'Belum ada lagu')+'</div></div>'+
+          '<div class="tsl-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div></div>';
+      });
+      h+='</div>';
+    });
+  }
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+function openToolSongEditor(i){
+  var c=(st.toolSongCards||[])[i];if(!c)return;
+  st.toolSongIdx=i;st.toolSongDate=c.date;st.toolSongGroup=c.group;
+  st.toolSongs=(c.songs||[]).map(function(x){return{judul:x.judul||"",pencipta:x.pencipta||"",link:x.link||""};});
+  st.toolSongDirty=false;
+  var d=new Date(c.date+"T00:00:00");
+  document.getElementById("tsl-ed-date").textContent=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
+  document.getElementById("tsl-ed-grp").textContent=c.group;
+  renderToolSongEditorBody();
+  document.getElementById("tsl-editor").classList.add("on");
+  document.getElementById("tsl-ed-body").scrollTop=0;
+}
+
+function closeToolSongEditor(){
+  if(st.toolSongDirty&&!confirm("Ada perubahan belum disimpan. Tutup?"))return;
+  document.getElementById("tsl-editor").classList.remove("on");
+  st.toolSongDirty=false;
+  buildToolSonglistPage();
+}
+
+function renderToolSongEditorBody(){
+  var songs=st.toolSongs||[],b=document.getElementById("tsl-ed-body");if(!b)return;
+  var h='';
+  songs.forEach(function(s,i){
+    h+='<div class="tsl-row"><div class="tsl-row-no">Lagu '+(i+1)+'</div>'+
+      '<input class="tsl-inp" type="text" placeholder="Judul lagu…" value="'+esc(s.judul)+'" oninput="onToolSongInput('+i+',\'judul\',this.value)">'+
+      '<input class="tsl-inp" type="text" placeholder="Pencipta…" value="'+esc(s.pencipta)+'" oninput="onToolSongInput('+i+',\'pencipta\',this.value)">'+
+      '<input class="tsl-inp" type="text" placeholder="Link YouTube (opsional)…" value="'+esc(s.link)+'" oninput="onToolSongInput('+i+',\'link\',this.value)">'+
+      '<button class="tsl-remove" onclick="removeToolSong('+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Hapus lagu</button></div>';
+  });
+  if(!songs.length)h+='<div class="tsl-empty">Belum ada lagu. Tambahkan di bawah.</div>';
+  h+='<button class="tsl-add-btn" onclick="addToolSong()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Tambah Lagu</button>'+
+    '<button class="tsl-save-btn'+(st.toolSongDirty?' dirty':'')+'" id="tsl-save" onclick="saveToolSonglist()"'+(st.toolSongDirty?'':' disabled')+'>Simpan Songlist ✓</button>';
+  b.innerHTML=h;
+}
+
+function onToolSongInput(i,field,val){if(!st.toolSongs||!st.toolSongs[i])return;st.toolSongs[i][field]=val;st.toolSongDirty=true;var btn=document.getElementById("tsl-save");if(btn){btn.classList.add("dirty");btn.disabled=false;}}
+function addToolSong(){if(!st.toolSongs)st.toolSongs=[];st.toolSongs.push({judul:"",pencipta:"",link:""});st.toolSongDirty=true;renderToolSongEditorBody();}
+function removeToolSong(i){if(!st.toolSongs)return;st.toolSongs.splice(i,1);st.toolSongDirty=true;renderToolSongEditorBody();}
+
+function saveToolSonglist(){
+  var clean=(st.toolSongs||[]).filter(function(s){return(s.judul||"").trim();}).map(function(s){return{judul:s.judul.trim(),pencipta:(s.pencipta||"").trim(),link:(s.link||"").trim()};});
+  var btn=document.getElementById("tsl-save");if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
+  callApi('saveSonglist',[st.toolSongDate,st.toolSongGroup,JSON.stringify(clean),st.vol.name]).then(function(res){
+    if(res&&res.ok){
+      st.toolSongs=clean;st.toolSongDirty=false;renderToolSongEditorBody();
+      if(st.toolSongIdx!==null&&st.toolSongCards[st.toolSongIdx]){st.toolSongCards[st.toolSongIdx].songs=clean;st.toolSongCards[st.toolSongIdx].songCount=clean.length;}
+      // also invalidate volunteer song cache so the read-only pane picks up the edit
+      Object.keys(st.songCache).forEach(function(k){if(k.indexOf(st.toolSongDate)!==-1)delete st.songCache[k];});
+      alert((res&&res.msg)||"Songlist tersimpan.");
+    } else {if(btn){btn.disabled=false;btn.classList.add("dirty");}alert((res&&res.msg)||"Gagal.");}
+  }).catch(function(e){if(btn){btn.disabled=false;btn.classList.add("dirty");}alert("Gagal: "+(e.message||e));});
+}
+
+/* ── QC DRESSCODE TOOL ──────────────────────────────────────── */
+function dressWeekVol_(dateStr){return Math.ceil(parseInt(dateStr.split("-")[2],10)/7);}
+function generateDressSlotsVol(year,month,saved){
+  var map={},order=[];var d=new Date(year,month,1);
+  while(d.getMonth()===month){
+    var dow=d.getDay(),tpls=(dow===6)?SAT_TEMPLATES:(dow===0)?SUN_TEMPLATES:null;
+    if(tpls){var ds=isoToday().substring(0,4)===String(year)?year+"-"+pad(month+1)+"-"+pad(d.getDate()):year+"-"+pad(month+1)+"-"+pad(d.getDate());
+      ds=year+"-"+pad(month+1)+"-"+pad(d.getDate());
+      tpls.forEach(function(t){var k=ds+"|"+t.service;if(!map[k]){map[k]={date:ds,service:t.service,pdfUrl:"",isCustom:false};order.push(k);}});}
+    d.setDate(d.getDate()+1);
+  }
+  (saved||[]).forEach(function(s){var k=s.date+"|"+s.service;if(map[k]){map[k].pdfUrl=s.pdfUrl;}else{map[k]={date:s.date,service:s.service,pdfUrl:s.pdfUrl,isCustom:true};order.push(k);}});
+  order.sort();return order.map(function(k){return map[k];});
+}
+
+function renderToolDresscode(){
+  if(!st.isQC){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk QC.</div>';return;}
+  if(!st.toolDressDept)st.toolDressDept=(st.toolDressDepts[0]||"PAW");
+  document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat dresscode…</div></div>';
+  callApi('getDresscodeList',[st.viewYear,st.viewMonth,st.toolDressDept]).then(function(res){
+    st.toolDressDepts=(res&&res.depts)||["PAW","Usher"];
+    if(st.toolDressDepts.indexOf(st.toolDressDept)===-1)st.toolDressDept=st.toolDressDepts[0];
+    st.toolDressList=generateDressSlotsVol(st.viewYear,st.viewMonth,(res&&res.items)||[]);
+    buildToolDresscodePage();
+  }).catch(function(e){document.getElementById("content").innerHTML='<div class="tsq-empty">Gagal: '+esc(e.message||e)+'</div>';});
+}
+
+function setToolDressDept(d){st.toolDressDept=d;renderToolDresscode();}
+function chToolDressMonth(dir){st.viewMonth+=dir;if(st.viewMonth>11){st.viewMonth=0;st.viewYear++;}if(st.viewMonth<0){st.viewMonth=11;st.viewYear--;}renderToolDresscode();}
+
+function buildToolDresscodePage(){
+  var list=st.toolDressList||[];
+  var h='<div class="tool-wrap"><div class="tool-title">Atur Dresscode</div>'+
+    '<div class="tool-month-nav">'+
+      '<button class="mon-btn" onclick="chToolDressMonth(-1)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>'+
+      '<div class="tool-month-lbl">'+BLN_L[st.viewMonth]+' '+st.viewYear+'</div>'+
+      '<button class="mon-btn" onclick="chToolDressMonth(1)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>'+
+    '</div>';
+  h+='<div class="tdc-dept-tabs">';
+  (st.toolDressDepts||[]).forEach(function(dp){
+    var m=deptMeta(dp),on=dp===st.toolDressDept;
+    h+='<button class="tdc-dept-tab'+(on?' on':'')+'" style="'+(on?'background:'+m.bg+';color:'+m.fg:'color:#8890aa')+'" onclick="setToolDressDept(\''+escQ(dp)+'\')">'+
+      '<span class="dept-pill-icon">'+m.icon+'</span><span class="dept-pill-name">'+esc(dp)+'</span></button>';
+  });
+  h+='</div>';
+  if(!list.length){h+='<div class="tsq-empty">Tidak ada Sabtu/Minggu bulan ini.</div>';}
+  else{
+    var byDate={},order=[];
+    list.forEach(function(it,i){it._i=i;if(!byDate[it.date]){byDate[it.date]=[];order.push(it.date);}byDate[it.date].push(it);});
+    order.forEach(function(ds){
+      var d=new Date(ds+"T00:00:00");
+      h+='<div class="tdc-daygroup"><div class="tdc-daylbl">'+HARI_L[d.getDay()]+', '+d.getDate()+' '+BLN_L[d.getMonth()]+'</div>';
+      byDate[ds].forEach(function(it){
+        var has=!!it.pdfUrl,i=it._i;
+        h+='<div class="tdc-card'+(has?" has":"")+'"><div class="tdc-card-top"><div><div class="tdc-svc">'+esc(it.service)+
+          '<span class="tdc-week">Week '+dressWeekVol_(it.date)+'</span>'+
+          (it.isCustom?'<span class="tdc-custom-tag">Manual</span>':'')+'</div></div>'+
+          '<span class="tdc-stat '+(has?"has":"none")+'">'+(has?"✅ Ada":"— Kosong")+'</span></div>'+
+          '<input class="tdc-url-inp" type="text" id="tdc-url-'+i+'" placeholder="Tempel link PDF…" value="'+esc(it.pdfUrl||"")+'" oninput="onToolDressInput('+i+')">'+
+          '<div class="tdc-row-actions"><button class="tdc-save" id="tdc-save-'+i+'" onclick="saveToolDresscode('+i+')" disabled>Simpan ✓</button>'+
+          (has?'<a class="tdc-open" href="'+encodeURI(it.pdfUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Buka</a>':'')+
+          '</div></div>';
+      });
+      h+='</div>';
+    });
+  }
+  h+='<button class="tsl-add-btn" onclick="toggleToolDressAdd()" style="margin-top:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Tambah Manual</button>'+
+    '<div id="tdc-add-wrap"></div></div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+function onToolDressInput(i){var btn=document.getElementById("tdc-save-"+i);if(btn){btn.classList.add("dirty");btn.disabled=false;}}
+
+function saveToolDresscode(i){
+  var it=(st.toolDressList||[])[i];if(!it)return;
+  var inp=document.getElementById("tdc-url-"+i),url=inp?inp.value.trim():"";
+  var btn=document.getElementById("tdc-save-"+i);if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
+  callApi('saveDresscode',[it.date,it.service,url,st.toolDressDept,st.vol.name]).then(function(res){
+    if(res&&res.ok){it.pdfUrl=url;alert(res.msg||"Tersimpan.");buildToolDresscodePage();}
+    else{if(btn){btn.disabled=false;btn.classList.add("dirty");}alert((res&&res.msg)||"Gagal.");}
+  }).catch(function(e){if(btn){btn.disabled=false;btn.classList.add("dirty");}alert("Gagal: "+(e.message||e));});
+}
+
+function toggleToolDressAdd(){
+  var w=document.getElementById("tdc-add-wrap");if(!w)return;
+  if(w.innerHTML){w.innerHTML="";return;}
+  var y=st.viewYear,m=st.viewMonth;
+  w.innerHTML='<div style="background:#12151c;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;margin-top:8px">'+
+    '<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#e8b84b;margin-bottom:12px">Tambah Dresscode — '+esc(st.toolDressDept)+'</div>'+
+    '<input class="tdc-url-inp" id="tdc-n-date" type="date" value="'+y+'-'+pad(m+1)+'-01" style="margin-bottom:8px">'+
+    '<input class="tdc-url-inp" id="tdc-n-svc" type="text" placeholder="Nama ibadah" style="margin-bottom:8px">'+
+    '<input class="tdc-url-inp" id="tdc-n-url" type="text" placeholder="Link PDF…">'+
+    '<button class="tsl-save-btn dirty" onclick="addToolDresscode()" style="margin-top:10px">Tambah</button></div>';
+  w.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function addToolDresscode(){
+  var date=(document.getElementById("tdc-n-date")||{}).value||"";
+  var svc=((document.getElementById("tdc-n-svc")||{}).value||"").trim();
+  var url=((document.getElementById("tdc-n-url")||{}).value||"").trim();
+  if(!date||!svc||!url){alert("Isi semua kolom.");return;}
+  callApi('saveDresscode',[date,svc,url,st.toolDressDept,st.vol.name]).then(function(res){
+    if(res&&res.ok){alert(res.msg||"Tersimpan.");renderToolDresscode();}
+    else alert((res&&res.msg)||"Gagal.");
+  }).catch(function(e){alert("Gagal: "+(e.message||e));});
+}
+
+/* ── QC SELFIE APPROVAL TOOL ───────────────────────────────── */
+var TOOL_SELFIE_GROUP_ORDER=["Voltage","AOG","Ibadah"];
+function toolSelfieGroupOf(it){return it.group||it.service||"";}
+
+function renderToolSelfie(){
+  if(!st.isQC){document.getElementById("content").innerHTML='<div class="tsq-empty">Fitur ini hanya untuk QC.</div>';return;}
+  document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat selfie…</div></div>';
+  callApi('getSelfieQueue',[st.vol.name]).then(function(res){
+    st.toolSelfieItems=(res&&res.items)||[];buildToolSelfieQueue();
+  }).catch(function(e){document.getElementById("content").innerHTML='<div class="tsq-empty">Gagal: '+esc(e.message||e)+'</div>';});
+}
+
+function toolSelfieGroups(){
+  var items=st.toolSelfieItems||[],seen={},out=[];
+  TOOL_SELFIE_GROUP_ORDER.forEach(function(g){if(items.some(function(it){return toolSelfieGroupOf(it)===g;})){seen[g]=true;out.push(g);}});
+  items.forEach(function(it){var g=toolSelfieGroupOf(it);if(g&&!seen[g]){seen[g]=true;out.push(g);}});
+  return out;
+}
+
+function toolSelfieShown(){
+  var g=st.toolSelfieGroup,s=st.toolSelfieFilter||"pending";
+  return(st.toolSelfieItems||[]).filter(function(it){return toolSelfieGroupOf(it)===g&&it.status===s;});
+}
+
+function buildToolSelfieQueue(){
+  var items=st.toolSelfieItems||[],groups=toolSelfieGroups();
+  var h='<div class="tool-wrap"><div class="tool-title">Approval Selfie</div>';
+  if(!groups.length){h+='<div class="tsq-empty">Belum ada selfie yang diupload.</div></div>';document.getElementById("content").innerHTML=h;return;}
+  if(groups.indexOf(st.toolSelfieGroup)===-1)st.toolSelfieGroup=groups[0];
+  var g=st.toolSelfieGroup;
+
+  h+='<div class="tsq-groups">';
+  groups.forEach(function(gr){
+    var pend=items.filter(function(it){return toolSelfieGroupOf(it)===gr&&it.status==="pending";}).length;
+    h+='<button class="tsq-gbtn'+(gr===g?" on":"")+'" onclick="setToolSelfieGroup(\''+escQ(gr)+'\')">'+esc(gr)+(pend?'<span class="tsq-gdot">'+pend+'</span>':'')+'</button>';
+  });
+  h+='</div>';
+
+  var counts={pending:0,approved:0,rejected:0};
+  items.forEach(function(it){if(toolSelfieGroupOf(it)===g)counts[it.status]=(counts[it.status]||0)+1;});
+  var filt=st.toolSelfieFilter||"pending";
+  h+='<div class="tsq-filter">'+
+    '<button class="tsq-fbtn'+(filt==="pending"?" on":"")+'" onclick="setToolSelfieFilter(\'pending\')">Menunggu ('+counts.pending+')</button>'+
+    '<button class="tsq-fbtn'+(filt==="approved"?" on":"")+'" onclick="setToolSelfieFilter(\'approved\')">Disetujui ('+counts.approved+')</button>'+
+    '<button class="tsq-fbtn'+(filt==="rejected"?" on":"")+'" onclick="setToolSelfieFilter(\'rejected\')">Ditolak ('+counts.rejected+')</button></div>';
+
+  var shown=toolSelfieShown();
+  if(!shown.length){h+='<div class="tsq-empty">Tidak ada selfie '+(filt==="pending"?"menunggu":"")+'.</div>';}
+  else{
+    shown.forEach(function(it,i){
+      var d=new Date(it.date+"T00:00:00");
+      var dstr=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
+      var week=Math.ceil(d.getDate()/7);
+      var badge='<span class="tsq-badge '+it.status+'">'+(it.status==="pending"?"⏳ Menunggu":it.status==="approved"?"✅ Disetujui":"❌ Ditolak")+'</span>';
+      var actions='<div class="tsq-actions">';
+      if(it.status!=="approved")actions+='<button class="tsq-btn tsq-approve" onclick="decideToolSelfie('+i+',\'approved\')">Setujui</button>';
+      if(it.status!=="rejected")actions+='<button class="tsq-btn tsq-reject" onclick="decideToolSelfie('+i+',\'rejected\')">Tolak</button>';
+      actions+='</div>';
+      h+='<div class="tsq-card '+it.status+'" id="tsq-card-'+i+'">'+
+        (it.url?'<img class="tsq-img" src="'+encodeURI(it.url)+'" alt="selfie" onclick="window.open(this.src,\'_blank\')">':'')+
+        '<div class="tsq-body"><div class="tsq-name">'+esc(it.name)+'</div>'+
+          '<div class="tsq-meta">'+esc(it.service)+' · '+esc(dstr)+' · Week '+week+'</div>'+
+          badge+actions+'</div></div>';
+    });
+  }
+  h+='</div>';
+  document.getElementById("content").innerHTML=h;
+}
+
+function setToolSelfieGroup(g){st.toolSelfieGroup=g;buildToolSelfieQueue();}
+function setToolSelfieFilter(f){st.toolSelfieFilter=f;buildToolSelfieQueue();}
+
+function decideToolSelfie(idx,decision){
+  var it=toolSelfieShown()[idx];if(!it)return;
+  var card=document.getElementById("tsq-card-"+idx);
+  if(card)card.querySelectorAll(".tsq-btn").forEach(function(b){b.disabled=true;});
+  callApi('approveSelfie',[it.date,it.service,it.name,decision,st.vol.name]).then(function(res){
+    if(res&&res.ok){
+      st.toolSelfieItems.forEach(function(x){if(x.date===it.date&&x.service===it.service&&x.name===it.name)x.status=decision;});
+      buildToolSelfieQueue();
+    } else {if(card)card.querySelectorAll(".tsq-btn").forEach(function(b){b.disabled=false;});alert((res&&res.msg)||"Gagal.");}
+  }).catch(function(e){if(card)card.querySelectorAll(".tsq-btn").forEach(function(b){b.disabled=false;});alert("Gagal: "+(e.message||e));});
+}        
+
 /* ── HELPERS ── */
 function switchST(t){st.schedTab=t;st.openKey=null;renderJadwal();window.scrollTo({top:0,behavior:"smooth"});}
 function chMonth(d){
@@ -2285,7 +2710,12 @@ function logoutToGate(){
   st.schedCache={};st.schedInflight={};
   st.notesCache={};st.ringCache={};
   st.availOpenMonths=[];
+  st.isWL=false;st.isQC=false;
+  st.toolSongCards=[];st.toolSongCardsKey="";st.toolSongs=null;st.toolSongDirty=false;
+  st.toolDressList=[];st.toolDressDepts=[];st.toolDressDept="";
+  st.toolSelfieItems=[];
   toggleAvailNav();
+  ["dn-tool-songlist","dn-tool-dresscode","dn-tool-selfie"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display="none";});
   setDeptHeader(null);
   document.body.classList.remove("app-in");
   document.body.classList.remove("app-loading");

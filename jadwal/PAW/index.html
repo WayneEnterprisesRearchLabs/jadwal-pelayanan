@@ -1409,6 +1409,7 @@ function gotEvents(resp){
   renderJadwal();
   prefetchNotes_(dept);
   prefetchRingkasan_(dept);
+  prefetchKetersediaan_(dept);
 }
 
 function prefetchNotes_(dept){
@@ -1437,6 +1438,27 @@ function prefetchRingkasan_(dept){
 
 function prevMonth_(y,m){m--;if(m<0){m=11;y--;}return{y:y,m:m};}
 function nextMonth_(y,m){m++;if(m>11){m=0;y++;}return{y:y,m:m};}   
+
+function prefetchKetersediaan_(dept){
+  if(!dept||!st.vol)return;
+  st._availPrefetched=false;
+  google.script.run.withSuccessHandler(function(months){
+    st.availOpenMonths=months||[];
+    toggleAvailNav();
+    if(!st.availOpenMonths.length){st._availPrefetched=true;return;}
+    var sel=st.availOpenMonths.find(function(m){return m.year===st.availSelYear&&m.month===st.availSelMonth;});
+    if(!sel){sel=st.availOpenMonths[0];st.availSelYear=sel.year;st.availSelMonth=sel.month;}
+    // Now prefetch the actual availability for this month
+    google.script.run.withSuccessHandler(function(res){
+      if(!res)return;
+      st.availData=res;
+      st.availBlocked={};
+      (res.blocked||[]).forEach(function(d){st.availBlocked[d]=true;});
+      st.availDirty=false;
+      st._availPrefetched=true;
+    }).withFailureHandler(function(){}).getMyAvailability(st.vol.name,st.availSelYear,st.availSelMonth);
+  }).withFailureHandler(function(){}).getOpenAvailabilityMonths(dept);
+}      
         
 /* ── JADWAL TAB ── */
 function renderJadwal(){
@@ -1722,22 +1744,16 @@ function renderKetersediaan(){
     content.innerHTML='<div class="empty" style="padding-top:40px"><div class="empty-ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5070" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-msg">Cari namamu dulu di halaman Jadwal untuk mengatur ketersediaan.</div></div>';
     return;
   }
+  // Prefetched and ready — skip the spinner
+  if(st._availPrefetched && st.availOpenMonths){
+    if(!st.availOpenMonths.length){
+      content.innerHTML='<div class="empty" style="padding-top:40px"><div class="empty-ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5070" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div><div class="empty-msg">Belum ada bulan yang dibuka untuk ketersediaan.</div></div>';
+      return;
+    }
+    if(st.availData){buildAvailUI();return;}
+  }
   content.innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat ketersediaan…</div></div>';
   google.script.run
-    .withSuccessHandler(function(months){
-      st.availOpenMonths=months||[];
-      toggleAvailNav();
-      if(!st.availOpenMonths.length){
-        content.innerHTML='<div class="empty" style="padding-top:40px"><div class="empty-ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a5070" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div><div class="empty-msg">Belum ada bulan yang dibuka untuk ketersediaan.</div></div>';
-        return;
-      }
-      var sel=st.availOpenMonths.find(function(m){return m.year===st.availSelYear&&m.month===st.availSelMonth;});
-      if(!sel){sel=st.availOpenMonths[0];st.availSelYear=sel.year;st.availSelMonth=sel.month;}
-      loadMyAvailability();
-    })
-    .withFailureHandler(function(e){showErr(e.message);})
-    .getOpenAvailabilityMonths(st.vol.dept);
-}
 
 function loadMyAvailability(){
   google.script.run

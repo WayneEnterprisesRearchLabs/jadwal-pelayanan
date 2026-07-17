@@ -26,7 +26,7 @@
 
 :root {
   --page-pad: 25px;
-  --gate-top: 15svh;    /* how far down the gate content starts — smaller = higher up the page */
+  --gate-top: 12svh;    /* how far down the gate content starts — smaller = higher up the page */
   --hdr-space: 190px;  /* header + bottom padding the full-page loader discounts when centering */
 }
 
@@ -2269,7 +2269,7 @@ function chRingMonth(dir){
  
 function buildRingkasanUI(data){
   var services=data.services||[];
-  var roles=data.roles||PAW_ROLES;
+  var roles=data.ringkasanRoles||data.roles||PAW_ROLES;
 
   var groupMap={};
   var groups=data.groups||{};

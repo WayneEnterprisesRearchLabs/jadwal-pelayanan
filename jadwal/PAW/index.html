@@ -123,7 +123,7 @@ input, textarea {
 }
 
 /* ── HEADER — 32px sides ──── */
-.hdr{position:sticky;top:0;z-index:40;background:#12151c;border-bottom:1px solid rgba(255,255,255,.08);padding:28px var(--page-pad) 20px;margin-bottom:16px;width:100%}
+.hdr{position:sticky;top:0;z-index:40;background:#12151c;border-bottom:1px solid rgba(255,255,255,.08);padding:16px var(--page-pad) 12px;margin-bottom:16px;width:100%}
 /* While the schedule is still in flight the header is an empty shell — hide it
    so the loader gets the whole screen, and zero out the space .loading reserves
    for it (132px ≈ the page/content bottom padding, keeps it off the scrollbar). */
@@ -2458,7 +2458,7 @@ function renderCatatan(){
 /* ── MASUKAN ── */
 function renderMasukan(){
   var pre=st.vol?st.vol.name:"";
-  document.getElementById("content").innerHTML='<div class="fb-wrap"><div class="fb-title">Kritik &amp; Saran</div><div class="fb-sub">Masukan kamu sangat berarti untuk kemajuan tim. 🙏</div><div class="form-g"><label class="form-lbl">Nama</label><input class="form-inp" id="fb-n" type="text" placeholder="Nama kamu…" value="'+esc(pre)+'"></div><div class="form-g"><label class="form-lbl">Pesan</label><textarea class="form-inp" id="fb-p" placeholder="Tulis kritik atau saranmu di sini…"></textarea></div><button class="sub-btn" id="fb-btn" onclick="kirimMasukan()">Kirim Masukan</button></div>';
+  document.getElementById("content").innerHTML='<div class="fb-wrap"><div class="fb-sub">Masukan kamu sangat berarti untuk kemajuan tim. 🙏</div><div class="form-g"><label class="form-lbl">Nama</label><input class="form-inp" id="fb-n" type="text" placeholder="Nama kamu…" value="'+esc(pre)+'"></div><div class="form-g"><label class="form-lbl">Pesan</label><textarea class="form-inp" id="fb-p" placeholder="Tulis kritik atau saranmu di sini…"></textarea></div><button class="sub-btn" id="fb-btn" onclick="kirimMasukan()">Kirim Masukan</button></div>';
   contentReady_();
 }
         

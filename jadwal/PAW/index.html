@@ -1711,6 +1711,22 @@ function fillRoster(elId,data,myName){
   var slots=data.slots||data,groupLabel=data.groupLabel||"",myLo=myName.toLowerCase();
   if(!Object.keys(slots).length){setRosterHTML(el,'<div style="color:#8890aa;font-size:13px;text-align:center;padding:6px">Belum ada data roster.</div>');return;}
   var h="",prevSeg=null,prevSub=null,segOpen=false;
+  // Show PAW speaker for non-PAW depts (read-only, injected by backend)
+  var dept=st.vol&&st.vol.dept;
+  if(dept&&dept!=="PAW"&&slots["Speaker"]&&slots["Speaker"].length){
+    var spC=C("Speaker");
+    h+='<div class="seg-block" style="'+SS[1]+'">';
+    h+='<div class="role-row" style="background:'+rowTint("Speaker")+'"><div class="r-lbl" style="color:'+spC.fg+'">Speaker</div><div class="r-names">';
+    slots["Speaker"].forEach(function(slot){
+      var orig=slot.original,sub=slot.substitute;
+      if(!sub){
+        h+='<div class="nchip"><div class="nchip-av" style="'+avCss("Speaker")+'">'+av(orig.photo,orig.name,26,"Speaker")+'</div><span class="nchip-name">'+esc(orig.name)+'</span></div>';
+      } else {
+        h+='<div class="sub-grp"><div class="n-orig"><div class="nchip-av">'+av(orig.photo,orig.name,22,"Speaker")+'</div><span class="nname">'+esc(orig.name)+'</span></div><div class="n-new"><div class="nchip-av">'+av(sub.photo,sub.name,22,"Speaker")+'</div><span class="nname">'+esc(sub.name)+'</span></div></div>';
+      }
+    });
+    h+='</div></div></div>';
+  }
   ROST.forEach(function(grp){
     var hasData=grp.roles.some(function(r){return slots[r]&&slots[r].length;});if(!hasData)return;
     if(grp.seg!==prevSeg){if(segOpen)h+='</div>';h+='<div class="seg-block" style="'+SS[grp.seg]+'">';segOpen=true;prevSeg=grp.seg;prevSub=null;}

@@ -1,7 +1,7 @@
 {
-  "name": "Admin — Jadwal Pelayanan PAW",
-  "short_name": "Admin PAW",
-  "description": "Halaman admin jadwal pelayanan PAW - GMS Salatiga",
+  "name": "Admin Page Volunteer",
+  "short_name": "Admin Page",
+  "description": "Admin Page Volunter Hub - GMS Salatiga",
   "start_url": "/jadwal-pelayanan/admin/PAW/",
   "scope": "/jadwal-pelayanan/admin/PAW/",
   "display": "fullscreen",
@@ -10,25 +10,25 @@
   "theme_color": "#0a0c10",
   "icons": [
     {
-      "src": "icons/ADMIN-192.png",
+      "src": "icons/adm-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/ADMIN-192.png",
+      "src": "icons/adm-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/ADMIN-512.png",
+      "src": "icons/adm-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/ADMIN-512.png",
+      "src": "icons/adm-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -2158,16 +2158,14 @@ function applyGroup(){
   var groups=st.data&&st.data.groups?st.data.groups:{};
   var group=groups[groupName];
   if(!group){showToast("Group tidak ditemukan.","warn");return;}
-  var slotDate=st.currentSlot&&st.currentSlot.date;
+  var slot=st.currentSlot;
+  var slotDate=slot&&slot.date;
+  var svcName=slot&&slot.service;
   var skipped=[];
   GROUP_ROLES_JS.forEach(function(role){
-    // subState must be reset in lockstep with rosterState. It wasn't, so a stale
-    // "sub" survived at that index and saveRoster wrote {name:newGroupMember,
-    // sub:someoneFromThePreviousGroup} straight to the sheet.
     st.rosterState[role]=[""];
     st.subState[role]=[""];
-    var svcName=st.currentSlot&&st.currentSlot.service;
-    var cands=(pool[role]||[]).filter(function(n){return !used[n]&&!isBlocked_(n,slot.date);});
+    var names=(group[role]||[]).filter(function(n){
       if(!n)return false;
       if(isBlocked_(n,slotDate)){skipped.push(n);return false;}
       if(!isVolEligible_(n,svcName)){skipped.push(n);return false;}

@@ -448,6 +448,8 @@ textarea.form-inp{resize:vertical;min-height:110px;line-height:1.6}
 .sub-btn{width:100%;padding:14px;border-radius:13px;border:none;background:#e8b84b;color:#0a0c10;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.01em;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:4px}
 .sub-btn:active{opacity:.85;transform:scale(.98)}
 .sub-btn:disabled{opacity:.4;cursor:default}
+.gate-spin{width:18px;height:18px;border:2.5px solid rgba(10,12,16,.25);border-top-color:#0a0c10;border-radius:50%;display:inline-block;vertical-align:middle;animation:gateSpin .65s linear infinite}
+@keyframes gateSpin{to{transform:rotate(360deg)}}
 .fb-ok{text-align:center;padding:48px 0;animation:fadeUp .4s cubic-bezier(.22,1,.36,1)}
 .fb-ok-ico{font-size:48px;margin-bottom:14px}
 .fb-ok-h{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px}
@@ -575,12 +577,13 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 
 .gate.closing{
   pointer-events:none;
+  transform-origin:top center;
   animation:gateLift .9s cubic-bezier(.6,0,.3,1) both;
 }
 @keyframes gateLift{
   0%  { transform:translateY(0) scaleY(1); }
-  22% { transform:translateY(1.8%) scaleY(.95); }    /* anticipation squash */
-  100%{ transform:translateY(-104%) scaleY(1.06); }  /* stretch on exit */
+  22% { transform:translateY(0) scaleY(.93); }
+  100%{ transform:translateY(-104%) scaleY(1.06); }
 }
 .gate-inner{width:100%;max-width:360px}
 .gate-inner:not(.in){opacity:0}
@@ -1312,7 +1315,7 @@ function enterApp(){
     liftGateAndLogin_(v);
   } else {
     var btn=document.getElementById("gate-enter-btn");
-    if(btn){btn.disabled=true;btn.textContent="Memuat…";}
+    if(btn){btn.disabled=true;btn.innerHTML='<span class="gate-spin"></span>';}
     fetchSchedule_(v.name,function(data){
       if(btn){btn.disabled=false;btn.textContent="Masuk";}
       liftGateAndLogin_(v);

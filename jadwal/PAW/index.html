@@ -899,8 +899,21 @@ var splashStart = Date.now();
 (function earlyPrefetch_(){
   var savedName=null;
   try{ savedName=localStorage.getItem(APP_CONFIG.storagePrefix+"volName"); }catch(e){}
-  if(savedName) prefetchSchedule_(savedName);
-})();        
+  if(!savedName)return;
+  // Hydrate from localStorage first — instant, possibly stale
+  try{
+    var stored=localStorage.getItem(APP_CONFIG.storagePrefix+"schedCache");
+    if(stored){
+      var parsed=JSON.parse(stored);
+      if(parsed) st.schedCache[savedName]=parsed;
+    }
+  }catch(e){}
+  // Always fire a fresh fetch in background to update the cache
+  google.script.run.withSuccessHandler(function(d){
+    st.schedCache[savedName]=d;
+    try{localStorage.setItem(APP_CONFIG.storagePrefix+"schedCache",JSON.stringify(d));}catch(e){}
+  }).withFailureHandler(function(){}).getVolunteerSchedule(savedName);
+})();    
         
 var splashGone = false;
 // Driven by markGateReady_() now, not window.load — the splash IS the data loader,
@@ -1341,16 +1354,24 @@ function liftGateAndLogin_(v){
   var g=document.getElementById("gate");
   revealBusy_=true;
   document.body.classList.add("app-in");
-  loginAsVol(v);
-  contentInstant_();
   if(g){
     g.classList.add("closing");
+    // Render content ~350ms in — the gate bottom has cleared by then,
+    // so vol-card/tabs/event-card animations play while the user can see them.
+    setTimeout(function(){
+      loginAsVol(v);
+      contentInstant_();
+    }, 350);
     setTimeout(function(){
       g.style.display="none";
       g.classList.remove("closing");
       revealDone_();
     },REVEAL_MS);
-  } else revealDone_();
+  } else {
+    loginAsVol(v);
+    contentInstant_();
+    revealDone_();
+  }
 }
 
 /* dept-filter and in-page search bar were removed — identity now only comes
@@ -1382,6 +1403,8 @@ function fetchSchedule_(name,onOk,onErr){
   w=st.schedInflight[name]={ok:[onOk],err:[onErr]};
   google.script.run.withSuccessHandler(function(d){
     st.schedCache[name]=d;delete st.schedInflight[name];
+    // Persist to localStorage so next visit is instant
+    try{localStorage.setItem(APP_CONFIG.storagePrefix+"schedCache",JSON.stringify(d));}catch(e){}
     w.ok.forEach(function(f){try{f(d);}catch(err){console.error(err);}});
   }).withFailureHandler(function(e){
     delete st.schedInflight[name];
@@ -2989,6 +3012,7 @@ function scrollToDate(iso){var pre="card-"+iso.replace(/-/g,"_")+"_";var cards=d
 // Tapping the name card (vol-card) sends the person back to the onboarding
 // gate to switch identity, replacing the old in-page search "✕ clear" flow.
 function logoutToGate(){
+  try{localStorage.removeItem(APP_CONFIG.storagePrefix+"schedCache");}catch(e){}      
   try{localStorage.removeItem(APP_CONFIG.storagePrefix + "volName");}catch(e){console.warn("localStorage remove failed",e);}
   st.vol=null;
   st.allEvents=[];

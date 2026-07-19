@@ -1345,7 +1345,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
 function serviceLabel(s){return s;}
 
-var _adminDataCache={};   // year-month → getAdminData response (Jadwal/Ringkasan/Masukan all read from this)
+var _adminDataCache={};   // dept-year-month → getAdminData response (Jadwal/Ringkasan/Masukan all read from this)
 
 var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",origSpecial:false,loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[],songIdx:null,songCardsKey:"",notesCache:null,availCache:{}};
 var AVAIL_SVC_TAB = "all";   // "all","Voltage","AOG","Umum"        
@@ -1353,7 +1353,7 @@ var AVAIL_SVC_TAB = "all";   // "all","Voltage","AOG","Umum"
 
 function loadData(){
   st.dept=ADMIN_DEPT;
-  var key=st.year+"-"+st.month;
+  var key=ADMIN_DEPT+"-"+st.year+"-"+st.month;
   if(_adminDataCache[key]){
     onDataLoaded(_adminDataCache[key]);
     prefetchAdjacentJadwalMonths_();
@@ -1372,7 +1372,7 @@ function loadData(){
 
 function loadDataThenReveal_(){
   st.dept=ADMIN_DEPT;
-  var key=st.year+"-"+st.month;
+  var key=ADMIN_DEPT+"-"+st.year+"-"+st.month;
   if(_adminDataCache[key]){
     onDataLoaded(_adminDataCache[key]);
     applyDeptLabels();
@@ -1402,7 +1402,7 @@ function loadDataThenReveal_(){
 // data.services underneath the cache, but the cache object is never re-fetched
 // after a local mutation — so drop it. Next visit to this month re-fetches fresh.
 function invalidateCurrentMonthCache_(){
-  delete _adminDataCache[st.year+"-"+st.month];
+  delete _adminDataCache[ADMIN_DEPT+"-"+st.year+"-"+st.month];
 }
 
 function prevMonth_(y,m){m--;if(m<0){m=11;y--;}return{y:y,m:m};}
@@ -1412,26 +1412,26 @@ function nextMonth_(y,m){m++;if(m>11){m=0;y++;}return{y:y,m:m};}
 // taps ‹ or ›, that month is usually already warm.
 function prefetchAdjacentJadwalMonths_(){
   [prevMonth_(st.year,st.month),nextMonth_(st.year,st.month)].forEach(function(mo){
-    var k=mo.y+"-"+mo.m;
+    var k=ADMIN_DEPT+"-"+mo.y+"-"+mo.m;
     if(_adminDataCache[k])return;
     google.script.run.withSuccessHandler(function(data){_adminDataCache[k]=data;}).withFailureHandler(function(){}).getAdminData(mo.y,mo.m);
   });
 }
 
 function prefetchNotes_(){
-  if(st.notesCache)return;   // dept-scoped, not month-scoped — fetch once per session
-  google.script.run.withSuccessHandler(function(notes){st.notesCache=notes||[];}).withFailureHandler(function(){}).getNotes();
+  if(st.notesCache && st._notesDept===ADMIN_DEPT)return;
+  google.script.run.withSuccessHandler(function(notes){st.notesCache=notes||[];st._notesDept=ADMIN_DEPT;}).withFailureHandler(function(){}).getNotes();
 }
 
 function prefetchAvailCurrent_(){
-  var key=st.availYear+"-"+st.availMonth;
+  var key=ADMIN_DEPT+"-"+st.availYear+"-"+st.availMonth;
   if(st.availCache[key])return;
   google.script.run.withSuccessHandler(function(data){st.availCache[key]=data;}).withFailureHandler(function(){}).getAvailabilityMatrix(st.availYear,st.availMonth);
 }
 
 function prefetchAdjacentAvailMonths_(){
   [prevMonth_(st.availYear,st.availMonth),nextMonth_(st.availYear,st.availMonth)].forEach(function(mo){
-    var k=mo.y+"-"+mo.m;
+    var k=ADMIN_DEPT+"-"+mo.y+"-"+mo.m;
     if(st.availCache[k])return;
     google.script.run.withSuccessHandler(function(data){st.availCache[k]=data;}).withFailureHandler(function(){}).getAvailabilityMatrix(mo.y,mo.m);
   });
@@ -3083,7 +3083,7 @@ function saveRingkasanAsImage(){
 
 /* ── KETERSEDIAAN (AVAILABILITY) ── */
 function renderKetersediaan(){
-  var key=st.availYear+"-"+st.availMonth;
+  var key=ADMIN_DEPT+"-"+st.availYear+"-"+st.availMonth;
   if(st.availCache[key]){
     st.availData=st.availCache[key];
     buildKetersediaanUI(st.availData);
@@ -3094,7 +3094,7 @@ function renderKetersediaan(){
   google.script.run
     .withSuccessHandler(function(data){
       st.availData=data;
-      st.availCache[key]=data;
+      st.availCache[ADMIN_DEPT+"-"+st.availYear+"-"+st.availMonth]=data;
       buildKetersediaanUI(data);
       prefetchAdjacentAvailMonths_();
     })

@@ -364,6 +364,13 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 .avail-pill.ok{background:rgba(74,222,128,.85)}
 .avail-pill.blk{background:rgba(248,113,113,.9)}
 
+/* ── KETERSEDIAAN SERVICE TABS ── */
+.avail-svc-tabs{display:flex;gap:5px;background:#12151c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:5px;margin-bottom:14px}
+.avail-svc-tab{flex:1;padding:11px 0;border:none;border-radius:10px;background:none;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:.02em;color:#8890aa;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .18s,color .18s}
+.avail-svc-tab.on{background:rgba(232,184,75,.15);color:#e8b84b;box-shadow:inset 0 0 0 1px rgba(232,184,75,.35)}
+.avail-svc-cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:20px;background:rgba(255,255,255,.1);color:#8890aa;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700}
+.avail-svc-tab.on .avail-svc-cnt{background:#e8b84b;color:#0a0c10}        
+
 /* ── MASUKAN ── */
 .masukan-list{display:flex;flex-direction:column;gap:10px}
 .masukan-card{background:#12151c;border:1.5px solid rgba(255,255,255,.07);border-radius:14px;padding:16px;animation:fadeUp .25s cubic-bezier(.22,1,.36,1) both}
@@ -758,20 +765,19 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
   left:0;
   right:0;
   z-index:120;
-  background:
-#12151c;
+  background:#12151c;
   border:1.5px solid rgba(255,255,255,.13);
   border-radius:14px;
   padding:6px;
-  max-height:264px;
+  max-height:340px;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   display:none;
   box-shadow:0 14px 44px rgba(0,0,0,.75);
   animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both;
-  text-align:left
+  text-align:center
 }
-.dept-opt{display:flex;align-items:center;gap:8px;padding:6px;border-radius:10px;cursor:pointer;transition:background .1s}
+.dept-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:12px;cursor:pointer;transition:background .1s;text-align:center}
 .dept-opt:active{background:
 #1a1e28}
 .dept-opt.sel{background:var(--d-bg,rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px var(--d-fg,transparent)}
@@ -1083,7 +1089,8 @@ function toggleDeptMenu(e){
   var menu=document.getElementById("lock-dept-menu"),trig=document.getElementById("lock-dept-trig");
   if(!menu||!trig)return;
   var open=menu.style.display!=="block";
-  menu.style.display=open?"block":"none";
+  menu.style.display=open?"grid":"none";
+  menu.style.gridTemplateColumns="repeat(3,1fr)";
   trig.classList.toggle("on",open);
 }
 function hideDeptMenu(){
@@ -1128,14 +1135,12 @@ function buildDeptMenu_(depts){
     menu.innerHTML=LOCK_DEPTS.map(function(d){
       var m=deptMeta(d);
       return '<div class="dept-opt" id="dopt-'+safeId(d)+'" style="--d-fg:'+m.fg+';--d-bg:'+m.bg+'" onclick="pickLockDept(\''+escQ(d)+'\')">'+
-        deptPillHTML(d)+
-        '<span class="dept-opt-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'+
+        '<span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;background:'+m.bg+';color:'+m.fg+'">'+m.icon+'</span>'+
+        '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:'+m.fg+'">'+esc(d)+'</span>'+
+        '<span class="dept-opt-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'+
       '</div>';
     }).join('');
   }
-  prefillLockFromMemory_();
-  hideLockLoader_();
-}
 
 function hideLockLoader_(){
   var el=document.getElementById("lock-load");
@@ -1227,7 +1232,7 @@ function submitKey(ev){
 // Sets the header/drawer/title to the active dept. Called after login and on
 // silent-resume. Kept separate so onDataLoaded doesn't fight it.
 function applyDeptLabels(){
-  var h = document.getElementById('hdr-l1'); if (h) h.innerHTML = titleTwoLines("Admin Panel");
+  var h = document.getElementById('hdr-l1'); if (h) h.textContent = NAV_LABELS[st.tab] || "Atur Jadwal";
   var d = document.getElementById('dr-title'); if (d) d.textContent = ADMIN_DEPT ? ("Admin " + ADMIN_DEPT) : "Admin";
   setDeptHeader(ADMIN_DEPT);
 }
@@ -1334,6 +1339,7 @@ function serviceLabel(s){return s;}
 var _adminDataCache={};   // year-month → getAdminData response (Jadwal/Ringkasan/Masukan all read from this)
 
 var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",origSpecial:false,loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[],songIdx:null,songCardsKey:"",notesCache:null,availCache:{}};
+var AVAIL_SVC_TAB = "all";   // "all","Voltage","AOG","Umum"        
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
 function loadData(){
@@ -1466,10 +1472,12 @@ function openDr(){document.getElementById("dr").classList.add("on");document.get
 function closeDr(){document.getElementById("dr").classList.remove("on");document.getElementById("ov").classList.remove("on");}
 
 var NAV_TABS=["jadwal","songlist","dresscode","selfie","ringkasan","catatan","masukan","ketersediaan"];
+var NAV_LABELS={jadwal:"Atur Jadwal",songlist:"Songlist",dresscode:"Dresscode",selfie:"Selfie Queue",ringkasan:"Ringkasan",catatan:"Catatan",masukan:"Kritik & Saran",ketersediaan:"Ketersediaan"};
 
 function navTo(tab){
   st.tab=tab;closeDr();
   NAV_TABS.forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
+  var h=document.getElementById("hdr-l1");if(h)h.textContent=NAV_LABELS[tab]||tab;
   renderTab();
 }
 
@@ -1814,15 +1822,19 @@ function renderInputRow(role,idx,sel){
   }
   var musicians=getMusiciansByRole(role);
   var warnCls=isOverLimit(sel)?" warn-select":"";
+  var svcName=st.currentSlot&&st.currentSlot.service;
+  var slotDate=st.currentSlot&&st.currentSlot.date;
   var h='<div class="rs-select-wrap" id="rs-row-'+sr+'-'+idx+'">'+
-    '<div class="rs-dd-wrap" id="rs-dd-'+sr+'-'+idx+'">'+
-      '<input class="rs-dd-input'+warnCls+'" type="text" placeholder="— Belum dipilih —" readonly '+
-        'value="'+esc(sel||'')+'" '+
-        'onfocus="openDd(\''+escQ(role)+'\','+idx+')" '+
-        'oninput="filterDd(\''+escQ(role)+'\','+idx+',this.value)" '+
-        'data-role="'+esc(role)+'" data-idx="'+idx+'">'+
-      '<div class="rs-dd-list" id="rs-ddlist-'+sr+'-'+idx+'"></div>'+
-    '</div>';
+    '<select class="rs-select'+warnCls+'" onchange="onSelectChange(\''+escQ(role)+'\','+idx+',this.value)">'+
+    '<option value="">— Belum dipilih —</option>';
+  musicians.forEach(function(m){
+    if(m.elig&&svcName){var key=eligKeyOf_(svcName);if(key&&!m.elig[key])return;}
+    if(isBlocked_(m.name,slotDate))return;
+    var cnt=getCountExcl(m.name);
+    var cntTxt=cnt>=6?" ⚠️ "+cnt+"×":cnt>3?" ("+cnt+"×)":"";
+    h+='<option value="'+esc(m.name)+'"'+(m.name===sel?' selected':'')+'>'+esc(m.name)+esc(cntTxt)+'</option>';
+  });
+  h+='</select>';
   if(isMultiRole_(role)&&(st.rosterState[role]||[]).length>1)h+='<button class="rs-remove-btn" onclick="removeMultiRole(\''+escQ(role)+'\','+idx+')">×</button>';
   h+='</div>';
   var _sub=(st.subState&&st.subState[role]&&st.subState[role][idx])||"";
@@ -3125,6 +3137,18 @@ function buildKetersediaanUI(data){
       '<button class="mon-btn" onclick="chAvailMonth(1)">'+chevR+'</button>'+
     '</div>'+
     '<div id="avail-toggle-wrap">'+availToggleHtml(isOpen)+'</div></div>';
+  // ── Service-type tabs ──
+  var svcTabs=["all","Voltage","AOG","Umum"];
+  var allVols=(data.allVolunteers||data.byRole||{});
+  h+='<div class="avail-svc-tabs">';
+  svcTabs.forEach(function(t){
+    var label=t==="all"?"Semua":t;
+    var cnt=0;
+    if(t==="all"){data.roles.forEach(function(r){cnt+=((data.byRole||{})[r]||[]).length;});}
+    else{data.roles.forEach(function(r){((data.byRole||{})[r]||[]).forEach(function(p){if(p.elig&&p.elig[t])cnt++;else if(!p.elig&&t!=="all")cnt++;});});}
+    h+='<button class="avail-svc-tab'+(AVAIL_SVC_TAB===t?' on':'')+'" onclick="setAvailSvcTab(\''+escQ(t)+'\')">'+esc(label)+'<span class="avail-svc-cnt">'+cnt+'</span></button>';
+  });
+  h+='</div>';      
 
   var dates=data.dates||[];
   var anyPeople=data.roles.some(function(r){return ((data.byRole||{})[r]||[]).length;});
@@ -3134,16 +3158,24 @@ function buildKetersediaanUI(data){
     h+='<div class="empty-state">Belum ada musisi aktif.</div>';
   } else {
     h+='<div class="avail-legend"><span><i style="background:rgba(74,222,128,.85)"></i>Bisa</span><span><i style="background:rgba(248,113,113,.9)"></i>Blokir</span></div>';
-    h+=buildKetersediaanTables(data);
+    h+=buildKetersediaanTables(data,AVAIL_SVC_TAB);
   }
   h+='</div>';
   document.getElementById("content").innerHTML=h;
 }
+function setAvailSvcTab(t){AVAIL_SVC_TAB=t;buildKetersediaanUI(st.availData);}        
 
-function buildKetersediaanTables(data){
+function buildKetersediaanTables(data,svcFilter){
   var dates=data.dates||[],h="";
   data.roles.forEach(function(role){
-    var people=((data.byRole||{})[role])||[];
+    var allPeople=((data.byRole||{})[role])||[];
+    var people=allPeople;
+    if(svcFilter&&svcFilter!=="all"){
+      people=allPeople.filter(function(p){
+        if(!p.elig)return true;   // no elig data = eligible for all
+        return !!p.elig[svcFilter];
+      });
+    }
     if(!people.length)return;
     var c=C(role);
     h+='<div class="avail-role-block">'+

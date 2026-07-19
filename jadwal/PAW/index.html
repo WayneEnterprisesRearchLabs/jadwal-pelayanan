@@ -631,8 +631,8 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .dept-trig-ph{font-size:14px;color:#4a5070;padding:0 2px}
 .dept-trig-chev{margin-left:auto;padding-left:2px;flex-shrink:0;transition:transform .22s cubic-bezier(.34,1.7,.64,1)}
 .dept-trig.on .dept-trig-chev{transform:rotate(180deg)}
-.dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both}
-.dept-opt{display:flex;flex-direction:row;align-items:center;gap:8px;padding:10px;border-radius:12px;cursor:pointer;transition:background .1s}
+.dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both;text-align:center}
+.dept-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:12px;cursor:pointer;transition:background .1s;text-align:center}
 .dept-opt:active{background:#1a1e28}
 /* --d-fg/--d-bg are set inline per option from DEPT_META, so the selected row
    and its check pick up that dept's own color instead of a generic white tint. */
@@ -839,12 +839,12 @@ var API_PARAM_MAP = {
   getOpenAvailabilityMonths: ['dept'],
   getMyAvailability: ['name','dept','year','month'],
   saveMyAvailability: ['name','dept','year','month','days'],
-  getSonglist: ['date','service'],
+  getSonglist: ['date','service','dept'],
   getDresscode: ['date','service'],
   getMySelfie: ['name','date','service'],
   uploadSelfie: ['name','date','service','imageData','mimeType'],
   getSonglistCards: ['year','month'],
-  saveSonglist: ['date','service','songsJson','callerName'],
+  saveSonglist: ['date','service','songsJson','callerName','dept'],
   getDresscodeList: ['year','month','forDept'],
   saveDresscode: ['date','service','pdfUrl','forDept','callerName'],
   getSelfieQueue: ['callerName'],
@@ -1207,7 +1207,7 @@ function toggleDeptMenu(e){
   if(!menu||!trig)return;
   var open=menu.style.display!=="block";
   menu.style.display=open?"grid":"none";
-  menu.style.gridTemplateColumns="repeat(3,1fr)";
+  if(open)menu.style.gridTemplateColumns="repeat(3,1fr)";
   trig.classList.toggle("on",open);
   if(open)hideGateSug();
 }
@@ -1401,7 +1401,7 @@ function populateDeptFilter(){
   menu.innerHTML=st.departments.map(function(d){
     var m=deptMeta(d);
     return '<div class="dept-opt" id="dopt-'+safeId(d)+'" style="--d-fg:'+m.fg+';--d-bg:'+m.bg+'" onclick="pickGateDept(\''+escQ(d)+'\')">'+
-      '<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:'+m.bg+';color:'+m.fg+';flex-shrink:0">'+m.icon+'</span>'+
+      '<span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;background:'+m.bg+';color:'+m.fg+'">'+m.icon+'</span>'+
       '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:'+m.fg+'">'+esc(d)+'</span>'+
     '</div>';
   }).join('');
@@ -2110,9 +2110,9 @@ function cachedFetch_(cache,key,runner,onOk,onErr){
 }
 
 function fetchSonglist_(ev,onOk,onErr){
-  var svc=svcOf_(ev);
-  cachedFetch_(st.songCache,"song|"+ev.date+"|"+svc,function(ok,err){
-    google.script.run.withSuccessHandler(ok).withFailureHandler(err).getSonglist(ev.date,svc);
+  var svc=svcOf_(ev),dept=st.vol&&st.vol.dept||"PAW";
+  cachedFetch_(st.songCache,"song|"+dept+"|"+ev.date+"|"+svc,function(ok,err){
+    google.script.run.withSuccessHandler(ok).withFailureHandler(err).getSonglist(ev.date,svc,dept);
   },onOk,onErr||function(){});
 }
 
@@ -2750,7 +2750,7 @@ function removeToolSong(i){if(!st.toolSongs)return;st.toolSongs.splice(i,1);st.t
 function saveToolSonglist(){
   var clean=(st.toolSongs||[]).filter(function(s){return(s.judul||"").trim();}).map(function(s){return{judul:s.judul.trim(),pencipta:(s.pencipta||"").trim(),link:(s.link||"").trim()};});
   var btn=document.getElementById("tsl-save");if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
-  callApi('saveSonglist',[st.toolSongDate,st.toolSongGroup,JSON.stringify(clean),st.vol.name]).then(function(res){
+  callApi('saveSonglist',[st.toolSongDate,st.toolSongGroup,JSON.stringify(clean),st.vol.name,st.vol.dept]).then(function(res){
     if(res&&res.ok){
       st.toolSongs=clean;st.toolSongDirty=false;renderToolSongEditorBody();
       if(st.toolSongIdx!==null&&st.toolSongCards[st.toolSongIdx]){st.toolSongCards[st.toolSongIdx].songs=clean;st.toolSongCards[st.toolSongIdx].songCount=clean.length;}

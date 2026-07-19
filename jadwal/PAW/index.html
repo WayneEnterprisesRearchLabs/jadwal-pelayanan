@@ -1471,7 +1471,7 @@ function gotEvents(resp){
   updateHeaderTitle_(st.mainTab||"jadwal");
   st.allEvents=mergeServiceGroups_(events);var now=new Date();st.viewYear=now.getFullYear();st.viewMonth=now.getMonth();
 // Role-based tool nav
-  st.isWL = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("WL") !== -1 && dept === "PAW");
+  st.isWL = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("WL") !== -1 && (dept === "PAW" || dept === "EK"));
   st.isQC = !!(st.vol && st.vol.roles && st.vol.roles.indexOf("Stylist") !== -1 && dept === "CM");
 
   // Prefetch tool data so the pages open instantly

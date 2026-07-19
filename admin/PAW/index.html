@@ -79,6 +79,7 @@ input, textarea {
 .dr.on{transform:translateX(0)}
 .dr-top{display:flex;align-items:center;gap:11px;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
 .dr-ring{width:36px;height:36px;border-radius:50%;background:#e8b84b;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;animation:logoThrob 2.8s ease-in-out infinite}
+.dr-ring img{width:100%;height:100%;object-fit:cover;display:block}
 /* box-shadow ripple, not a ::after ring — the logo's own overflow:hidden would
    clip a pseudo-element, but never its own shadow. */
 @keyframes logoThrob{
@@ -111,11 +112,6 @@ input, textarea {
   overflow: hidden;
 }
 
-.page:has(.roster-page.on) {
-  height: 100svh;
-  min-height: unset;
-  overflow: hidden;
-}
 
 /* ── HEADER ── */
 .hdr{position:sticky;top:0;z-index:40;background:#12151c;border-bottom:1px solid rgba(255,255,255,.08);padding:28px var(--page-pad) 20px;margin-bottom:16px;width:100%;transform-origin:top center}
@@ -251,6 +247,8 @@ body.app-in .hdr{animation:hdrSlideIn .8s cubic-bezier(.22,1,.36,1) both}
 .chk-box{position:relative;width:20px;height:20px;flex-shrink:0;-webkit-appearance:none;appearance:none;border-radius:6px;border:1.5px solid rgba(167,139,250,.4);background:rgba(167,139,250,.08);cursor:pointer;transition:all .15s;margin:0}
 .chk-box:checked{background:#a78bfa;border-color:#a78bfa}
 .chk-box:checked::after{content:'';position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #0a0c10;border-width:0 2px 2px 0;transform:rotate(45deg)}
+#rp-copy-all{border-color:rgba(232,184,75,.45);background:rgba(232,184,75,.08)}
+#rp-copy-all:checked{background:#e8b84b;border-color:#e8b84b}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:#1a1e28;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 20px;font-size:14px;color:#f0f0f5;box-shadow:0 8px 32px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap;z-index:500}
@@ -986,6 +984,32 @@ var API_KEY_REQUIRED = ['verifyKey','getAdminData','saveServiceRoster','saveMany
 // is UX, not the security boundary.
 var ADMIN_KEY  = sessionStorage.getItem('gms_admin_key')  || "";
 var ADMIN_DEPT = sessionStorage.getItem('gms_admin_dept') || "";
+
+/* ── HAPTICS ──
+   navigator.vibrate is Android Chrome only (iOS Safari has no vibration API at
+   all — this stays silent there, not broken). One delegated listener instead of
+   touching every onclick: tag the elements that should buzz and match by closest(). */
+var HAPTIC_MS=10;
+var HAPTIC_SEL=[
+  ".mon-btn",".menu-btn",".dr-item",".dept-trig",".dept-opt",
+  ".pub-btn",".auto-all-btn",".ev-card",".rs-dd-tap",".rs-dd-item",
+  ".rs-add-btn",".rs-remove-btn",".grp-assign-btn",".sq-gbtn",".sq-fbtn",
+  ".sq-btn",".avail-svc-tab",".slc-card",".note-edit-btn",".note-del-btn",
+  ".add-note-btn",".add-ev-btn",".rp-back",".rp-save-btn",".rp-del-btn",
+  ".rp-apply-btn",".rp-cancel-edit-btn",".modal-confirm-btn",".modal-cancel-btn",
+  ".lock-btn",".lock-eye",".dp-save",".dc-save-btn",".sl-add-btn",".sl-save-btn",
+  ".sl-remove",".btn-save",".btn-cancel",".jadwal-search-clear"
+].join(",");
+function buzz_(ms){
+  try{ if(navigator.vibrate) navigator.vibrate(ms||HAPTIC_MS); }catch(e){}
+}
+document.addEventListener("click",function(e){
+  var hit=e.target.closest(HAPTIC_SEL);
+  if(hit && !hit.disabled) buzz_();
+},true);   // capture phase — fires even if the handler below stops propagation
+
+(function(){var sx=0;document.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;},{passive:true});document.addEventListener("touchend",function(e){var dx=e.changedTouches[0].clientX-sx;if(dx<-50&&document.getElementById("dr").classList.contains("on"))closeDr();},{passive:true});})();
+        
 var _adminDataCache={};   // dept-year-month → getAdminData response (Jadwal/Ringkasan/Masukan all read from this)
 function setAdminKey(k){ ADMIN_KEY = k || ""; if (k) sessionStorage.setItem('gms_admin_key', k); else sessionStorage.removeItem('gms_admin_key'); }
 function setAdminDept(d){ ADMIN_DEPT = d || ""; if (d) sessionStorage.setItem('gms_admin_dept', d); else sessionStorage.removeItem('gms_admin_dept'); }
@@ -1258,9 +1282,10 @@ function applyDeptLabels(){
 var FALLBACK_DEPTS = ["PAW","Sound","MM","CM","Usher","Prayer","C-PRO","FLC","EK"];
 function populateLoginDepts(){
   callApi('getConfig', []).then(function(c){
-    buildDeptMenu_((c && c.departments) || FALLBACK_DEPTS);
+    var depts=((c && c.departments) || FALLBACK_DEPTS).slice().sort(function(a,b){return a.localeCompare(b);});
+    buildDeptMenu_(depts);
   }).catch(function(){
-    buildDeptMenu_(FALLBACK_DEPTS);
+    buildDeptMenu_(FALLBACK_DEPTS.slice().sort(function(a,b){return a.localeCompare(b);}));
   });
 }
 
@@ -1493,7 +1518,21 @@ function generateSlots(year,month,existing){
   slots.sort(function(a,b){return (a.date+a.time+a.service).localeCompare(b.date+b.time+b.service);});
   return slots;
 }
-
+var _scrollLockY=0;
+function lockBodyScroll_(){
+  _scrollLockY=window.scrollY||window.pageYOffset||0;
+  document.body.style.position='fixed';
+  document.body.style.top=(-_scrollLockY)+'px';
+  document.body.style.left='0';
+  document.body.style.right='0';
+}
+function unlockBodyScroll_(){
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.left='';
+  document.body.style.right='';
+  window.scrollTo(0,_scrollLockY);
+}
 function openDr(){document.getElementById("dr").classList.add("on");document.getElementById("ov").classList.add("on");}
 
 function closeDr(){document.getElementById("dr").classList.remove("on");document.getElementById("ov").classList.remove("on");}
@@ -1726,6 +1765,7 @@ function openRoster(key){
   updateSaveBtn();
   renderGroupDropdown();
   refreshCopyRow_();
+  lockBodyScroll_();
   document.getElementById("rp").classList.add("on");
   document.getElementById("rp-body").scrollTop=0;
 }
@@ -1744,15 +1784,17 @@ function revertEdit_(){
 function closeRoster(){
   if(st.dirty){
       showModal("Belum Disimpan","Ada perubahan yang belum disimpan. Yakin keluar?","Keluar Tanpa Simpan",function(){
-      revertEdit_();                     // ← add
+      revertEdit_();
       st.dirty=false;updateSaveBtn();
+      unlockBodyScroll_();
       document.getElementById("rp").classList.remove("on");
       st.currentSlot=null;
-      renderJadwal();                    // ← add: repaint cards with reverted name+key
+      renderJadwal();
     });
     return;
   }
   st.dirty=false;
+  unlockBodyScroll_();
   document.getElementById("rp").classList.remove("on");
   st.currentSlot=null;
 }
@@ -2806,22 +2848,24 @@ function openSonglistEditor(i){
   document.getElementById("slp-date").textContent=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
   document.getElementById("slp-grp").textContent=c.group+(c.isSpecial?" · Spesial":"");
   renderSonglistEditorInto("slp-body",true);
+  lockBodyScroll_();
   document.getElementById("slp").classList.add("on");
   document.getElementById("slp-body").scrollTop=0;
 }
 
 function closeSonglistEditor(){
   if(st.songDirty){
-    // was a native confirm() — the rest of the app uses showModal
     showModal("Belum Disimpan","Ada perubahan lagu yang belum disimpan. Yakin keluar?","Keluar Tanpa Simpan",function(){
       st.songDirty=false;
+      unlockBodyScroll_();
       document.getElementById("slp").classList.remove("on");
-      buildSonglistPage();   // local — st.songCards is still authoritative
+      buildSonglistPage();
     });
     return;
   }
+  unlockBodyScroll_();
   document.getElementById("slp").classList.remove("on");
-  buildSonglistPage();       // was renderSonglistPage() → refetched the whole month
+  buildSonglistPage();
 }
         
 function saveSonglist(){

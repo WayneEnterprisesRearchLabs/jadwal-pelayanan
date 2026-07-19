@@ -1357,7 +1357,8 @@ var RC={
   sd:       {fg:"#ff9d3d",bg:"rgba(255,157,61,.22)"},
   cm:       {fg:"#ffc23c",bg:"rgba(255,194,60,.24)"},
   soundman: {fg:"#b8c2d9",bg:"rgba(184,194,217,.16)"},
-  sound:    {fg:"#b8c2d9",bg:"rgba(184,194,217,.16)"}
+  sound:    {fg:"#b8c2d9",bg:"rgba(184,194,217,.16)"},
+  tema:     {fg:"#f59e0b",bg:"rgba(245,158,11,.22)"}
 };
 
 // Service → eligibility key (mirrors Code.gs)
@@ -1848,7 +1849,7 @@ function renderRosterPage(){
     grp.roles.forEach(function(role){
       var c=C(role);
       // Non-PAW: Speaker is read-only (injected from PAW data)
-      if(role==="Speaker"&&st.dept!=="PAW"){
+      if(role==="Speaker"&&st.dept!=="PAW"&&st.dept!=="EK"){
         var spkNames=(st.currentSlot&&st.currentSlot.slots&&st.currentSlot.slots["Speaker"])||[];
         var spkDisplay=spkNames.length
           ? spkNames.map(function(s){
@@ -1884,9 +1885,10 @@ function renderRosterPage(){
 
 function renderInputRow(role,idx,sel){
   var sr=safeId(role);
-  if(role==="Speaker"){
+  if(role==="Speaker"||role==="Tema"){
+    var ph=role==="Tema"?"Tema ibadah…":"Nama Speaker…";
     return'<div class="rs-select-wrap" id="rs-row-'+sr+'-'+idx+'">'+
-      '<input class="rs-text-inp" type="text" placeholder="Nama Speaker…" value="'+esc(sel||'')+'" oninput="onSelectChange(\''+escQ(role)+'\','+idx+',this.value)">'+
+      '<input class="rs-text-inp" type="text" placeholder="'+ph+'" value="'+esc(sel||'')+'" oninput="onSelectChange(\''+escQ(role)+'\','+idx+',this.value)">'+
     '</div>';
   }
   var musicians=getMusiciansByRole(role);
@@ -2930,7 +2932,7 @@ function saveRoster(){
   var clean={};
   PAW_ROLES.forEach(function(role){
     // Non-PAW: never write Speaker (it's PAW's data)
-    if(role==="Speaker"&&st.dept!=="PAW")return;
+    if(role==="Speaker"&&st.dept!=="PAW"&&st.dept!=="EK")return;
     var arr=[];
     (st.rosterState[role]||[]).forEach(function(name,i){
       name=(name||"").trim(); if(!name)return;
@@ -3470,7 +3472,7 @@ function saveNote(){
 }
 
 /* ── HELPERS ── */
-function countFilled(slot){var n=0;PAW_ROLES.forEach(function(r){if(r==="Speaker"&&st.dept!=="PAW")return;if(slot.slots[r]&&slot.slots[r].length>0)n++;});return n;}
+function countFilled(slot){var n=0;PAW_ROLES.forEach(function(r){if(r==="Speaker"&&st.dept!=="PAW"&&st.dept!=="EK")return;if(slot.slots[r]&&slot.slots[r].length>0)n++;});return n;}
 function isoDate(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
 function pad(n){return n<10?"0"+n:String(n);}
 function safeId(k){return k.replace(/[^a-z0-9]/gi,"_");}

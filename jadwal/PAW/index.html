@@ -631,8 +631,8 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .dept-trig-ph{font-size:14px;color:#4a5070;padding:0 2px}
 .dept-trig-chev{margin-left:auto;padding-left:2px;flex-shrink:0;transition:transform .22s cubic-bezier(.34,1.7,.64,1)}
 .dept-trig.on .dept-trig-chev{transform:rotate(180deg)}
-.dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:264px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both}
-.dept-opt{display:flex;align-items:center;gap:8px;padding:6px;border-radius:10px;cursor:pointer;transition:background .1s}
+.dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both}
+.dept-opt{display:flex;flex-direction:row;align-items:center;gap:8px;padding:10px;border-radius:12px;cursor:pointer;transition:background .1s}
 .dept-opt:active{background:#1a1e28}
 /* --d-fg/--d-bg are set inline per option from DEPT_META, so the selected row
    and its check pick up that dept's own color instead of a generic white tint. */
@@ -989,16 +989,16 @@ var DEPT_META = {
     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><rect x="17" y="14" width="4" height="7" rx="2"/><rect x="3" y="14" width="4" height="7" rx="2"/></svg>'},
   "CM":       {fg:"#f4685b", bg:"rgba(244,104,91,.16)",
     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>'},
-  "Usher":    {fg:"#4ec9a0", bg:"rgba(78,201,160,.16)",
+"Usher":    {fg:"#4ec9a0", bg:"rgba(78,201,160,.16)",
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
+"Prayer":   {fg:"#f472b6", bg:"rgba(244,114,182,.16)",
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M9 3c0 4-1 6-4 8 3 1 4 3 4 5"/><path d="M15 3c0 4 1 6 4 8-3 1-4 3-4 5"/><path d="M9 5.5c1 1 2 1.5 3 1.5s2-.5 3-1.5"/></svg>'},
+ "C-PRO":    {fg:"#818cf8", bg:"rgba(129,140,248,.16)",
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>'},
+"FLC":      {fg:"#84cc16", bg:"rgba(132,204,22,.16)",
     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'},
-  "Prayer":   {fg:"#f472b6", bg:"rgba(244,114,182,.16)",
-    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'},
-  "C-PRO":    {fg:"#818cf8", bg:"rgba(129,140,248,.16)",
-    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>'},
-  "FLC":      {fg:"#84cc16", bg:"rgba(132,204,22,.16)",
-    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'},
-  "EK":       {fg:"#38bdf8", bg:"rgba(56,189,248,.16)",
-    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>'}
+"EK":       {fg:"#38bdf8", bg:"rgba(56,189,248,.16)",
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
 };
 var DEPT_FALLBACK={fg:"#8890aa",bg:"rgba(136,144,170,.16)",
   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>'};
@@ -1071,7 +1071,7 @@ google.script.run.withSuccessHandler(function(c){
   st.rolesByDept=c.rolesByDept||{};
   st.structureByDept=c.structureByDept||{};
   st.cardTabsByDept=c.cardTabsByDept||{};
-  st.departments=c.departments||Object.keys(st.rolesByDept);
+  st.departments=(c.departments||Object.keys(st.rolesByDept)).slice().sort(function(a,b){return a.localeCompare(b);});
   populateDeptFilter();
 if(c.logoUrl){
   ["dr-logo","gate-logo-img"].forEach(function(id){
@@ -1132,7 +1132,21 @@ function prefillGateFromMemory_(){
   prefetchSchedule_(match.name);
 }
 
-
+var _scrollLockY=0;
+function lockBodyScroll_(){
+  _scrollLockY=window.scrollY||window.pageYOffset||0;
+  document.body.style.position='fixed';
+  document.body.style.top=(-_scrollLockY)+'px';
+  document.body.style.left='0';
+  document.body.style.right='0';
+}
+function unlockBodyScroll_(){
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.left='';
+  document.body.style.right='';
+  window.scrollTo(0,_scrollLockY);
+}
 function openDr(){document.getElementById("dr").classList.add("on");document.getElementById("ov").classList.add("on");}
 function closeDr(){document.getElementById("dr").classList.remove("on");document.getElementById("ov").classList.remove("on");}
 
@@ -1386,8 +1400,8 @@ function populateDeptFilter(){
   menu.innerHTML=st.departments.map(function(d){
     var m=deptMeta(d);
     return '<div class="dept-opt" id="dopt-'+safeId(d)+'" style="--d-fg:'+m.fg+';--d-bg:'+m.bg+'" onclick="pickGateDept(\''+escQ(d)+'\')">'+
-      deptPillHTML(d)+
-      '<span class="dept-opt-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'+
+      '<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:'+m.bg+';color:'+m.fg+';flex-shrink:0">'+m.icon+'</span>'+
+      '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:'+m.fg+'">'+esc(d)+'</span>'+
     '</div>';
   }).join('');
   renderDeptTrigger_(st.gateDept);
@@ -2686,6 +2700,7 @@ function openToolSongEditor(i){
   document.getElementById("tsl-ed-date").innerHTML='<span style="color:#e8b84b">'+esc(HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()])+'</span>';
   document.getElementById("tsl-ed-grp").textContent=c.group;
   renderToolSongEditorBody();
+  lockBodyScroll_();
   document.getElementById("tsl-editor").classList.add("on");
   document.getElementById("tsl-ed-body").scrollTop=0;
 }
@@ -2694,11 +2709,13 @@ function closeToolSongEditor(){
   if(st.toolSongDirty){
     showToolModal("Belum Disimpan","Ada perubahan lagu yang belum disimpan. Yakin keluar?","Keluar Tanpa Simpan",function(){
       st.toolSongDirty=false;
+      unlockBodyScroll_();
       document.getElementById("tsl-editor").classList.remove("on");
       buildToolSonglistPage();
     });
     return;
   }
+  unlockBodyScroll_();
   document.getElementById("tsl-editor").classList.remove("on");
   buildToolSonglistPage();
 }

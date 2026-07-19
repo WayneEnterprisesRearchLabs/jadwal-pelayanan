@@ -406,6 +406,14 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 .rs-dd-cnt{font-size:11px;color:#4a5070;flex-shrink:0}
 .rs-dd-empty{padding:10px 12px;font-size:13px;color:#4a5070;text-align:center}
 
+/* ── TAP DROPDOWN (non-searchable) ── */
+.rs-dd-tap{width:100%;background:#0d0f14;border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 30px 8px 10px;font-family:'DM Sans',sans-serif;font-size:14px;color:#f0f0f5;cursor:pointer;transition:border-color .2s;position:relative;display:flex;align-items:center;justify-content:space-between}
+.rs-dd-tap:active{border-color:#e8b84b}
+.rs-dd-tap.warn-select{border-color:rgba(248,113,113,.5)}
+.rs-dd-val{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs-dd-ph{color:#4a5070}
+.rs-dd-chev{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none}
+
 /* ── CONFIRM MODAL ── */
 .sl-section{margin-top:22px;border-top:1px solid rgba(255,255,255,.09);padding-top:18px}
 .sl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -1825,24 +1833,38 @@ function renderInputRow(role,idx,sel){
   var warnCls=isOverLimit(sel)?" warn-select":"";
   var svcName=st.currentSlot&&st.currentSlot.service;
   var slotDate=st.currentSlot&&st.currentSlot.date;
+  var displayVal=sel||'';
   var h='<div class="rs-select-wrap" id="rs-row-'+sr+'-'+idx+'">'+
-    '<select class="rs-select'+warnCls+'" onchange="onSelectChange(\''+escQ(role)+'\','+idx+',this.value)">'+
-    '<option value="">— Belum dipilih —</option>';
+    '<div class="rs-dd-wrap" id="rs-dd-'+sr+'-'+idx+'">'+
+      '<div class="rs-dd-tap'+warnCls+'" onclick="toggleRoleDd(\''+escQ(role)+'\','+idx+')" data-role="'+esc(role)+'" data-idx="'+idx+'">'+
+        '<span class="rs-dd-val'+(displayVal?'':' rs-dd-ph')+'">'+esc(displayVal||'— Belum dipilih —')+'</span>'+
+        '<svg class="rs-dd-chev" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1L6 7L11 1" stroke="#8890aa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+      '</div>'+
+      '<div class="rs-dd-list" id="rs-ddlist-'+sr+'-'+idx+'">';
+  // Empty option
+  h+='<div class="rs-dd-item'+(sel?'':' selected')+'" onmousedown="pickDd(\''+escQ(role)+'\','+idx+',\'\')"><span>— Kosongkan —</span></div>';
   musicians.forEach(function(m){
     if(m.elig&&svcName){var key=eligKeyOf_(svcName);if(key&&!m.elig[key])return;}
-    if(isBlocked_(m.name,slotDate))return;
+    if(isBlocked_(m.name,slotDate)){
+      h+='<div class="rs-dd-item blk-item"><span>'+esc(m.name)+'</span><span class="rs-dd-cnt">Tidak bisa</span></div>';
+      return;
+    }
     var cnt=getCountExcl(m.name);
-    var cntTxt=cnt>=6?" ⚠️ "+cnt+"×":cnt>3?" ("+cnt+"×)":"";
-    h+='<option value="'+esc(m.name)+'"'+(m.name===sel?' selected':'')+'>'+esc(m.name)+esc(cntTxt)+'</option>';
+    var warnCls2=cnt>=6?" warn-item":"";
+    var selCls=m.name===sel?" selected":"";
+    var cntTxt=cnt>=6?"⚠️ "+cnt+"×":cnt>3?cnt+"×":"";
+    h+='<div class="rs-dd-item'+warnCls2+selCls+'" onmousedown="pickDd(\''+escQ(role)+'\','+idx+',\''+escQ(m.name)+'\')">'+
+      '<span>'+esc(m.name)+'</span>'+
+      '<span class="rs-dd-cnt">'+esc(cntTxt)+'</span>'+
+    '</div>';
   });
-  h+='</select>';
+  h+='</div></div>';
   if(isMultiRole_(role)&&(st.rosterState[role]||[]).length>1)h+='<button class="rs-remove-btn" onclick="removeMultiRole(\''+escQ(role)+'\','+idx+')">×</button>';
   h+='</div>';
   var _sub=(st.subState&&st.subState[role]&&st.subState[role][idx])||"";
   if(_sub)h+='<div class="rs-sub-hint" id="rs-subhint-'+sr+'-'+idx+'">&#8618; digantikan oleh <b>'+esc(_sub)+'</b> <button type="button" onclick="clearSub(\''+escQ(role)+'\','+idx+')" title="Batalkan pergantian" style="margin-left:6px;border:none;background:none;color:#ff6b7a;font-size:13px;cursor:pointer;padding:0 4px">&times;</button></div>';
   return h;
 }
-
 function dimBg(bg,factor){
   var m=bg.match(/rgba\(([\d.]+),([\d.]+),([\d.]+),([\d.]+)\)/);
   if(!m)return bg;
@@ -1968,20 +1990,8 @@ function pickDd(role,idx,name){
   var subChanged=applyPick_(role,idx,name);
   st.dirty=true;updateSaveBtn();
   closeAllDd();
-  if(subChanged){
-    renderRosterPage(); // re-render so the "digantikan" hint appears/updates
-  } else {
-    var sr=safeId(role);
-    var cur=st.rosterState[role][idx]||"";
-    var inp=document.querySelector('#rs-dd-'+sr+'-'+idx+' .rs-dd-input');
-    if(inp){
-      inp.value=cur;
-      inp.readOnly=true;
-      inp.placeholder="— Belum dipilih —";
-      inp.classList.toggle("warn-select",isOverLimit(cur));
-    }
-    updateWarnBox();
-  }
+  renderRosterPage();
+  updateWarnBox();
 }
 
 // True unless the current month is explicitly CLOSE.
@@ -2016,17 +2026,28 @@ function clearSub(role,idx){
 
 function closeAllDd(){
   document.querySelectorAll('.rs-dd-list').forEach(function(l){l.classList.remove("on");});
-  document.querySelectorAll('.rs-dd-input').forEach(function(inp){
-    var role=inp.dataset.role,idx=inp.dataset.idx;
-    if(role&&idx!==undefined){
-      var val=st.rosterState[role]&&st.rosterState[role][idx]||"";
-      inp.value=val;
-      inp.readOnly=true;
-      inp.placeholder="— Belum dipilih —";
-    }
-  });
   _ddRole=null;_ddIdx=null;
 }
+
+function toggleRoleDd(role,idx){
+  var sr=safeId(role);
+  var list=document.getElementById('rs-ddlist-'+sr+'-'+idx);
+  if(!list)return;
+  var wasOpen=list.classList.contains("on");
+  closeAllDd();
+  if(!wasOpen){
+    var tap=list.parentElement.querySelector('.rs-dd-tap');
+    if(tap){
+      var rect=tap.getBoundingClientRect();
+      list.style.position='fixed';
+      list.style.top=(rect.bottom+4)+'px';
+      list.style.left=rect.left+'px';
+      list.style.width=rect.width+'px';
+    }
+    list.classList.add("on");
+    setTimeout(function(){document.addEventListener('click',onDocClick,{once:true,capture:true});},50);
+  }
+}        
 
 function onDocClick(e){
   if(!e.target.closest('.rs-dd-wrap'))closeAllDd();
@@ -2688,7 +2709,7 @@ function saveManualDresscode(){
 
 // ── PAW STANDALONE SONGLIST PAGE (keyed date|group) ──────────
 function renderSonglistPage(){
-  if(st.dept!=="PAW"){document.getElementById("content").innerHTML='<div class="sq-empty">Halaman ini khusus departemen PAW.</div>';return;}
+  if(st.dept!=="PAW"&&st.dept!=="EK"){document.getElementById("content").innerHTML='<div class="sq-empty">Halaman ini khusus departemen PAW/EK.</div>';return;}
   // Cards (and their songs) are already in memory for this month — saves are
   // mirrored locally, so a refetch would only re-fetch what we already know.
   var mkey=st.year+"-"+st.month;

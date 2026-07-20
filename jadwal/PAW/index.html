@@ -2869,10 +2869,12 @@ function generateDressSlotsVol(year,month,saved,dept){
   var map={},order=[];
   var d=new Date(year,month,1);
   while(d.getMonth()===month){
-    var dow=d.getDay(),tpls=(dow===6)?SAT_TEMPLATES:(dow===0)?SUN_TEMPLATES:null;
+    var dow=d.getDay();
+    var isEK=(dept==="EK");
+    // EK only has Sunday services — skip Saturday entirely
+    if(dow===6 && isEK){d.setDate(d.getDate()+1);continue;}
+    var tpls=(dow===6)?SAT_TEMPLATES:(dow===0)?SUN_TEMPLATES:null;
     if(tpls){
-      // EK only has Sunday services — skip Saturday templates
-      if(dow===6 && dept==="EK"){d.setDate(d.getDate()+1);continue;}
       var ds=year+"-"+pad(month+1)+"-"+pad(d.getDate());
       var seen={};
       tpls.forEach(function(t){
@@ -2890,7 +2892,6 @@ function generateDressSlotsVol(year,month,saved,dept){
     if(map[k]){map[k].pdfUrl=s.pdfUrl;}
     else{map[k]={date:s.date,service:grp,pdfUrl:s.pdfUrl,isCustom:true};order.push(k);}
   });
-  // Sort by date, then fixed group order: Voltage > AOG > Umum > custom
   var groupRank={"Voltage":0,"AOG":1,"Umum":2};
   order.sort(function(a,b){
     var da=a.split("|")[0],db=b.split("|")[0];
@@ -2918,7 +2919,7 @@ function renderToolDresscode(){
   callApi('getDresscodeList',[st.viewYear,st.viewMonth,st.toolDressDept]).then(function(res){
     st.toolDressDepts=(res&&res.depts)||["PAW","Usher"];
     if(st.toolDressDepts.indexOf(st.toolDressDept)===-1)st.toolDressDept=st.toolDressDepts[0];
-    st.toolDressList=generateDressSlotsVol(st.viewYear,st.viewMonth,(res&&res.items)||[],st.toolDressDept);
+    st.toolDressList=generateDressSlotsVol(st.viewYear,st.viewMonth,(res&&res.items)||[],st.toolDressDept)
     st._toolDressByKey[st.viewYear+"-"+st.viewMonth+"|"+st.toolDressDept]={list:st.toolDressList,depts:st.toolDressDepts};
     buildToolDresscodePage();
   }).catch(function(e){document.getElementById("content").innerHTML='<div class="tsq-empty">Gagal: '+esc(e.message||e)+'</div>';});

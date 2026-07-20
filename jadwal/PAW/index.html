@@ -3322,7 +3322,32 @@ document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hide
     window.addEventListener('deviceorientation',onGyro,{passive:true});
   }
 })();
+<script>
+(function(){
+  var bar=document.getElementById("offline-bar");
+  if(!bar)return;
+  var isOffline=!navigator.onLine;
 
+  function show(){
+    isOffline=true;
+    bar.style.display="block";
+    setTimeout(function(){bar.style.transform="translateY(0)";},10);
+  }
+  function hide(){
+    isOffline=false;
+    bar.style.transform="translateY(-100%)";
+    setTimeout(function(){bar.style.display="none";},350);
+  }
+
+  window.addEventListener("offline",show);
+  window.addEventListener("online",hide);
+
+  if(isOffline)show();
+
+  window.isAppOffline=function(){return isOffline;};
+})();
+</script>
+        
 // ── SERVICE WORKER (needed for PWA installability) ──
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
@@ -3374,6 +3399,6 @@ armNavGuard();
     <button onclick="closeToolModal()" style="width:100%;padding:14px;border-radius:13px;border:1.5px solid rgba(255,255,255,.1);background:none;color:#8890aa;font-family:DM Sans,sans-serif;font-size:15px;font-weight:600;cursor:pointer">Batal</button>
   </div>
 </div>
-        
+<div id="offline-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e24b4a;color:#fff;text-align:center;padding:6px 16px;font-size:13px;font-weight:500;letter-spacing:.01em;transition:transform .3s ease;transform:translateY(-100%);">Kamu sedang offline — data mungkin tidak tersimpan</div>        
 </body>
 </html>

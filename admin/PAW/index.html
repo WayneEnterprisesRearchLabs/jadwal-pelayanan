@@ -934,7 +934,7 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 </div>
 
 <div class="toast" id="toast"></div>
-
+<div id="offline-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e24b4a;color:#fff;text-align:center;padding:6px 16px;font-size:13px;font-weight:500;letter-spacing:.01em;transition:transform .3s ease;transform:translateY(-100%);">Kamu sedang offline — data mungkin tidak tersimpan</div>
 <script>
 // ============================================================
 //  GAS SHIM — makes google.script.run work over fetch() (static PWA)
@@ -2966,6 +2966,7 @@ function refreshCopyRow_(){
 }
 
 function saveRoster(){
+  if(window.isAppOffline && window.isAppOffline()){showToast("Kamu sedang offline. Coba lagi nanti.","err");return;}
   if(!st.currentSlot)return;
   var btn=document.getElementById("rp-save");btn.disabled=true;btn.textContent="Menyimpan…";
   var clean={};

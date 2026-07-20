@@ -3322,7 +3322,7 @@ document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hide
     window.addEventListener('deviceorientation',onGyro,{passive:true});
   }
 })();
-<script>
+
 (function(){
   var bar=document.getElementById("offline-bar");
   if(!bar)return;
@@ -3346,7 +3346,7 @@ document.addEventListener("click",function(e){if(!e.target.closest(".srch"))hide
 
   window.isAppOffline=function(){return isOffline;};
 })();
-</script>
+
         
 // ── SERVICE WORKER (needed for PWA installability) ──
 if ('serviceWorker' in navigator) {

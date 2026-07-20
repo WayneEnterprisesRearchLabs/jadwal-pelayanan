@@ -355,6 +355,7 @@ body:not(.app-in) .home{animation:none}   /* first paint sits behind the gate �
 .ecard-notif.pending {background:rgba(255,255,255,.04);color:#8890aa}
 .ecard-notif.approved{background:rgba(74,222,128,.10);color:#4ade80}
 .ecard-notif.rejected{background:rgba(248,113,113,.12);color:#f87171}
+.ecard-notif.none_late{background:rgba(245,158,11,.14);color:#f59e0b}
 
 /* ── ROSTER PANEL ─────── */
         
@@ -715,7 +716,8 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .tsq-card{background:#12151c;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;margin-bottom:14px}
 .tsq-card.approved{border-color:rgba(74,222,128,.35)}
 .tsq-card.rejected{border-color:rgba(248,113,113,.35)}
-.tsq-img{width:100%;max-height:280px;object-fit:cover;background:#000;display:block;cursor:zoom-in;border-radius:14px 14px 0 0}
+.tsq-img{width:100%;max-height:340px;object-fit:contain;background:#000;display:block;cursor:zoom-in;opacity:0;transform:translateY(-12px);transition:opacity .4s ease,transform .4s cubic-bezier(.22,1,.36,1)}
+.tsq-img.loaded{opacity:1;transform:translateY(0)}
 .tsq-body{padding:13px 15px}
 .tsq-name{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#f0f0f5}
 .tsq-meta{font-size:12px;color:#8890aa;margin-top:2px}
@@ -2080,21 +2082,29 @@ function cardTab(e,kid,which){
    otherwise there's nothing to confirm and the nudge would be noise. */
 var NOTIF_META={
   none:    {t:"Belum upload selfie dresscode",     i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'},
+  none_late:{t:"⚠️ Melewati deadline! Upload segera", i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'},
   pending: {t:"Selfie menunggu approval CM",       i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'},
-  approved:{t:"Dresscode kamu sudah disetujui",    i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'},
+  approved:{t:"Dresscode sudah disetujui",    i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'},
   rejected:{t:"Selfie ditolak — upload ulang",     i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'}
 };
 
 function notifHTML_(kid,ev){
   if(!st.vol||!ev||ev.isPast)return"";
   if(!deptHasTab_(st.vol.dept,"dress"))return"";
+  var dept=st.vol.dept;
   var dress=st.dressCache["dress|"+ev.date+"|"+svcOf_(ev)];
-  if(!dress||!dress.pdfUrl)return"";          // no dresscode published yet → no notif
+  if(!dress||!dress.pdfUrl)return"";
   var sel=st.selfieCache[selfieKey_(ev)];
   var s=(sel&&sel.status)||"none";
+  // Deadline warning: if status is "none" and deadline has passed, escalate
+  if(s==="none"&&isDeadlinePassed_(ev.date,dept))s="none_late";
   var m=NOTIF_META[s]||NOTIF_META.none;
+  var dlText="";
+  if((s==="none"||s==="none_late")&&dressDeadline_(ev.date,dept)){
+    dlText=' · Deadline: '+deadlineLabel_(ev.date,dept);
+  }
   return '<div class="ecard-notif '+s+'" id="notif-'+kid+'" onclick="openDressFromNotif(event,\''+kid+'\')">'+
-    m.i+'<span>'+esc(m.t)+'</span>'+
+    m.i+'<span>'+esc(m.t)+dlText+'</span>'+
     '<span class="ecard-notif-arr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>'+
   '</div>';
 }
@@ -2275,6 +2285,45 @@ function renderDressPane_(kid,ev,res){
   fetchSelfie_(ev,function(sres){applySelfie_(kid,sres);},function(){renderSelfieStatus(kid,"none");});
   if(hadSelfie)revalidateSelfie_(kid,ev);   // cached hit → confirm it's still current
 }
+
+/* ── DRESSCODE DEADLINE ──
+   Fixed per service group. Returns the deadline Date for a given service date,
+   or null if no deadline applies. The volunteer can still upload after — this
+   is warning-only. */
+function dressDeadline_(serviceDateStr,dept){
+  var d=new Date(serviceDateStr+"T00:00:00");
+  var dow=d.getDay(); // 0=Sun, 6=Sat
+  if(dept==="Usher"){
+    // Thursday before the service
+    var thu=new Date(d);thu.setDate(d.getDate()-(dow===0?3:dow===6?2:dow-4));
+    if(thu>=d)thu.setDate(thu.getDate()-7);
+    return thu;
+  }
+  if(dow===6){
+    // Saturday service (AOG) → Wednesday before (3 days)
+    var wed=new Date(d);wed.setDate(d.getDate()-3);
+    return wed;
+  }
+  if(dow===0){
+    // Sunday service (Umum) → Tuesday before (5 days)
+    var tue=new Date(d);tue.setDate(d.getDate()-5);
+    return tue;
+  }
+  return null;
+}
+
+function isDeadlinePassed_(serviceDateStr,dept){
+  var dl=dressDeadline_(serviceDateStr,dept);
+  if(!dl)return false;
+  var now=new Date();now.setHours(23,59,59,999);
+  return now>dl;
+}
+
+function deadlineLabel_(serviceDateStr,dept){
+  var dl=dressDeadline_(serviceDateStr,dept);
+  if(!dl)return"";
+  return HARI_L[dl.getDay()]+", "+dl.getDate()+" "+BLN_L[dl.getMonth()];
+}        
 
 function loadCardDresscode(kid,ev){
   if(!ev)return;
@@ -2893,13 +2942,6 @@ function buildToolDresscodePage(){
       '<span class="dept-pill-icon">'+m.icon+'</span><span class="dept-pill-name">'+esc(dp)+'</span></button>';
   });
   h+='</div>';
-  h+='<div style="background:#12151c;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px">'+
-    '<div style="flex:1;min-width:0">'+
-      '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f59e0b;margin-bottom:4px">Deadline Upload</div>'+
-      '<div style="font-size:13px;color:#8890aa" id="tdc-deadline-display">'+(st.toolDressDeadline||'Belum diatur')+'</div>'+
-    '</div>'+
-    '<input type="date" class="tdc-url-inp" id="tdc-deadline-inp" value="'+esc(st.toolDressDeadline||'')+'" style="width:auto;margin:0;flex-shrink:0" onchange="setToolDressDeadline(this.value)">'+
-  '</div>';
   if(!list.length){h+='<div class="tsq-empty">Tidak ada Sabtu/Minggu bulan ini.</div>';}
   else{
     var byDate={},order=[];
@@ -2927,19 +2969,6 @@ function buildToolDresscodePage(){
 }
 
 function onToolDressInput(i){var btn=document.getElementById("tdc-save-"+i);if(btn){btn.classList.add("dirty");btn.disabled=false;}}
-function setToolDressDeadline(val){
-  st.toolDressDeadline=val;
-  var el=document.getElementById("tdc-deadline-display");
-  if(el){
-    if(val){
-      var d=new Date(val+"T00:00:00");
-      el.textContent=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()]+" "+d.getFullYear();
-    } else {
-      el.textContent="Belum diatur";
-    }
-  }
-  showToast("Deadline diatur.","ok");
-}
         
 function saveToolDresscode(i){
   var it=(st.toolDressList||[])[i];if(!it)return;
@@ -3060,7 +3089,7 @@ function buildToolSelfieQueue(){
       if(it.status!=="rejected")actions+='<button class="tsq-btn tsq-reject" onclick="decideToolSelfie('+i+',\'rejected\')">Tolak</button>';
       actions+='</div>';
       h+='<div class="tsq-card '+it.status+'" id="tsq-card-'+i+'">'+
-        (it.url?'<img class="tsq-img" src="'+encodeURI(it.url)+'" alt="selfie" onclick="window.open(this.src,\'_blank\')">':'')+
+        (it.url?'<img class="tsq-img" src="'+encodeURI(it.url)+'" alt="selfie" onclick="window.open(this.src,\'_blank\')" onload="this.classList.add(\'loaded\')">':'')+
         '<div class="tsq-body"><div class="tsq-name">'+esc(it.name)+'</div>'+
           '<div class="tsq-meta">'+esc(it.service)+' · '+esc(dstr)+' · Week '+week+'</div>'+
           badge+actions+'</div></div>';

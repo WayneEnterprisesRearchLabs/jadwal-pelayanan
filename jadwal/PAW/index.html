@@ -738,11 +738,14 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .toast.err{border-color:rgba(248,113,113,.3);color:#f87171}
 .toast.warn{border-color:rgba(232,184,75,.3);color:#e8b84b}
 
+.offline-bar{position:fixed;top:0;left:0;right:0;z-index:9998;background:#f59e0b;color:#0a0c10;text-align:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:6px 16px;transform:translateY(-100%);transition:transform .3s ease;padding-top:calc(6px + env(safe-area-inset-top,0px))}
+.offline-bar.on{transform:translateY(0)}        
         
         
 </style>
 </head>
 <body>
+<div class="offline-bar" id="offline-bar">Tidak ada koneksi internet</div>  
 <div id="native-splash">
   <div class="big-spin"><span></span><span></span><span></span></div>
   <div class="ld-txt">Menyiapkan data…</div>
@@ -3417,6 +3420,18 @@ function onNavBack(){
 function onPopGuard(){if(_navGuardArmed)onNavBack();}
 window.addEventListener("popstate",onPopGuard);
 armNavGuard();
+        
+/* ── OFFLINE DETECTION ── */
+function updateOnlineStatus_(){
+  var bar=document.getElementById("offline-bar");
+  if(!bar)return;
+  if(navigator.onLine){bar.classList.remove("on");}
+  else{bar.classList.add("on");}
+}
+window.addEventListener("online",updateOnlineStatus_);
+window.addEventListener("offline",updateOnlineStatus_);
+updateOnlineStatus_();
+        
 </script>
 
 <div class="toast" id="toast"></div>

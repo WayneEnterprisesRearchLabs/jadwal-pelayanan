@@ -895,6 +895,16 @@ Object.defineProperty(google.script, 'run', { get: function(){ return new GasRun
 var SPLASH_MIN_MS = 1400;
 var splashStart = Date.now();
 
+// ============================================================
+//  APP TEMPLATE CONFIG — edit these when cloning for a new department
+// ============================================================/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+var APP_CONFIG = {
+  storagePrefix: "paw_",        // unique per department! prevents saved-name clashes if hosted on same domain
+  appTitle: "Volunteer Hub", // main header line 1
+  deptLabel: "PAW DEPARTMENT",  // small orange badge under the title
+  ringkasanBrand: "PAW"         // short brand text on the Ringkasan summary image
+};        
+
 // Early prefetch: if we have a saved name, start loading their schedule
 // NOW — don't wait for getConfig/getAllVolunteers. By the time the splash
 // clears and the user taps Masuk, the data is already cached.
@@ -947,15 +957,7 @@ function popGateInner_(){
   inner.classList.add('in');
 }
 
-// ============================================================
-//  APP TEMPLATE CONFIG — edit these when cloning for a new department
-// ============================================================/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var APP_CONFIG = {
-  storagePrefix: "paw_",        // unique per department! prevents saved-name clashes if hosted on same domain
-  appTitle: "Volunteer Hub", // main header line 1
-  deptLabel: "PAW DEPARTMENT",  // small orange badge under the title
-  ringkasanBrand: "PAW"         // short brand text on the Ringkasan summary image
-};
+
   
 // ============================================================
 //  ORIGINAL APP CODE — unchanged below this point

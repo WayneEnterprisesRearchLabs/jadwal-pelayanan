@@ -1908,7 +1908,7 @@ function applyEdit(){
 
 function renderRosterPage(){
   var modeOpen=isMonthOpen();
-  h+='<div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacing:.03em;'+
+  var h='<div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacing:.03em;'+
     (modeOpen?'background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80':'background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#f87171')+'">'+
     '<span style="width:8px;height:8px;border-radius:50%;background:'+(modeOpen?'#4ade80':'#f87171')+'"></span>'+
     'Mode '+(modeOpen?'OPEN — perubahan dicatat sebagai pergantian':'CLOSE — perubahan langsung overwrite')+
@@ -3339,6 +3339,7 @@ function setAvailPub(status){
   btns2.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
   google.script.run
     .withSuccessHandler(function(res){
+      hidePubOverlay();
       if(res&&res.ok){
         st.availData.availStatus=res.availStatus;
         st.availCache[st.availYear+"-"+st.availMonth]=st.availData;
@@ -3351,6 +3352,7 @@ function setAvailPub(status){
       }
     })
     .withFailureHandler(function(e){
+      hidePubOverlay();
       st.availData.availStatus=cur;
       document.getElementById("avail-toggle-wrap").innerHTML=availToggleHtml(cur==="OPEN");
       showToast("Error: "+(e&&e.message||e),"err");

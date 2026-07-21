@@ -1821,7 +1821,14 @@ function openRoster(key){
   st.songs=null;
   st.dressUrl=null;
   st.dressDirty=false;
-  _rosterSnapshot=JSON.stringify({r:st.rosterState,s:st.subState});
+  _rosterSnapshot=JSON.stringify({
+    r:st.rosterState,
+    s:st.subState,
+    svc:slot.service,
+    time:slot.time,
+    special:!!slot.isSpecial,
+    copy:false   // checkbox always starts unchecked (refreshCopyRow_ resets it)
+  });
   renderRosterPage();
   updateSaveBtn();
   renderGroupDropdown();
@@ -1906,7 +1913,7 @@ function renderRosterPage(){
     '<span style="width:8px;height:8px;border-radius:50%;background:'+(modeOpen?'#4ade80':'#f87171')+'"></span>'+
     'Mode '+(modeOpen?'OPEN — perubahan dicatat sebagai pergantian':'CLOSE — perubahan langsung overwrite')+
   '</div>';
-  var h='<div id="rp-warn-box" class="warn-box"></div>';
+  h+='<div id="rp-warn-box" class="warn-box"></div>';
   var prevSeg=null,prevSub=null,segOpen=false;
   ROST.forEach(function(grp){
     if(grp.seg!==prevSeg){if(segOpen)h+='</div>';h+='<div class="rs-block" style="'+SS[grp.seg]+'">';segOpen=true;prevSeg=grp.seg;prevSub=null;}
@@ -2266,7 +2273,16 @@ function updateWarnBox(){
 
 function updateSaveBtn(){
   var btn=document.getElementById("rp-save");
-  var current=JSON.stringify({r:st.rosterState,s:st.subState});
+  var box=document.getElementById("rp-copy-all");
+  var slot=st.currentSlot;
+  var current=JSON.stringify({
+    r:st.rosterState,
+    s:st.subState,
+    svc:slot&&slot.service,
+    time:slot&&slot.time,
+    special:!!(slot&&slot.isSpecial),
+    copy:!!(box&&box.checked)
+  });
   st.dirty=(current!==_rosterSnapshot);
   if(btn){btn.classList.toggle("dirty",st.dirty);}
 }

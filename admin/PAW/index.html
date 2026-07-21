@@ -1624,17 +1624,24 @@ function renderPubToggle(){
   if(w)w.innerHTML=statusToggleHtml();
 }
 
+
+// function setPubStatus(status){
+//   if(!st.data)return;
+//   var cur=st.data.monthStatus||"OPEN";
+//   if(cur===status)return;
+//   // Instant visual feedback — disable buttons and show spinner
+//   var btns=document.querySelectorAll(".pub-btn");
+//   btns.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
+//   st.data.monthStatus=status;renderPubToggle();
+//   // Re-disable after re-render since renderPubToggle rebuilds the buttons
+//   var btns2=document.querySelectorAll(".pub-btn");
+//   btns2.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
+        
 function setPubStatus(status){
   if(!st.data)return;
   var cur=st.data.monthStatus||"OPEN";
   if(cur===status)return;
-  // Instant visual feedback — disable buttons and show spinner
-  var btns=document.querySelectorAll(".pub-btn");
-  btns.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
-  st.data.monthStatus=status;renderPubToggle();
-  // Re-disable after re-render since renderPubToggle rebuilds the buttons
-  var btns2=document.querySelectorAll(".pub-btn");
-  btns2.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
+  showPubOverlay(status==="OPEN"?"Membuka jadwal…":"Menutup jadwal…");
   google.script.run
     .withSuccessHandler(function(res){
       hidePubOverlay();

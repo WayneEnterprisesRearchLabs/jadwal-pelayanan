@@ -201,7 +201,11 @@ body.app-in .hdr{animation:hdrSlideIn .8s cubic-bezier(.22,1,.36,1) both}
 .pub-note.open{color:#6ee7a0}
 .rs-sub-hint{font-size:11px;color:#e8b84b;opacity:.92;margin:3px 0 2px 5px;line-height:1.35}
 .rs-sub-hint b{font-weight:700}
-
+        
+.pub-overlay{position:fixed;inset:0;z-index:300;background:rgba(10,12,16,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.pub-overlay.on{opacity:1;pointer-events:all}
+.pub-overlay .big-spin{margin-bottom:16px}
+.pub-overlay-lbl{font-size:14px;color:#8890aa}
 
 /* ── EVENT LIST ── */
 .ev-list{display:flex;flex-direction:column;gap:0}
@@ -321,6 +325,8 @@ body.app-in .hdr{animation:hdrSlideIn .8s cubic-bezier(.22,1,.36,1) both}
 .group-lbl{text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#e8b84b;letter-spacing:.08em;text-transform:uppercase;padding:4px 0;margin:4px 0}
 .warn-box{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 14px;margin-bottom:16px;margin-left:13px;margin-right:13px;font-size:13px;color:#f87171;line-height:1.5;display:none}
 .warn-box.on{display:block}
+.rs-role-row[data-role="Speaker"]{margin-top:12px}
+.rs-role-row[data-role="Soundman"]{margin-bottom:16px}
 
 /* ── RINGKASAN ── */
 .ring-wrap{animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
@@ -940,6 +946,8 @@ body.offline .dr{padding-top:calc(env(safe-area-inset-top,0px) + 29px)}
   </div> 
 </div>
 
+<div class="pub-overlay" id="pub-overlay"><div class="big-spin"><span></span><span></span><span></span></div><div class="pub-overlay-lbl" id="pub-overlay-lbl">Mengubah status…</div></div>
+        
 <div class="toast" id="toast"></div>
 <div id="offline-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e24b4a;color:#fff;text-align:center;padding:6px 16px;font-size:13px;font-weight:500;letter-spacing:.01em;transition:transform .3s ease;transform:translateY(-100%);">Kamu sedang offline — data mungkin tidak tersimpan</div>
 <script>
@@ -1425,7 +1433,8 @@ function serviceLabel(s){return s;}
 
 
 var st={tab:"jadwal",dept:"",year:0,month:0,availYear:0,availMonth:0,availData:null,data:null,slots:[],currentSlot:null,rosterState:{},subState:{},origService:"",origTime:"",origSpecial:false,loaded:false,dirty:false,songs:null,songDirty:false,dressUrl:null,dressDirty:false,selfieItems:[],selfieFilter:"pending",selfieGroup:"",dressList:[],songGroup:"",songDate:"",songGroupList:[],songCards:[],songIdx:null,songCardsKey:"",notesCache:null,availCache:{}};
-var AVAIL_SVC_TAB = "all";   // "all","Voltage","AOG","Umum"        
+var AVAIL_SVC_TAB = "all";   // "all","Voltage","AOG","Umum"  
+var _rosterSnapshot="";   // JSON snapshot of initial roster+sub state
 (function(){var now=new Date();st.year=now.getFullYear();st.month=now.getMonth();st.availYear=now.getFullYear();st.availMonth=now.getMonth();if(ADMIN_KEY&&ADMIN_DEPT)loadData();})();
 
 function loadData(){
@@ -1628,6 +1637,7 @@ function setPubStatus(status){
   btns2.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
   google.script.run
     .withSuccessHandler(function(res){
+      hidePubOverlay();
       if(res&&res.ok){
         st.data.monthStatus=res.status;renderPubToggle();
         showToast(res.status==="OPEN"?"Jadwal DIBUKA untuk volunteer.":"Jadwal DITUTUP dari volunteer.","ok");
@@ -1637,6 +1647,7 @@ function setPubStatus(status){
       }
     })
     .withFailureHandler(function(e){
+      hidePubOverlay();
       st.data.monthStatus=cur;renderPubToggle();
       showToast("Error: "+(e&&e.message||e),"err");
     })
@@ -1802,6 +1813,7 @@ function openRoster(key){
   st.songs=null;
   st.dressUrl=null;
   st.dressDirty=false;
+  _rosterSnapshot=JSON.stringify({r:st.rosterState,s:st.subState});
   renderRosterPage();
   updateSaveBtn();
   renderGroupDropdown();
@@ -1880,6 +1892,12 @@ function applyEdit(){
 }
 
 function renderRosterPage(){
+  var modeOpen=isMonthOpen();
+  h+='<div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacing:.03em;'+
+    (modeOpen?'background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80':'background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#f87171')+'">'+
+    '<span style="width:8px;height:8px;border-radius:50%;background:'+(modeOpen?'#4ade80':'#f87171')+'"></span>'+
+    'Mode '+(modeOpen?'OPEN — perubahan dicatat sebagai pergantian':'CLOSE — perubahan langsung overwrite')+
+  '</div>';
   var h='<div id="rp-warn-box" class="warn-box"></div>';
   var prevSeg=null,prevSub=null,segOpen=false;
   ROST.forEach(function(grp){
@@ -1897,12 +1915,12 @@ function renderRosterPage(){
               return sub ? esc(nm)+' <span style="color:#4ade80">→ '+esc(sub)+'</span>' : esc(nm);
             }).join(', ')
           : '<span style="color:#4a5070">Belum diisi oleh PAW</span>';
-        h+='<div class="rs-role-row" style="background:'+dimBg(c.bg)+'">'+
+        h+='<div class="rs-role-row" data-role="'+esc(role)+'" style="background:'+dimBg(c.bg)+'">'+
           '<div class="rs-lbl" style="color:'+c.fg+'">'+esc(roleLabel(role))+'</div>'+
           '<div class="rs-inputs" style="padding:10px 12px;font-size:14px;color:#f0f0f5;border-left:1px solid rgba(255,255,255,.08)">'+spkDisplay+'</div></div>';
         return;
       }
-      h+='<div class="rs-role-row" style="background:'+dimBg(c.bg)+'">'+
+      h+='<div class="rs-role-row" data-role="'+esc(role)+'" style="background:'+dimBg(c.bg)+'">'+
         '<div class="rs-lbl" style="color:'+c.fg+'">'+esc(roleLabel(role))+'</div>'+
         '<div class="rs-inputs" id="rs-inputs-'+safeId(role)+'">';
       var names=st.rosterState[role]||[""];
@@ -1943,8 +1961,9 @@ function renderInputRow(role,idx,sel){
         '<svg class="rs-dd-chev" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1L6 7L11 1" stroke="#8890aa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
       '</div>'+
       '<div class="rs-dd-list" id="rs-ddlist-'+sr+'-'+idx+'">';
-  // Empty option
-  h+='<div class="rs-dd-item'+(sel?'':' selected')+'" onmousedown="pickDd(\''+escQ(role)+'\','+idx+',\'\')"><span>— Kosongkan —</span></div>';
+  if(!isMonthOpen()){
+    h+='<div class="rs-dd-item'+(sel?'':' selected')+'" onmousedown="pickDd(\''+escQ(role)+'\','+idx+',\'\')"><span>— Kosongkan —</span></div>';
+  }
   musicians.forEach(function(m){
     if(m.elig&&svcName){var key=eligKeyOf_(svcName);if(key&&!m.elig[key])return;}
     if(isBlocked_(m.name,slotDate)){
@@ -1974,8 +1993,9 @@ function switchToManual(role,idx){
   var sr=safeId(role);
   var wrap=document.getElementById('rs-dd-'+sr+'-'+idx);
   if(!wrap)return;
+  st.rosterState[role][idx]="";
   wrap.innerHTML='<div style="display:flex;gap:6px;align-items:center">'+
-    '<input class="rs-text-inp" type="text" placeholder="Ketik nama…" value="'+esc(st.rosterState[role][idx]||'')+'" oninput="onSelectChange(\''+escQ(role)+'\','+idx+',this.value)" style="flex:1">'+
+    '<input class="rs-text-inp" type="text" placeholder="Ketik nama…" value="" oninput="onSelectChange(\''+escQ(role)+'\','+idx+',this.value)" style="flex:1">'+
     '<button class="rs-remove-btn" style="width:auto;height:auto;padding:6px 8px;font-size:11px;border-color:rgba(232,184,75,.4);color:#e8b84b" onclick="backToDropdown(\''+escQ(role)+'\','+idx+')" title="Kembali ke dropdown">↩</button>'+
   '</div>';
   var inp=wrap.querySelector('input');
@@ -2026,7 +2046,7 @@ function onSelectChange(role,idx,val){
   if(!st.rosterState[role])st.rosterState[role]=[""];
   st.rosterState[role][idx]=val;
   clearSubHint_(role,idx);
-  st.dirty=true;updateSaveBtn();
+  updateSaveBtn();
   // was ".rs-select" — that class no longer exists. Speaker rows render .rs-text-inp.
   var el=document.querySelector("#rs-row-"+safeId(role)+"-"+idx+" .rs-text-inp, #rs-row-"+safeId(role)+"-"+idx+" .rs-dd-input");
   if(el)el.classList.toggle("warn-select",isOverLimit(val));
@@ -2123,7 +2143,7 @@ function pickDd(role,idx,name){
   var newVal=(name||"").trim();
   if(oldVal===newVal){closeAllDd();return;}
   var subChanged=applyPick_(role,idx,name);
-  st.dirty=true;updateSaveBtn();
+  updateSaveBtn();
   closeAllDd();
   renderRosterPage();
   updateWarnBox();
@@ -2157,7 +2177,7 @@ function applyPick_(role,idx,name){
 // Explicitly clear a substitution (the × on the digantikan hint).
 function clearSub(role,idx){
   if(st.subState&&st.subState[role])st.subState[role][idx]="";
-  st.dirty=true;updateSaveBtn();
+  updateSaveBtn();
   renderRosterPage();
 }
 
@@ -2196,6 +2216,7 @@ function addMultiRole(role){
   if(!st.rosterState[role])st.rosterState[role]=[""];
   st.rosterState[role].push("");
   if(st.subState&&st.subState[role])st.subState[role].push("");
+  updateSaveBtn();
   var wrap=document.getElementById("rs-inputs-"+safeId(role));if(!wrap)return;
   var idx=st.rosterState[role].length-1;
   var btn=wrap.querySelector(".rs-add-btn");
@@ -2210,7 +2231,7 @@ function removeMultiRole(role,idx){
   st.rosterState[role].splice(idx,1);
   if(!st.rosterState[role].length)st.rosterState[role]=[""];
   if(st.subState&&st.subState[role]){st.subState[role].splice(idx,1);if(!st.subState[role].length)st.subState[role]=[""];}
-  st.dirty=true;updateSaveBtn();
+  updateSaveBtn();
   var wrap=document.getElementById("rs-inputs-"+safeId(role));if(!wrap)return;
   var h="";st.rosterState[role].forEach(function(n,ni){h+=renderInputRow(role,ni,n);});
   if(canAddMore_(role))h+=addBtnHTML_(role);
@@ -2237,9 +2258,9 @@ function updateWarnBox(){
 
 function updateSaveBtn(){
   var btn=document.getElementById("rp-save");
-  if(!btn)return;
-  btn.classList.toggle("dirty",st.dirty);
-  btn.disabled=!st.dirty;
+  var current=JSON.stringify({r:st.rosterState,s:st.subState});
+  st.dirty=(current!==_rosterSnapshot);
+  if(btn){btn.classList.toggle("dirty",st.dirty);}
 }
 
 function renderGroupDropdown(){
@@ -2336,7 +2357,7 @@ function autoAssignSlot(){
     st.rosterState[role]=names.length?names:[""];
     st.subState[role]=names.length?names.map(function(){return "";}):[""];
   });
-  st.dirty=true;updateSaveBtn();
+  updateSaveBtn();
   renderRosterPage();
   showToast("Auto assign diterapkan untuk ibadah ini.","ok");
 }
@@ -3287,9 +3308,7 @@ function setAvailPub(status){
   if(!st.availData)return;
   var cur=st.availData.availStatus||"CLOSE";
   if(cur===status)return;
-  // Instant feedback
-  var btns=document.querySelectorAll("#avail-toggle-wrap .pub-btn");
-  btns.forEach(function(b){b.disabled=true;b.style.opacity=".5";});
+  showPubOverlay(status==="OPEN"?"Membuka ketersediaan…":"Menutup ketersediaan…");
   st.availData.availStatus=status;
   document.getElementById("avail-toggle-wrap").innerHTML=availToggleHtml(status==="OPEN");
   var btns2=document.querySelectorAll("#avail-toggle-wrap .pub-btn");
@@ -3678,6 +3697,9 @@ function togglePass(){
   if(eye){eye.innerHTML=willShow?_EYE_HIDE:_EYE_SHOW;eye.setAttribute('aria-label',willShow?'Sembunyikan password':'Tampilkan password');}
   try{inp.focus();}catch(e){}
 }
+
+function showPubOverlay(msg){var el=document.getElementById("pub-overlay");var lbl=document.getElementById("pub-overlay-lbl");if(lbl)lbl.textContent=msg||"Mengubah status…";if(el)el.classList.add("on");}
+function hidePubOverlay(){var el=document.getElementById("pub-overlay");if(el)el.classList.remove("on");}        
 </script>
         
 </body>

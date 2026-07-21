@@ -790,10 +790,17 @@ table.avail-tbl{border-collapse:collapse;font-size:12px}
 .dept-opt-check{margin-left:auto;color:var(--d-fg,
 #e8b84b);flex-shrink:0;opacity:0;transition:opacity .12s}
 .dept-opt.sel .dept-opt-check{opacity:1}        
+
+.offline-bar{position:fixed;top:0;left:0;right:0;z-index:9998;background:#f59e0b;color:#0a0c10;text-align:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:6px 16px;transform:translateY(-100%);transition:transform .3s ease;padding-top:calc(6px + env(safe-area-inset-top,0px))}
+.offline-bar.on{transform:translateY(0)}
+body.offline .hdr{top:calc(29px + env(safe-area-inset-top,0px))}
+body.offline .lock{padding-top:calc(env(safe-area-inset-top,0px) + var(--gate-top) + 29px)}
+body.offline .dr{padding-top:calc(env(safe-area-inset-top,0px) + 29px)}
         
 </style>
 </head>
 <body>
+<div class="offline-bar" id="offline-bar">Tidak ada koneksi internet</div>   
 
 <!-- ADMIN LOGIN GATE — shown by default so admin data never flashes pre-auth.
      The key is verified server-side in Apps Script; this screen is the UX wrapper. -->
@@ -2117,6 +2124,12 @@ function pickDd(role,idx,name){
   if(oldVal===newVal){closeAllDd();return;}
   var subChanged=applyPick_(role,idx,name);
   st.dirty=true;updateSaveBtn();
+  closeAllDd();
+  renderRosterPage();
+  updateWarnBox();
+}
+
+// True unless the current month is explicitly CLOSE.
 
 // True unless the current month is explicitly CLOSE.
 function isMonthOpen(){ return !(st.data && st.data.monthStatus==="CLOSE"); }
@@ -3624,6 +3637,17 @@ function onPopGuard(){ if(_navGuardArmed)onNavBack(); }
 window.addEventListener("popstate",onPopGuard);
 armNavGuard();
 
+/* ── OFFLINE DETECTION ── */
+function updateOnlineStatus_(){
+  var bar=document.getElementById("offline-bar");
+  if(!bar)return;
+  if(navigator.onLine){bar.classList.remove("on");document.body.classList.remove("offline");}
+  else{bar.classList.add("on");document.body.classList.add("offline");}
+}
+window.addEventListener("online",updateOnlineStatus_);
+window.addEventListener("offline",updateOnlineStatus_);
+updateOnlineStatus_();
+        
 </script>
 <div class="modal-ov" id="modal-ov" onclick="closeModal()"></div>
 <div class="modal-box" id="modal-box">

@@ -1239,14 +1239,14 @@ function updateHeaderTitle_(tab){
         
 function navTo(tab){
   st.mainTab=tab;closeDr();
-  ["jadwal","tool-songlist","tool-dresscode","tool-selfie","ketersediaan","ringkasan","catatan","masukan"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
+  ["jadwal","tool-songlist","tool-dresscode","tool-selfie","direktori","ketersediaan","ringkasan","catatan","masukan"].forEach(function(t){var el=document.getElementById("dn-"+t);if(el)el.classList.toggle("on",t===tab);});
   updateHeaderTitle_(tab);
   contentOut_();
   if(tab==="jadwal")renderJadwal();
   else if(tab==="tool-songlist")renderToolSonglist();
   else if(tab==="tool-dresscode")renderToolDresscode();
   else if(tab==="tool-selfie")renderToolSelfie();
-  else if(st.tab==="direktori") renderDirektori();
+  else if(tab==="direktori") renderDirektori();
   else if(tab==="ketersediaan")renderKetersediaan();
   else if(tab==="ringkasan")renderRingkasan();
   else if(tab==="catatan")renderCatatan();

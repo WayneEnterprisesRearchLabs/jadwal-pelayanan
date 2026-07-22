@@ -633,7 +633,7 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .dept-trig-chev{margin-left:auto;padding-left:2px;flex-shrink:0;transition:transform .22s cubic-bezier(.34,1.7,.64,1)}
 .dept-trig.on .dept-trig-chev{transform:rotate(180deg)}
 .dept-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:120;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:6px;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;box-shadow:0 14px 44px rgba(0,0,0,.75);animation:popIn .16s cubic-bezier(.34,1.5,.64,1) both;text-align:center}
-.dept-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:12px;cursor:pointer;transition:background .1s;text-align:center}
+.dept-opt{display:flex;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;transition:background .1s}
 .dept-opt:active{background:#1a1e28}
 /* --d-fg/--d-bg are set inline per option from DEPT_META, so the selected row
    and its check pick up that dept's own color instead of a generic white tint. */
@@ -1279,8 +1279,7 @@ function toggleDeptMenu(e){
   var trig=document.getElementById("gate-dept-trig");
   if(!menu||!trig)return;
   var open=menu.style.display!=="block";
-  menu.style.display=open?"grid":"none";
-  if(open)menu.style.gridTemplateColumns="repeat(3,1fr)";
+  menu.style.display=open?"block":"none";
   trig.classList.toggle("on",open);
   if(open)hideGateSug();
 }
@@ -1474,8 +1473,8 @@ function populateDeptFilter(){
   menu.innerHTML=st.departments.map(function(d){
     var m=deptMeta(d);
     return '<div class="dept-opt" id="dopt-'+safeId(d)+'" style="--d-fg:'+m.fg+';--d-bg:'+m.bg+'" onclick="pickGateDept(\''+escQ(d)+'\')">'+
-      '<span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;background:'+m.bg+';color:'+m.fg+'">'+m.icon+'</span>'+
-      '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:'+m.fg+'">'+esc(d)+'</span>'+
+      '<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:'+m.bg+';color:'+m.fg+';flex-shrink:0">'+m.icon+'</span>'+
+      '<span style="font-family:Syne,sans-serif;font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:'+m.fg+'">'+esc(d)+'</span>'+
     '</div>';
   }).join('');
   renderDeptTrigger_(st.gateDept);
@@ -2759,7 +2758,7 @@ function prefetchToolDresscode(){
     var depts=(res&&res.depts)||["PAW","Usher"];
     st.toolDressDepts=depts;
     if(depts.indexOf(st.toolDressDept)===-1)st.toolDressDept=depts[0];
-    var list=generateDressSlotsVol(y,m,(res&&res.items)||[]);
+    var list=generateDressSlotsVol(y,m,(res&&res.items)||[],st.toolDressDept);
     st.toolDressList=list;
     st._toolDressByKey[y+"-"+m+"|"+first]={list:list,depts:depts};
     // Prefetch every other dept in background
@@ -2768,7 +2767,7 @@ function prefetchToolDresscode(){
       var ck=y+"-"+m+"|"+d;
       if(st._toolDressByKey[ck])return;
       callApi('getDresscodeList',[y,m,d]).then(function(r2){
-        st._toolDressByKey[ck]={list:generateDressSlotsVol(y,m,(r2&&r2.items)||[]),depts:depts};
+        st._toolDressByKey[ck]={list:generateDressSlotsVol(y,m,(r2&&r2.items)||[],st.toolDressDept),depts:depts};
       }).catch(function(){});
     });
   }).catch(function(){});

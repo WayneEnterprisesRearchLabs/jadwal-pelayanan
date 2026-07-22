@@ -753,22 +753,19 @@ body.offline .dr{padding-top:calc(env(safe-area-inset-top,0px) + 29px)}
 .dir-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#4a5070;pointer-events:none}
 .dir-count{font-size:12px;color:#4a5070;margin-bottom:14px}
 .dir-grid{display:flex;flex-direction:column;gap:10px}
-.dir-card{background:#12151c;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;display:flex;gap:13px;align-items:flex-start;animation:fadeUp .25s cubic-bezier(.22,1,.36,1) both}
+.dir-card{background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:18px;padding:16px;display:flex;align-items:center;gap:13px;animation:fadeUp .25s cubic-bezier(.22,1,.36,1) both}
 .dir-card:nth-child(2){animation-delay:.03s}
 .dir-card:nth-child(3){animation-delay:.06s}
 .dir-card:nth-child(4){animation-delay:.09s}
-.dir-avatar{width:48px;height:48px;border-radius:14px;background:#1a1e28;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#4a5070;font-family:'Syne',sans-serif;font-weight:800;font-size:18px}
-.dir-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.dir-card:nth-child(5){animation-delay:.12s}
 .dir-info{flex:1;min-width:0}
-.dir-name{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#f0f0f5;margin-bottom:3px}
-.dir-roles{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.dir-role-chip{font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:20px}
-.dir-grup{font-size:11px;color:#4a5070;margin-bottom:6px}
-.dir-actions{display:flex;gap:8px;margin-top:8px}
-.dir-wa-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);color:#25d366;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s}
-.dir-wa-btn:active{background:rgba(37,211,102,.22)}
-.dir-phone{font-size:12px;color:#8890aa;display:inline-flex;align-items:center;gap:5px}
-.dir-empty{text-align:center;padding:48px 0;color:#8890aa;font-size:14px}     
+.dir-name{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em;line-height:1.1;margin-bottom:6px;color:#e8b84b}
+.dir-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:0}
+.dir-wa{width:40px;height:40px;border-radius:12px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:background .15s;text-decoration:none}
+.dir-wa:active{background:rgba(37,211,102,.25)}
+.dir-wa svg{width:20px;height:20px;color:#25d366}
+.dir-empty{text-align:center;padding:48px 0;color:#8890aa;font-size:14px}
+        
 </style>
 </head>
 <body>
@@ -816,7 +813,7 @@ body.offline .dr{padding-top:calc(env(safe-area-inset-top,0px) + 29px)}
     <div class="dr-item" id="dn-tool-songlist" style="display:none" onclick="navTo('tool-songlist')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Atur Songlist</div>
     <div class="dr-item" id="dn-tool-dresscode" style="display:none" onclick="navTo('tool-dresscode')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Atur Dresscode</div>
     <div class="dr-item" id="dn-tool-selfie" style="display:none" onclick="navTo('tool-selfie')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>QC Dresscode</div>      
-    <div class="dr-item" id="dn-direktori" onclick="navTo('direktori')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Direktori</div>      
+    <div class="dr-item" id="dn-direktori" onclick="navTo('direktori')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Volunteers</div>      
     <div class="dr-item" id="dn-ketersediaan" style="display:none" onclick="navTo('ketersediaan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 15 11 17 15 13"/></svg>Ketersediaan</div>
     <div class="dr-item" id="dn-ringkasan" onclick="navTo('ringkasan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>Ringkasan</div>
     <div class="dr-item" id="dn-catatan" onclick="navTo('catatan')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Catatan</div>
@@ -2947,35 +2944,38 @@ function buildDirektoriUI(people){
     h+='<div class="dir-empty">Tidak ditemukan.</div>';
   } else {
     filtered.forEach(function(p){
-      var initials=p.name.split(" ").map(function(w){return w.charAt(0).toUpperCase();}).slice(0,2).join("");
+      var firstRole=p.roles&&p.roles[0]||"soundman";
+      // Avatar — exact same style as home page vol-card
       h+='<div class="dir-card">'+
-        '<div class="dir-avatar">'+(p.foto?'<img src="'+encodeURI(p.foto)+'" alt="" loading="lazy">':esc(initials))+'</div>'+
+        '<div class="vol-av" style="border-color:'+rcolor(firstRole)+';'+avCss(firstRole)+'">'+
+          av(p.foto,p.name,52,firstRole)+
+        '</div>'+
         '<div class="dir-info">'+
           '<div class="dir-name">'+esc(p.name)+'</div>'+
-          '<div class="dir-roles">';
+          '<div class="dir-badges">';
+      // Role chips — same as home page
       (p.roles||[]).forEach(function(r){
-        var c=C(r);
-        h+='<span class="dir-role-chip" style="color:'+c.fg+';background:'+c.bg+'">'+esc(r)+'</span>';
+        h+='<span class="badge" style="'+chipCss(r)+'">'+esc(roleLabel(r))+'</span>';
       });
-      h+='</div>';
-      if(p.grup) h+='<div class="dir-grup">Group '+esc(String(p.grup).replace(/^group\s*/i,"").trim())+'</div>';
-      h+='<div class="dir-actions">';
+      // Group pill — same gray pill as home page
+      if(p.grup){
+        h+='<span class="badge" style="background:rgba(255,255,255,.08);color:#8890aa">'+esc(fmtGroup(p.grup))+'</span>';
+      }
+      h+='</div></div>';
+      // WhatsApp button — right side
       if(p.waLink){
-        h+='<a class="dir-wa-btn" href="'+encodeURI(p.waLink)+'" target="_blank" rel="noopener">'+
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.316 0-4.458-.764-6.182-2.054l-.432-.332-3.29 1.103 1.103-3.29-.332-.432A9.955 9.955 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>'+
-          'WhatsApp</a>';
+        h+='<a class="dir-wa" href="'+encodeURI(p.waLink)+'" target="_blank" rel="noopener">'+
+          '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .611.611l4.458-1.495A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.316 0-4.458-.764-6.182-2.054l-.432-.332-3.29 1.103 1.103-3.29-.332-.432A9.955 9.955 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>'+
+        '</a>';
       }
-      if(p.phoneMasked){
-        h+='<span class="dir-phone"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'+esc(p.phoneMasked)+'</span>';
-      }
-      h+='</div></div></div>';
+      h+='</div>';
     });
   }
 
   h+='</div></div>';
   document.getElementById("content").innerHTML=h;
+  contentReady_();
 
-  // Restore search focus + cursor position
   var inp=document.getElementById("dir-search-inp");
   if(inp&&q){inp.focus();inp.setSelectionRange(q.length,q.length);}
 }

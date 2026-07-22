@@ -521,7 +521,8 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .song-lyrics-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.2);color:#e8b84b;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s}
 .song-lyrics-btn:active{background:rgba(232,184,75,.18)}
 .song-lyrics-btn svg{flex-shrink:0;color:#e8b84b}
-.song-edit-wrap{padding:4px 0}
+.song-edit-wrap{padding:4px 12px}
+.song-list{padding:4px 12px}
 .song-yt{flex-shrink:0;width:38px;height:38px;border-radius:11px;background:rgba(255,60,60,.15);border:1px solid rgba(255,60,60,.3);display:flex;align-items:center;justify-content:center;color:#ff5252;text-decoration:none;transition:background .15s}
 .song-yt:active{background:rgba(255,60,60,.28)}
 .song-yt.off{opacity:.3;pointer-events:none}
@@ -882,7 +883,7 @@ var API_PARAM_MAP = {
   uploadSelfie: ['name','date','service','imageData','mimeType'],
   getSonglistCards: ['year','month','dept'],
   getVolunteerDirectory: ['callerName','dept'],
-  saveSonglist: ['date','service','songsJson','callerName','dept'],
+  saveSonglist: ['date','service','songsJson','callerName','dept','lyricsLink'],
   getDresscodeList: ['year','month','forDept'],
   saveDresscode: ['date','service','pdfUrl','forDept','callerName'],
   getSelfieQueue: ['callerName'],
@@ -2293,7 +2294,8 @@ function renderSonglistPane_(kid,res){
     if(!st._songEdit)st._songEdit={};
     if(!st._songEdit[kid]){
       st._songEdit[kid]={
-        songs:songs.map(function(s){return{judul:s.judul||"",pencipta:s.pencipta||"",link:s.link||"",lyricsLink:s.lyricsLink||""};}),
+        songs:songs.map(function(s){return{judul:s.judul||"",pencipta:s.pencipta||"",link:s.link||""};}),
+        lyricsLink:(res&&res.lyricsLink)||"",
         dirty:false
       };
     }
@@ -2310,16 +2312,14 @@ function renderSonglistPane_(kid,res){
     h+='<div class="song-row"><div class="song-info"><div class="song-no">Lagu '+(s.no||i+1)+'</div><div class="song-title">'+esc(s.judul)+'</div>'+(s.pencipta?'<div class="song-pencipta">'+esc(s.pencipta)+'</div>':'')+'</div>'+yt+'</div>';
   });
   // Lyrics link at bottom
-  var hasAnyLyrics=songs.some(function(s){return s.lyricsLink;});
-  if(hasAnyLyrics){
-    h+='<div class="song-lyrics-bar">';
-    songs.forEach(function(s,i){
-      if(!s.lyricsLink)return;
-      h+='<a class="song-lyrics-btn" href="'+encodeURI(s.lyricsLink)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+
+  // SongMap link at bottom
+  var songMapLink=(res&&res.lyricsLink)||"";
+  if(songMapLink){
+    h+='<div class="song-lyrics-bar">'+
+      '<a class="song-lyrics-btn" href="'+encodeURI(songMapLink)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'+
-        esc(s.judul||"Lagu "+(i+1))+'</a>';
-    });
-    h+='</div>';
+        'SongMap / Lyrics</a>'+
+    '</div>';
   }
   h+='</div>';
   pane.innerHTML=h;growRoster(kid);
@@ -2337,12 +2337,15 @@ function renderSongEditPane_(kid){
       '<input class="tsl-inp" type="text" placeholder="Judul lagu…" value="'+esc(s.judul)+'" oninput="onSongEdit_(\''+kid+'\','+i+',\'judul\',this.value)">'+
       '<input class="tsl-inp" type="text" placeholder="Pencipta…" value="'+esc(s.pencipta)+'" oninput="onSongEdit_(\''+kid+'\','+i+',\'pencipta\',this.value)">'+
       '<input class="tsl-inp" type="text" placeholder="Link YouTube (opsional)…" value="'+esc(s.link)+'" oninput="onSongEdit_(\''+kid+'\','+i+',\'link\',this.value)">'+
-      '<input class="tsl-inp" type="text" placeholder="Link Lyrics / SongMap (opsional)…" value="'+esc(s.lyricsLink)+'" oninput="onSongEdit_(\''+kid+'\','+i+',\'lyricsLink\',this.value)">'+
       '<button class="tsl-remove" onclick="removeSongEdit_(\''+kid+'\','+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Hapus</button>'+
     '</div>';
   });
   if(!songs.length)h+='<div class="tsl-empty">Belum ada lagu. Tambahkan di bawah.</div>';
   h+='<button class="tsl-add-btn" onclick="addSongEdit_(\''+kid+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Tambah Lagu</button>';
+  h+='<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)">'+
+    '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#e8b84b;margin-bottom:6px">SongMap / Lyrics (Google Docs)</div>'+
+    '<input class="tsl-inp" type="text" placeholder="Paste link Google Docs…" value="'+esc(ed.lyricsLink||'')+'" oninput="onSongMapEdit_(\''+kid+'\',this.value)">'+
+  '</div>';
   h+='<button class="tsl-save-btn'+(ed.dirty?' dirty':'')+'" id="song-save-'+kid+'" onclick="saveSongEdit_(\''+kid+'\')"'+(ed.dirty?'':' disabled')+'>Simpan Songlist ✓</button>';
   h+='</div>';
   pane.innerHTML=h;
@@ -2351,6 +2354,12 @@ function renderSongEditPane_(kid){
 function onSongEdit_(kid,i,field,val){
   var ed=st._songEdit[kid];if(!ed||!ed.songs[i])return;
   ed.songs[i][field]=val;ed.dirty=true;
+  var btn=document.getElementById("song-save-"+kid);
+  if(btn){btn.classList.add("dirty");btn.disabled=false;}
+}
+function onSongMapEdit_(kid,val){
+  var ed=st._songEdit[kid];if(!ed)return;
+  ed.lyricsLink=val;ed.dirty=true;
   var btn=document.getElementById("song-save-"+kid);
   if(btn){btn.classList.add("dirty");btn.disabled=false;}
 }
@@ -2377,7 +2386,8 @@ function saveSongEdit_(kid){
   if(btn){btn.disabled=true;btn.textContent="Menyimpan…";}
   var dept=st.vol&&st.vol.dept||"PAW";
   var svc=svcOf_(ev);
-  callApi('saveSonglist',[ev.date,svc,JSON.stringify(clean),st.vol.name,dept]).then(function(res){
+  var songMap=ed.lyricsLink||"";
+  callApi('saveSonglist',[ev.date,svc,JSON.stringify(clean),st.vol.name,dept,songMap]).then(function(res){
     if(res&&res.ok){
       ed.songs=clean;ed.dirty=false;
       renderSongEditPane_(kid);

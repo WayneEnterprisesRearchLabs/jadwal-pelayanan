@@ -361,7 +361,7 @@ body:not(.app-in) .home{animation:none}   /* first paint sits behind the gate �
         
         
 /* ── ROSTER PANEL ─────────── */
-.roster{max-height:0;overflow:hidden;transform-origin:top;transition:max-height .34s cubic-bezier(.22,1,.36,1)}
+.roster{max-height:0;overflow:hidden;transform-origin:top;transition:max-height .6s cubic-bezier(.22,1,.36,1)}
 .roster {
     background:#12151c;
 }
@@ -371,7 +371,7 @@ body:not(.app-in) .home{animation:none}   /* first paint sits behind the gate �
   100%{ transform:translateY(0) scaleY(1); }
 }
 .roster-fadein{transform-origin:top;animation:rosterFadeIn .3s cubic-bezier(.34,1.56,.64,1) both}
-.roster-fadein{animation:rosterFadeIn 1.2s cubic-bezier(.16,1,.3,1) both}
+.roster-fadein{animation:rosterFadeIn 2s cubic-bezier(.16,1,.3,1) both}
 .roster-inner{border-top:1px solid rgba(255,255,255,.06);padding:10px;background:#12151c;display:flex;flex-direction:column;gap:7px}
 .roster-spin{display:flex;align-items:center;gap:8px;font-size:13px;color:#8890aa;padding:4px}
 
@@ -523,7 +523,7 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .song-lyrics-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.2);color:#e8b84b;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s}
 .song-lyrics-btn:active{background:rgba(232,184,75,.18)}
 .song-lyrics-btn svg{flex-shrink:0;color:#e8b84b}
-.song-edit-wrap{padding:10px 12px 20px}
+.song-edit-wrap{padding:6px 15px 20px}
 .song-list{padding:4px 12px}
 .song-yt{flex-shrink:0;width:38px;height:38px;border-radius:11px;background:rgba(255,60,60,.15);border:1px solid rgba(255,60,60,.3);display:flex;align-items:center;justify-content:center;color:#ff5252;text-decoration:none;transition:background .15s}
 .song-yt:active{background:rgba(255,60,60,.28)}
@@ -691,7 +691,7 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .tsl-add-btn{width:100%;padding:11px;border-radius:11px;border:1.5px dashed rgba(232,184,75,.4);background:rgba(232,184,75,.06);color:#e8b84b;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
 .tsl-save-btn{width:100%;padding:12px;border-radius:11px;border:none;background:#333744;color:#666a7a;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:default;transition:background .2s,color .2s}
 .tsl-save-btn.dirty{background:#e8b84b;color:#0a0c10;cursor:pointer}
-.song-edit-wrap .tsl-save-btn{margin-top:12px;margin-bottom:24px}
+.song-edit-wrap .tsl-save-btn{margin-top:12px;margin-bottom:12px}
 .tsl-empty{font-size:13px;color:#8890aa;text-align:center;padding:10px 0}
 /* dresscode tool */
 .tdc-dept-tabs{display:flex;gap:5px;background:#12151c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:5px;margin-bottom:16px}
@@ -1794,7 +1794,7 @@ function scrollToCard(card){
   setTimeout(function(){
     var top=card.getBoundingClientRect().top+window.pageYOffset-90;
     window.scrollTo({top:top,behavior:"smooth"});
-  },130); // was 80 — now waits out the .34s roster collapse transition first
+  },100); // was 80 — now waits out the .34s roster collapse transition first
 }
         
 function toggleCard(key,myName){

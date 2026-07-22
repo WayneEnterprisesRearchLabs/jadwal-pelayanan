@@ -759,8 +759,9 @@ body.offline .dr{padding-top:calc(env(safe-area-inset-top,0px) + 29px)}
 .dir-card:nth-child(4){animation-delay:.09s}
 .dir-card:nth-child(5){animation-delay:.12s}
 .dir-info{flex:1;min-width:0}
-.dir-name{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em;line-height:1.1;margin-bottom:6px;color:#e8b84b}
+.dir-name{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;letter-spacing:-.02em;line-height:1.1;margin-bottom:4px;color:#e8b84b}
 .dir-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:0}
+.dir-badges .badge{font-size:10px;padding:2px 7px}
 .dir-wa{width:40px;height:40px;border-radius:12px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:background .15s;text-decoration:none}
 .dir-wa:active{background:rgba(37,211,102,.25)}
 .dir-wa svg{width:20px;height:20px;color:#25d366}
@@ -2947,8 +2948,8 @@ function buildDirektoriUI(people){
       var firstRole=p.roles&&p.roles[0]||"soundman";
       // Avatar — exact same style as home page vol-card
       h+='<div class="dir-card">'+
-        '<div class="vol-av" style="border-color:'+rcolor(firstRole)+';'+avCss(firstRole)+'">'+
-          av(p.foto,p.name,52,firstRole)+
+        '<div class="vol-av" style="border-color:'+rcolor(firstRole)+';'+avCss(firstRole)+';width:38px;height:38px">'+
+          av(p.foto,p.name,38,firstRole)+
         '</div>'+
         '<div class="dir-info">'+
           '<div class="dir-name">'+esc(p.name)+'</div>'+

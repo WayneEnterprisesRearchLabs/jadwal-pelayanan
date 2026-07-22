@@ -3746,7 +3746,9 @@ function silentRefresh_(){
     _adminDataCache[key]=data;
     // Only re-render if user is still on the same month
     if(ADMIN_DEPT+"-"+st.year+"-"+st.month===key){
-      onDataLoaded(data);
+      st.data=data;st.slots=generateSlots(st.year,st.month,data.services||[]);
+      if(st.tab==="jadwal")renderJadwal();
+      else if(st.tab==="ringkasan")renderRingkasan();
     }
   }).catch(function(){});
 }

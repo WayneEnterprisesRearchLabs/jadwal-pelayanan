@@ -2714,10 +2714,27 @@ function buildRingkasanUI(data){
   var satSun=services.filter(function(s){
     return roles.some(function(r){return s.slots&&s.slots[r]&&s.slots[r].length>0;});
   });
-  // Sort by date first, then by time within the same date so earlier services
-  // (e.g. Voltage 13:00) appear left of later ones (e.g. AOG 17:00).
+  // Service family: "Umum 1"→"Umum", "AOG Teens"→"AOG", "Voltage"→"Voltage"
+  function svcFamily_(svc){return serviceLabel(svc).replace(/\s+\S+$/,"");}
+  // Compute earliest time per family per date so families sort by when they start
+  var _famMin={};
+  satSun.forEach(function(s){
+    var fk=s.date+"|"+svcFamily_(s.service);
+    var t=s.time||"99:99";
+    if(!_famMin[fk]||t<_famMin[fk])_famMin[fk]=t;
+  });
+  // Sort: date → family (by earliest time) → individual time
+  // This keeps same-family services adjacent so the merge pass works,
+  // while putting Voltage (13:00) before AOG (17:00) etc.
   satSun.sort(function(a,b){
     if(a.date!==b.date)return a.date<b.date?-1:1;
+    var famA=svcFamily_(a.service),famB=svcFamily_(b.service);
+    if(famA!==famB){
+      var mtA=_famMin[a.date+"|"+famA]||"99:99";
+      var mtB=_famMin[b.date+"|"+famB]||"99:99";
+      if(mtA!==mtB)return mtA<mtB?-1:1;
+      return famA<famB?-1:1;
+    }
     var ta=a.time||"99:99",tb=b.time||"99:99";
     return ta<tb?-1:(ta>tb?1:0);
   });
@@ -2744,17 +2761,82 @@ function buildRingkasanUI(data){
     if(s.isSpecial) specialDates[s.date]=true;
   });
 
-  var dateGroups={},dateOrder=[];
-  satSun.forEach(function(s){
-    if(!dateGroups[s.date]){dateGroups[s.date]={day:s.day,slots:[]};dateOrder.push(s.date);}
-    dateGroups[s.date].slots.push(s);
+  // ── MERGE HELPERS ──
+  function slotSig_(slots,role){
+    return (slots[role]||[]).map(function(p){return(p.name||p)+"~"+(p.sub||"");}).join("|");
+  }
+  function mergeLabel_(names){
+    if(names.length<=1)return names[0]||"";
+    var words=names[0].split(/\s+/);
+    for(var w=words.length;w>=1;w--){
+      var pfx=words.slice(0,w).join(" ");
+      var ok=names.every(function(n){return n.indexOf(pfx)===0;});
+      if(ok){var clean=pfx.replace(/\s*\d+$/,"").trim();return clean||pfx;}
+    }
+    return names.join(" / ");
+  }
+  function mergedCellNames_(mc,role){
+    var seen={},result=[];
+    mc.svcs.forEach(function(s){
+      (s.slots[role]||[]).forEach(function(p){
+        var nm=p.name||p,sub=p.sub||"";
+        var key=nm+"~"+sub;
+        if(seen[key])return;
+        seen[key]=true;
+        result.push(sub
+          ?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>'
+          :esc(nm));
+      });
+    });
+    return result.join('<br><br>');
+  }
+
+  // ── MERGE PASS: collapse adjacent same-date services with identical rosters ──
+  var ALWAYS_MERGE={"Umum":true,"AOG":true};
+
+  var cols=[];
+  for(var ci=0;ci<satSun.length;ci++){
+    var s=satSun[ci],merged=false;
+    if(cols.length>0){
+      var prev=cols[cols.length-1];
+      if(prev.date===s.date){
+        var fam=svcFamily_(s.service);
+        var prevFam=svcFamily_(prev.svcs[0].service);
+        var forceMerge=(fam===prevFam && ALWAYS_MERGE[fam]);
+        var identical=true;
+        if(!forceMerge){
+          roles.forEach(function(r){
+            if(slotSig_(prev.svcs[0].slots,r)!==slotSig_(s.slots,r))identical=false;
+          });
+        }
+        if(forceMerge||identical){prev.svcs.push(s);merged=true;}
+      }
+    }
+    if(!merged) cols.push({svcs:[s],date:s.date,isSpecial:!!s.isSpecial});
+  }
+  cols.forEach(function(mc){
+    if(mc.svcs.length===1){
+      mc.label=serviceLabel(mc.svcs[0].service);
+      mc.time=mc.svcs[0].time||defaultTimesFor(mc.svcs[0].service,true);
+    } else {
+      var names=mc.svcs.map(function(x){return serviceLabel(x.service);});
+      mc.label=mergeLabel_(names);
+      mc.time=mc.svcs.map(function(x){return x.time||defaultTimesFor(x.service,true);}).join(" · ");
+      if(mc.svcs.some(function(x){return!!x.isSpecial;}))mc.isSpecial=true;
+    }
   });
 
+  // Rebuild date and week groupings from merged columns
+  var dateGroups={},dateOrder=[];
+  cols.forEach(function(mc){
+    if(!dateGroups[mc.date]){dateGroups[mc.date]={cols:[]};dateOrder.push(mc.date);}
+    dateGroups[mc.date].cols.push(mc);
+  });
   var weekMap={},weekOrder=[];
   dateOrder.forEach(function(ds){
     var d=new Date(ds+"T00:00:00"),w=Math.ceil(d.getDate()/7);
-    if(!weekMap[w]){weekMap[w]={dates:[],count:0};weekOrder.push(w);}
-    weekMap[w].dates.push(ds);weekMap[w].count+=dateGroups[ds].slots.length;
+    if(!weekMap[w]){weekMap[w]={count:0};weekOrder.push(w);}
+    weekMap[w].count+=dateGroups[ds].cols.length;
   });
 
   h+='<div id="ring-table-wrap" style="background:#0a0c10;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">';
@@ -2765,53 +2847,54 @@ function buildRingkasanUI(data){
   '</div>';
 
   var ringColWidth=90, ringLabelWidth=80;
-  var ringTotalWidth=ringLabelWidth+(satSun.length*ringColWidth);
+  var ringTotalWidth=ringLabelWidth+(cols.length*ringColWidth);
   h+='<div class="ring-scroll"><table class="ring-tbl" style="width:'+ringTotalWidth+'px"><colgroup><col style="width:'+ringLabelWidth+'px">';
-  satSun.forEach(function(){h+='<col style="width:'+ringColWidth+'px">';});
+  cols.forEach(function(){h+='<col style="width:'+ringColWidth+'px">';});
   h+='</colgroup>';
 
+  // Week header
   h+='<tr><th class="role-col"></th>';
   weekOrder.forEach(function(w){h+='<th class="week-hdr" colspan="'+weekMap[w].count+'">WEEK '+w+'</th>';});
   h+='</tr>';
 
+  // Date header
   h+='<tr><th class="role-col"></th>';
   dateOrder.forEach(function(ds){
     var d=new Date(ds+"T00:00:00");
     var dstr=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
     var isSpec=!!specialDates[ds];
     var style=isSpec?'background:rgba(192,132,252,.15);color:#c084fc':'';
-    h+='<th class="date-hdr" colspan="'+dateGroups[ds].slots.length+'" style="'+style+'">'+esc(dstr)+'</th>';
+    h+='<th class="date-hdr" colspan="'+dateGroups[ds].cols.length+'" style="'+style+'">'+esc(dstr)+'</th>';
   });
   h+='</tr>';
 
+  // Service header (merged labels)
   h+='<tr><th class="role-col"></th>';
-  satSun.forEach(function(s){
-    var isSpec=!!s.isSpecial;
+  cols.forEach(function(mc){
+    var isSpec=mc.isSpecial;
     var style=isSpec?'background:rgba(192,132,252,.12);color:#c084fc':'';
-    var svcTime=s.time||defaultTimesFor(s.service,true);
-    h+='<th class="svc-hdr" style="'+style+'">'+esc(serviceLabel(s.service))+'<br><span style="color:#4a5070;font-size:10px">'+esc(svcTime)+'</span></th>';
+    h+='<th class="svc-hdr" style="'+style+'">'+esc(mc.label)+'<br><span style="color:#4a5070;font-size:10px">'+esc(mc.time)+'</span></th>';
   });
   h+='</tr>';
 
+  // Speaker row
   if(roles.indexOf("Speaker")!==-1){
     var spC=C("Speaker"),spTint=rowTint("Speaker");
     h+='<tr><td class="role-col" style="color:'+spC.fg+';background:'+spC.bg+'">'+esc(roleLabel("Speaker"))+'</td>';
-    satSun.forEach(function(s){
-      var people=s.slots["Speaker"]||[];
-      var names=people.map(function(p){
-        var nm=p.name||p,sub=p.sub;
-        return sub?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>':esc(nm);
-      }).join('<br><br>');
-      var cellBg=s.isSpecial?'rgba(192,132,252,.14)':spTint;
+    cols.forEach(function(mc){
+      var names=mergedCellNames_(mc,"Speaker");
+      var cellBg=mc.isSpecial?'rgba(192,132,252,.14)':spTint;
       h+='<td class="'+(names?"cell-filled":"cell-empty")+'" style="background:'+cellBg+'">'+names+'</td>';
     });
     h+='</tr>';
   }
 
+  // Group row
   var hasGroups=Object.keys(groups).length>0;
   if(hasGroups){
     h+='<tr><th class="role-col" style="color:#8890aa;font-size:10px;letter-spacing:.06em;text-transform:uppercase">Group</th>';
-    satSun.forEach(function(s){
+    cols.forEach(function(mc){
+      var s=mc.svcs[0];
       var bandRoles=["WL","Singer","Keys","Guitar","Bass","Drums"];
       var g=null,isMix=false;
       bandRoles.forEach(function(role){
@@ -2823,26 +2906,37 @@ function buildRingkasanUI(data){
           else if(g!==pg)isMix=true;
         });
       });
+      // For force-merged columns, also check other services for group mix
+      if(mc.svcs.length>1){
+        mc.svcs.forEach(function(sv){
+          bandRoles.forEach(function(role){
+            (sv.slots[role]||[]).forEach(function(p){
+              var name=p.name||p;
+              var pg=groupMap[name];
+              if(!pg)return;
+              if(g===null)g=pg;
+              else if(g!==pg)isMix=true;
+            });
+          });
+        });
+      }
       var label=isMix?"MIX":(g?"GROUP "+String(g).replace(/^group\s*/i,'').trim():"—");
       var col=isMix?"color:#f59e0b":"color:#e8b84b";
-      var grpBg=s.isSpecial?'background:rgba(192,132,252,.18);':'background:#1a1e28;';
+      var grpBg=mc.isSpecial?'background:rgba(192,132,252,.18);':'background:#1a1e28;';
       h+='<th style="'+grpBg+'font-size:11px;font-weight:800;'+col+'">'+label+'</th>';
     });
     h+='</tr>';
   }
 
+  // Role rows
   roles.forEach(function(role){
     if(role==="Speaker")return;
     var c=C(role);
     var tint=rowTint(role);
     h+='<tr><td class="role-col" style="color:'+c.fg+';background:'+c.bg+'">'+esc(roleLabel(role))+'</td>';
-    satSun.forEach(function(s){
-      var people=s.slots[role]||[];
-      var names=people.map(function(p){
-        var nm=p.name||p,sub=p.sub;
-        return sub?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>':esc(nm);
-      }).join('<br><br>');
-      var cellBg=s.isSpecial?'rgba(192,132,252,.14)':tint;
+    cols.forEach(function(mc){
+      var names=mergedCellNames_(mc,role);
+      var cellBg=mc.isSpecial?'rgba(192,132,252,.14)':tint;
       h+='<td class="'+(names?"cell-filled":"cell-empty")+'" style="background:'+cellBg+'">'+names+'</td>';
     });
     h+='</tr>';

@@ -239,7 +239,8 @@ body:not(.app-in) .home{animation:none}   /* first paint sits behind the gate �
 /* ── VOL CARD ─────────────── */
 .vol-card{display:flex;align-items:center;gap:13px;background:#12151c;border:1.5px solid rgba(255,255,255,.13);border-radius:18px;padding:18px;margin-bottom:14px;transform-origin:top center;animation:slideDown .55s cubic-bezier(.22,1.1,.36,1) .06s both;cursor:pointer}
 .vol-card:active{background:#171b24}
-.vol-card-switch{flex-shrink:0;color:#4a5070;align-self:center}
+.vol-card-switch{flex-shrink:0;color:#4a5070;align-self:stretch;display:flex;align-items:center;padding:0 2px 0 14px;padding-right:18px;margin:-18px -18px -18px 0;border-left:1px solid rgba(255,255,255,.07);cursor:pointer}
+.vol-card-switch:active{background:rgba(255,255,255,.06);border-radius:0 16px 16px 0}
 @keyframes slideDown{
   0%  { opacity:0; transform:translateY(-12px) scaleY(.92); }
   70% { opacity:1; transform:translateY(1px) scaleY(1.015); }
@@ -461,7 +462,7 @@ table.ring-tbl{border-collapse:collapse;font-size:12px;table-layout:fixed}
 .ring-tbl th,.ring-tbl td{border:1px solid rgba(255,255,255,.08);padding:7px 10px;text-align:center;vertical-align:middle}
 .ring-tbl th{background:#1a1e28;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11px}
 .ring-tbl .week-hdr{background:#0f2d52;color:#e8b84b;font-size:11px;font-weight:800;letter-spacing:.08em}
-.ring-tbl .date-hdr{background:#1e2636;color:#f0f0f5;font-size:12px;font-weight:700;white-space:nowrap}
+.ring-tbl .date-hdr{background:#1e2636;color:#f0f0f5;font-size:12px;font-weight:700;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
 .ring-tbl .svc-hdr{background:#1a1e28;color:#8890aa;font-size:11px;white-space:nowrap}
 .ring-tbl .role-col{text-align:left;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-left:12px;white-space:nowrap;min-width:80px}
 .ring-tbl .cell-filled{background:rgba(74,222,128,.05)}
@@ -944,11 +945,7 @@ Object.keys(API_PARAM_MAP).forEach(function(fnName){
 var google = { script: { run: null } };
 Object.defineProperty(google.script, 'run', { get: function(){ return new GasRun(); } });
 
-// If we have cached data, the splash is purely cosmetic — keep it short.
-// First-time users (no cache) get the full animation while data loads.
-var _hasCachedBoot=false;
-try{_hasCachedBoot=!!(localStorage.getItem(APP_CONFIG.storagePrefix+"configCache")&&localStorage.getItem(APP_CONFIG.storagePrefix+"volsCache"));}catch(e){}
-var SPLASH_MIN_MS = _hasCachedBoot ? 400 : 1400;
+var SPLASH_MIN_MS = 1400;
 var splashStart = Date.now();
 
 // ============================================================
@@ -982,6 +979,12 @@ var APP_CONFIG = {
     try{localStorage.setItem(APP_CONFIG.storagePrefix+"schedCache",JSON.stringify(d));}catch(e){}
   }).withFailureHandler(function(){}).getVolunteerSchedule(savedName);
 })();   
+(function earlyConfigPrefetch_(){
+  // Warm the two gate-blocking calls — if they finish before the user taps
+  // Masuk, markGateReady_ fires instantly and the splash clears faster.
+  callApi('getConfig',[]).then(function(){}).catch(function(){});
+  callApi('getAllVolunteers',[]).then(function(){}).catch(function(){});
+})();        
         
 var splashGone = false;
 // Driven by markGateReady_() now, not window.load — the splash IS the data loader,
@@ -1100,7 +1103,7 @@ function C(r){return RC[(r||"").toLowerCase()]||RC.soundman;}
 function chipCss(r){var c=C(r);return"color:"+c.fg+";background:"+c.bg;}
 function avCss(r){var c=C(r);return"background:"+c.bg+";color:"+c.fg;}
 function rcolor(r){return C(r).fg;}
-function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq"};return map[r]||r;}
+function roleLabel(r){var map={"Soundman":"Sound","Sequencer":"Seq","Teleprompter":"Teleprom","Telepromptor":"Teleprom"};return map[r]||r;}
 function serviceLabel(s){var map={};return map[s]||s;}
 function fmtGroup(g){g=String(g||"").trim();if(!g)return"";return /^group/i.test(g)?g.replace(/^group\s*/i,"Group "):"Group "+g;}
 
@@ -1148,8 +1151,7 @@ function titleTwoLines(text){
   return esc(parts.slice(0,mid).join(" "))+"<br>"+esc(parts.slice(mid).join(" "));
 }
 
-// ── Extracted apply helpers (called by both cache hydration and network) ──
-function applyConfig_(c){
+google.script.run.withSuccessHandler(function(c){
   var church=c.churchName||"GMS Salatiga";
   document.getElementById("hdr-l1").innerHTML=titleTwoLines("Beranda");
   document.getElementById("dr-team").textContent=APP_CONFIG.appTitle;
@@ -1161,37 +1163,27 @@ function applyConfig_(c){
   st.cardTabsByDept=c.cardTabsByDept||{};
   st.departments=(c.departments||Object.keys(st.rolesByDept)).slice().sort(function(a,b){return a.localeCompare(b);});
   populateDeptFilter();
-  if(c.logoUrl){
-    ["dr-logo","gate-logo-img"].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el){
-        el.style.display="block";
-        el.onload=function(){ el.classList.add("loaded"); };
-        el.src=c.logoUrl;
-      }
-    });
-  }
+if(c.logoUrl){
+  ["dr-logo","gate-logo-img"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){
+      el.style.display="block";
+      el.onload=function(){ el.classList.add("loaded"); };
+      el.src=c.logoUrl;
+    }
+  });
 }
-function applyVolunteers_(list){
-  st.allMusicians=list||[];
-}
-
-// ── NETWORK FETCH (always fires — updates cache + state silently) ──
-google.script.run.withSuccessHandler(function(c){
-  applyConfig_(c);
-  try{localStorage.setItem(APP_CONFIG.storagePrefix+"configCache",JSON.stringify(c));}catch(e){}
-  markGateReady_("config");
+markGateReady_("config");
 }).withFailureHandler(function(e){
   console.warn("getConfig failed",e);
   markGateReady_("config");
 }).getConfig();
 google.script.run.withSuccessHandler(function(list){
-  applyVolunteers_(list);
-  try{localStorage.setItem(APP_CONFIG.storagePrefix+"volsCache",JSON.stringify(list));}catch(e){}
+  st.allMusicians=list||[];
   markGateReady_("vols");
 }).withFailureHandler(function(e){
   console.warn("getAllVolunteers failed",e);
-  if(!st.allMusicians||!st.allMusicians.length) st.allMusicians=[];
+  st.allMusicians=[];
   markGateReady_("vols");
 }).getAllVolunteers();
         
@@ -1213,26 +1205,6 @@ function markGateReady_(which){
 
 // Safety valve: a dead API must never trap the person behind the loader.
 setTimeout(function(){markGateReady_("config");markGateReady_("vols");},8000);
-
-// ── INSTANT HYDRATION from localStorage (returning users skip the wait) ──
-// Runs AFTER gateReady_ + markGateReady_ are initialized.
-// If both caches hit, the splash lifts in ~400ms instead of waiting for the network.
-(function hydrateFromCache_(){
-  try{
-    var cfgRaw=localStorage.getItem(APP_CONFIG.storagePrefix+"configCache");
-    if(cfgRaw){
-      var cfg=JSON.parse(cfgRaw);
-      if(cfg){applyConfig_(cfg);markGateReady_("config");}
-    }
-  }catch(e){console.warn("config cache hydrate fail",e);}
-  try{
-    var volRaw=localStorage.getItem(APP_CONFIG.storagePrefix+"volsCache");
-    if(volRaw){
-      var vols=JSON.parse(volRaw);
-      if(vols){applyVolunteers_(vols);markGateReady_("vols");}
-    }
-  }catch(e){console.warn("vols cache hydrate fail",e);}
-})();
 
 function prefillGateFromMemory_(){
   var savedName=null;
@@ -1669,7 +1641,7 @@ function prefetchDirektori_(dept){
 function renderJadwal(){
   if(!st.vol){document.getElementById("content").innerHTML=homeHTML();return;}
   var v=st.vol;var up=st.allEvents.filter(function(e){return !e.isPast;});
-  var h='<div class="vol-card" onclick="logoutToGate()"><div class="vol-av" style="border-color:'+rcolor(v.roles[0]||"soundman")+';'+avCss(v.roles[0]||"soundman")+'">'+av(v.photo,v.name,52,v.roles[0])+'</div><div style="min-width:0;flex:1"><div class="vol-name">'+esc(v.name)+'</div><div class="vol-badges">'+v.roles.map(function(r){return'<span class="badge" style="'+chipCss(r)+'">'+esc(roleLabel(r))+'</span>';}).join('')+(v.group?'<span class="badge" style="background:rgba(255,255,255,.08);color:#8890aa">'+esc(fmtGroup(v.group))+'</span>':'')+'</div><div class="vol-meta">'+up.length+' ibadah mendatang</div></div><div class="vol-card-switch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></div></div>'+
+  var h='<div class="vol-card"><div class="vol-av" style="border-color:'+rcolor(v.roles[0]||"soundman")+';'+avCss(v.roles[0]||"soundman")+'">'+av(v.photo,v.name,52,v.roles[0])+'</div><div style="min-width:0;flex:1"><div class="vol-name">'+esc(v.name)+'</div><div class="vol-badges">'+v.roles.map(function(r){return'<span class="badge" style="'+chipCss(r)+'">'+esc(roleLabel(r))+'</span>';}).join('')+(v.group?'<span class="badge" style="background:rgba(255,255,255,.08);color:#8890aa">'+esc(fmtGroup(v.group))+'</span>':'')+'</div><div class="vol-meta">'+up.length+' ibadah mendatang</div></div><div class="vol-card-switch" onclick="confirmLogout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></div></div>'+
     '<div class="sched-tabs"><button class="sched-tab'+(st.schedTab==="jadwal"?" on":"")+'" onclick="switchST(\'jadwal\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Jadwal</button><button class="sched-tab'+(st.schedTab==="riwayat"?" on":"")+'" onclick="switchST(\'riwayat\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Riwayat</button></div>'+
     (st.schedTab==="jadwal"?buildSched():buildRiwayat());
   document.getElementById("content").innerHTML=h;
@@ -2675,14 +2647,35 @@ function downscaleImage(file,maxDim,quality,cb){
 function renderRingkasan(){
   if(!st.vol){document.getElementById("content").innerHTML='<div class="empty" style="padding-top:40px"><div class="empty-msg">Cari namamu dulu di halaman Jadwal untuk melihat ringkasan.</div></div>';return;}
   var cacheKey=st.vol.dept+"|"+mKey(st.ringYear,st.ringMonth);
+  // 1. Try in-memory cache
   if(st.ringCache[cacheKey]){
     try{buildRingkasanUI(st.ringCache[cacheKey]);}catch(err){console.error("buildRingkasanUI error:",err);showErr("Error: "+err.message);}
     return;
   }
+  // 2. Try localStorage (survives refresh — instant)
+  var lsKey=APP_CONFIG.storagePrefix+"ring_"+cacheKey;
+  try{
+    var stored=localStorage.getItem(lsKey);
+    if(stored){
+      var parsed=JSON.parse(stored);
+      if(parsed){
+        st.ringCache[cacheKey]=parsed;
+        try{buildRingkasanUI(parsed);}catch(err){console.error("buildRingkasanUI error:",err);showErr("Error: "+err.message);}
+        // Background refresh so data stays current
+        google.script.run.withSuccessHandler(function(data){
+          st.ringCache[cacheKey]=data;
+          try{localStorage.setItem(lsKey,JSON.stringify(data));}catch(e){}
+        }).withFailureHandler(function(){}).getPublicMonthData(st.ringYear,st.ringMonth,st.vol.dept);
+        return;
+      }
+    }
+  }catch(e){}
+  // 3. No cache — show loader, fetch from network
   document.getElementById("content").innerHTML='<div class="loading"><div class="big-spin"><span></span><span></span><span></span></div><div class="ld-txt">Memuat ringkasan…</div></div>';
   google.script.run
     .withSuccessHandler(function(data){
       st.ringCache[cacheKey]=data;
+      try{localStorage.setItem(lsKey,JSON.stringify(data));}catch(e){}
       try{buildRingkasanUI(data);}catch(err){console.error("buildRingkasanUI error:",err);showErr("Error: "+err.message);}
     })
     .withFailureHandler(function(e){showErr(e.message);})
@@ -2701,7 +2694,7 @@ function chRingMonth(dir){
     var ahead=dir>0?nextMonth_(st.ringYear,st.ringMonth):prevMonth_(st.ringYear,st.ringMonth);
     var ck=dept+"|"+mKey(ahead.y,ahead.m);
     if(!st.ringCache[ck]){
-      google.script.run.withSuccessHandler(function(data){st.ringCache[ck]=data;}).withFailureHandler(function(){}).getPublicMonthData(ahead.y,ahead.m,dept);
+      google.script.run.withSuccessHandler(function(data){st.ringCache[ck]=data;try{localStorage.setItem(APP_CONFIG.storagePrefix+"ring_"+ck,JSON.stringify(data));}catch(e){}}).withFailureHandler(function(){}).getPublicMonthData(ahead.y,ahead.m,dept);
     }
   }
 }
@@ -2720,6 +2713,13 @@ function buildRingkasanUI(data){
 
   var satSun=services.filter(function(s){
     return roles.some(function(r){return s.slots&&s.slots[r]&&s.slots[r].length>0;});
+  });
+  // Sort by date first, then by time within the same date so earlier services
+  // (e.g. Voltage 13:00) appear left of later ones (e.g. AOG 17:00).
+  satSun.sort(function(a,b){
+    if(a.date!==b.date)return a.date<b.date?-1:1;
+    var ta=a.time||"99:99",tb=b.time||"99:99";
+    return ta<tb?-1:(ta>tb?1:0);
   });
 
   var h='<div class="ring-wrap">';
@@ -2744,60 +2744,17 @@ function buildRingkasanUI(data){
     if(s.isSpecial) specialDates[s.date]=true;
   });
 
-  // ── MERGE PASS: collapse adjacent same-date services with identical rosters ──
-  function slotSig_(slots,role){
-    return (slots[role]||[]).map(function(p){return(p.name||p)+"~"+(p.sub||"");}).join("|");
-  }
-  function mergeLabel_(names){
-    if(names.length<=1)return names[0]||"";
-    var words=names[0].split(/\s+/);
-    for(var w=words.length;w>=1;w--){
-      var pfx=words.slice(0,w).join(" ");
-      var ok=names.every(function(n){return n.indexOf(pfx)===0;});
-      if(ok){var clean=pfx.replace(/\s*\d+$/,"").trim();return clean||pfx;}
-    }
-    return names.join(" / ");
-  }
-
-  var cols=[];
-  for(var ci=0;ci<satSun.length;ci++){
-    var s=satSun[ci],merged=false;
-    if(cols.length>0){
-      var prev=cols[cols.length-1];
-      if(prev.date===s.date){
-        var identical=true;
-        roles.forEach(function(r){
-          if(slotSig_(prev.svcs[0].slots,r)!==slotSig_(s.slots,r))identical=false;
-        });
-        if(identical){prev.svcs.push(s);merged=true;}
-      }
-    }
-    if(!merged) cols.push({svcs:[s],date:s.date,isSpecial:!!s.isSpecial});
-  }
-  // Generate labels and times for each column
-  cols.forEach(function(mc){
-    if(mc.svcs.length===1){
-      mc.label=serviceLabel(mc.svcs[0].service);
-      mc.time=mc.svcs[0].time||defaultTimesFor(mc.svcs[0].service,true);
-    } else {
-      var names=mc.svcs.map(function(x){return serviceLabel(x.service);});
-      mc.label=mergeLabel_(names);
-      mc.time=mc.svcs.map(function(x){return x.time||defaultTimesFor(x.service,true);}).join(" · ");
-      if(mc.svcs.some(function(x){return!!x.isSpecial;}))mc.isSpecial=true;
-    }
-  });
-
-  // Rebuild date and week groupings from merged columns
   var dateGroups={},dateOrder=[];
-  cols.forEach(function(mc){
-    if(!dateGroups[mc.date]){dateGroups[mc.date]={cols:[]};dateOrder.push(mc.date);}
-    dateGroups[mc.date].cols.push(mc);
+  satSun.forEach(function(s){
+    if(!dateGroups[s.date]){dateGroups[s.date]={day:s.day,slots:[]};dateOrder.push(s.date);}
+    dateGroups[s.date].slots.push(s);
   });
+
   var weekMap={},weekOrder=[];
   dateOrder.forEach(function(ds){
     var d=new Date(ds+"T00:00:00"),w=Math.ceil(d.getDate()/7);
-    if(!weekMap[w]){weekMap[w]={count:0};weekOrder.push(w);}
-    weekMap[w].count+=dateGroups[ds].cols.length;
+    if(!weekMap[w]){weekMap[w]={dates:[],count:0};weekOrder.push(w);}
+    weekMap[w].dates.push(ds);weekMap[w].count+=dateGroups[ds].slots.length;
   });
 
   h+='<div id="ring-table-wrap" style="background:#0a0c10;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">';
@@ -2808,59 +2765,53 @@ function buildRingkasanUI(data){
   '</div>';
 
   var ringColWidth=90, ringLabelWidth=80;
-  var ringTotalWidth=ringLabelWidth+(cols.length*ringColWidth);
+  var ringTotalWidth=ringLabelWidth+(satSun.length*ringColWidth);
   h+='<div class="ring-scroll"><table class="ring-tbl" style="width:'+ringTotalWidth+'px"><colgroup><col style="width:'+ringLabelWidth+'px">';
-  cols.forEach(function(){h+='<col style="width:'+ringColWidth+'px">';});
+  satSun.forEach(function(){h+='<col style="width:'+ringColWidth+'px">';});
   h+='</colgroup>';
 
-  // Week header
   h+='<tr><th class="role-col"></th>';
   weekOrder.forEach(function(w){h+='<th class="week-hdr" colspan="'+weekMap[w].count+'">WEEK '+w+'</th>';});
   h+='</tr>';
 
-  // Date header
   h+='<tr><th class="role-col"></th>';
   dateOrder.forEach(function(ds){
     var d=new Date(ds+"T00:00:00");
     var dstr=HARI_L[d.getDay()]+", "+d.getDate()+" "+BLN_L[d.getMonth()];
     var isSpec=!!specialDates[ds];
     var style=isSpec?'background:rgba(192,132,252,.15);color:#c084fc':'';
-    h+='<th class="date-hdr" colspan="'+dateGroups[ds].cols.length+'" style="'+style+'">'+esc(dstr)+'</th>';
+    h+='<th class="date-hdr" colspan="'+dateGroups[ds].slots.length+'" style="'+style+'">'+esc(dstr)+'</th>';
   });
   h+='</tr>';
 
-  // Service header (merged labels)
   h+='<tr><th class="role-col"></th>';
-  cols.forEach(function(mc){
-    var isSpec=mc.isSpecial;
+  satSun.forEach(function(s){
+    var isSpec=!!s.isSpecial;
     var style=isSpec?'background:rgba(192,132,252,.12);color:#c084fc':'';
-    h+='<th class="svc-hdr" style="'+style+'">'+esc(mc.label)+'<br><span style="color:#4a5070;font-size:10px">'+esc(mc.time)+'</span></th>';
+    var svcTime=s.time||defaultTimesFor(s.service,true);
+    h+='<th class="svc-hdr" style="'+style+'">'+esc(serviceLabel(s.service))+'<br><span style="color:#4a5070;font-size:10px">'+esc(svcTime)+'</span></th>';
   });
   h+='</tr>';
 
-  // Speaker row
   if(roles.indexOf("Speaker")!==-1){
     var spC=C("Speaker"),spTint=rowTint("Speaker");
     h+='<tr><td class="role-col" style="color:'+spC.fg+';background:'+spC.bg+'">'+esc(roleLabel("Speaker"))+'</td>';
-    cols.forEach(function(mc){
-      var s=mc.svcs[0];
+    satSun.forEach(function(s){
       var people=s.slots["Speaker"]||[];
       var names=people.map(function(p){
         var nm=p.name||p,sub=p.sub;
         return sub?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>':esc(nm);
       }).join('<br><br>');
-      var cellBg=mc.isSpecial?'rgba(192,132,252,.14)':spTint;
+      var cellBg=s.isSpecial?'rgba(192,132,252,.14)':spTint;
       h+='<td class="'+(names?"cell-filled":"cell-empty")+'" style="background:'+cellBg+'">'+names+'</td>';
     });
     h+='</tr>';
   }
 
-  // Group row
   var hasGroups=Object.keys(groups).length>0;
   if(hasGroups){
     h+='<tr><th class="role-col" style="color:#8890aa;font-size:10px;letter-spacing:.06em;text-transform:uppercase">Group</th>';
-    cols.forEach(function(mc){
-      var s=mc.svcs[0];
+    satSun.forEach(function(s){
       var bandRoles=["WL","Singer","Keys","Guitar","Bass","Drums"];
       var g=null,isMix=false;
       bandRoles.forEach(function(role){
@@ -2874,26 +2825,24 @@ function buildRingkasanUI(data){
       });
       var label=isMix?"MIX":(g?"GROUP "+String(g).replace(/^group\s*/i,'').trim():"—");
       var col=isMix?"color:#f59e0b":"color:#e8b84b";
-      var grpBg=mc.isSpecial?'background:rgba(192,132,252,.18);':'background:#1a1e28;';
+      var grpBg=s.isSpecial?'background:rgba(192,132,252,.18);':'background:#1a1e28;';
       h+='<th style="'+grpBg+'font-size:11px;font-weight:800;'+col+'">'+label+'</th>';
     });
     h+='</tr>';
   }
 
-  // Role rows
   roles.forEach(function(role){
     if(role==="Speaker")return;
     var c=C(role);
     var tint=rowTint(role);
     h+='<tr><td class="role-col" style="color:'+c.fg+';background:'+c.bg+'">'+esc(roleLabel(role))+'</td>';
-    cols.forEach(function(mc){
-      var s=mc.svcs[0];
+    satSun.forEach(function(s){
       var people=s.slots[role]||[];
       var names=people.map(function(p){
         var nm=p.name||p,sub=p.sub;
         return sub?'<s style="color:#f87171">'+esc(nm)+'</s><br><span style="color:#4ade80">'+esc(sub)+'</span>':esc(nm);
       }).join('<br><br>');
-      var cellBg=mc.isSpecial?'rgba(192,132,252,.14)':tint;
+      var cellBg=s.isSpecial?'rgba(192,132,252,.14)':tint;
       h+='<td class="'+(names?"cell-filled":"cell-empty")+'" style="background:'+cellBg+'">'+names+'</td>';
     });
     h+='</tr>';
@@ -3557,8 +3506,9 @@ function chMonth(d){
 }
 function scrollToDate(iso){var pre="card-"+iso.replace(/-/g,"_")+"_";var cards=document.querySelectorAll(".ecard");for(var i=0;i<cards.length;i++){if(cards[i].id.indexOf(pre)===0){var top=cards[i].getBoundingClientRect().top+window.pageYOffset-90;window.scrollTo({top:top,behavior:"smooth"});return;}}}
 
-// Tapping the name card (vol-card) sends the person back to the onboarding
-// gate to switch identity, replacing the old in-page search "✕ clear" flow.
+function confirmLogout(){
+  showToolModal("Ganti Volunteer","Yakin ingin keluar dan ganti volunteer?","Keluar",function(){logoutToGate();});
+}
 function logoutToGate(){
   try{localStorage.removeItem(APP_CONFIG.storagePrefix+"schedCache");}catch(e){}      
   try{localStorage.removeItem(APP_CONFIG.storagePrefix + "volName");}catch(e){console.warn("localStorage remove failed",e);}

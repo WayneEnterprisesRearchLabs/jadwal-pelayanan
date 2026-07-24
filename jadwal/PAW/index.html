@@ -978,13 +978,7 @@ var APP_CONFIG = {
     st.schedCache[savedName]=d;
     try{localStorage.setItem(APP_CONFIG.storagePrefix+"schedCache",JSON.stringify(d));}catch(e){}
   }).withFailureHandler(function(){}).getVolunteerSchedule(savedName);
-})();   
-(function earlyConfigPrefetch_(){
-  // Warm the two gate-blocking calls — if they finish before the user taps
-  // Masuk, markGateReady_ fires instantly and the splash clears faster.
-  callApi('getConfig',[]).then(function(){}).catch(function(){});
-  callApi('getAllVolunteers',[]).then(function(){}).catch(function(){});
-})();        
+})();         
         
 var splashGone = false;
 // Driven by markGateReady_() now, not window.load — the splash IS the data loader,
@@ -1152,17 +1146,21 @@ function titleTwoLines(text){
 }
 
 google.script.run.withSuccessHandler(function(c){
-  var church=c.churchName||"GMS Salatiga";
-  document.getElementById("hdr-l1").innerHTML=titleTwoLines("Beranda");
-  document.getElementById("dr-team").textContent=APP_CONFIG.appTitle;
-  document.getElementById("dr-church").textContent=church;
-  document.getElementById("gate-title").textContent=APP_CONFIG.appTitle;
-  document.getElementById("gate-sub").textContent=church;
   st.rolesByDept=c.rolesByDept||{};
   st.structureByDept=c.structureByDept||{};
   st.cardTabsByDept=c.cardTabsByDept||{};
   st.departments=(c.departments||Object.keys(st.rolesByDept)).slice().sort(function(a,b){return a.localeCompare(b);});
-  populateDeptFilter();
+  // Only touch DOM if the gate is still showing — after login these
+  // overwrites reset the header title and cause a visible flash.
+  if(!gateReady_.done){
+    var church=c.churchName||"GMS Salatiga";
+    document.getElementById("hdr-l1").innerHTML=titleTwoLines("Beranda");
+    document.getElementById("dr-team").textContent=APP_CONFIG.appTitle;
+    document.getElementById("dr-church").textContent=church;
+    document.getElementById("gate-title").textContent=APP_CONFIG.appTitle;
+    document.getElementById("gate-sub").textContent=church;
+    populateDeptFilter();
+  }
 if(c.logoUrl){
   ["dr-logo","gate-logo-img"].forEach(function(id){
     var el=document.getElementById(id);
@@ -2144,7 +2142,7 @@ function cardTab(e,kid,which){
    otherwise there's nothing to confirm and the nudge would be noise. */
 var NOTIF_META={
   none:    {t:"Belum upload selfie dresscode",     i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'},
-  none_late:{t:"⚠️ Melewati deadline! Upload segera", i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'},
+  none_late:{t:"Melewati deadline! Upload segera", i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'},
   pending: {t:"Selfie menunggu approval CM",       i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'},
   approved:{t:"Dresscode sudah disetujui",    i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'},
   rejected:{t:"Selfie ditolak — upload ulang",     i:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'}
@@ -2538,15 +2536,16 @@ function dressDeadline_(serviceDateStr,dept){
 function isDeadlinePassed_(serviceDateStr,dept){
   var dl=dressDeadline_(serviceDateStr,dept);
   if(!dl)return false;
-  var now=new Date();now.setHours(23,59,59,999);
+  dl.setHours(19,0,0,0);
+  var now=new Date();
   return now>dl;
 }
 
 function deadlineLabel_(serviceDateStr,dept){
   var dl=dressDeadline_(serviceDateStr,dept);
   if(!dl)return"";
-  return HARI_L[dl.getDay()]+", "+dl.getDate()+" "+BLN_L[dl.getMonth()];
-}        
+  return HARI_L[dl.getDay()]+", 19:00";
+}
 
 function loadCardDresscode(kid,ev){
   if(!ev)return;
